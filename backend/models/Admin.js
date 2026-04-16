@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
 
-const userSchema = new mongoose.Schema(
+const adminSchema = new mongoose.Schema(
   {
     firstName: {
       type: String,
@@ -34,23 +34,17 @@ const userSchema = new mongoose.Schema(
       required: [true, 'Phone number is required'],
       trim: true,
     },
-    address: {
-      street: { type: String, trim: true },
-      city: { type: String, trim: true },
-      state: { type: String, trim: true },
-      zip: { type: String, trim: true },
-      country: { type: String, trim: true },
+    employeeId: {
+      type: String,
+      required: [true, 'Employee ID is required'],
+      unique: true,
+      trim: true,
     },
-    idProof: {
-      idType: {
-        type: String,
-        enum: ['Passport', 'Driving License', 'National ID', 'Other'],
-      },
-      idNumber: { type: String, trim: true },
-    },
-    loyaltyPoints: {
-      type: Number,
-      default: 0,
+    department: {
+      type: String,
+      required: [true, 'Department is required'],
+      enum: ['Reception', 'Management', 'Housekeeping', 'Security', 'SuperAdmin'],
+      default: 'Reception',
     },
     verified: {
       type: Boolean,
@@ -66,7 +60,7 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-userSchema.pre('save', async function hashPassword(next) {
+adminSchema.pre('save', async function hashPassword(next) {
   if (!this.isModified('password')) {
     next();
     return;
@@ -77,10 +71,10 @@ userSchema.pre('save', async function hashPassword(next) {
   next();
 });
 
-userSchema.methods.matchPassword = async function matchPassword(enteredPassword) {
+adminSchema.methods.matchPassword = async function matchPassword(enteredPassword) {
   return bcrypt.compare(enteredPassword, this.password);
 };
 
-const User = mongoose.model('User', userSchema);
+const Admin = mongoose.model('Admin', adminSchema);
 
-export default User;
+export default Admin;

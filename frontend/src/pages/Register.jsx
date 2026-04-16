@@ -1,152 +1,139 @@
-import { useState } from 'react'
-
-const API_BASE_URL = 'http://localhost:5000/api/auth'
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { registerUser } from "../api/authApi";
 
 const initialFormData = {
-  role: 'user',
-  email: '',
-  fullName: '',
-  phone: '',
-  password: '',
-  confirmPassword: '',
-}
+  firstName: "",
+  lastName: "",
+  email: "",
+  phone: "",
+  address: "",
+  idProof: "",
+  password: "",
+  confirmPassword: "",
+};
 
-function Register() {
-  const [formData, setFormData] = useState(initialFormData)
-  const [isVerified, setIsVerified] = useState(false)
-  const [isVerifying, setIsVerifying] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [message, setMessage] = useState('')
-  const [error, setError] = useState('')
+const Register = () => {
+  const [formData, setFormData] = useState(initialFormData);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [submittedEmail, setSubmittedEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (event) => {
-    const { name, value } = event.target
+    const { name, value } = event.target;
+    setFormData((current) => ({
+      ...current,
+      [name]: value,
+    }));
 
-    setFormData((current) => {
-      const next = { ...current, [name]: value }
-
-      if (name === 'email' || name === 'role') {
-        return {
-          ...next,
-          fullName: name === 'role' ? current.fullName : next.fullName,
-        }
-      }
-
-      return next
-    })
-
-    if (name === 'email' || name === 'role') {
-      setIsVerified(false)
-      setMessage('')
-    }
-
-    setError('')
-  }
-
-  const handleVerify = async () => {
-    setError('')
-    setMessage('')
-
-    if (!formData.email.trim()) {
-      setError('Enter your email before verification.')
-      return
-    }
-
-    setIsVerifying(true)
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/verify-registration`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          role: formData.role,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Verification failed')
-      }
-
-      setIsVerified(true)
-      setMessage(data.message)
-    } catch (verifyError) {
-      setIsVerified(false)
-      setError(verifyError.message)
-    } finally {
-      setIsVerifying(false)
-    }
-  }
+    if (error) setError("");
+    if (success) setSuccess("");
+  };
 
   const handleSubmit = async (event) => {
-    event.preventDefault()
-    setError('')
-    setMessage('')
+    event.preventDefault();
+    setError("");
+    setSuccess("");
 
-    if (!isVerified) {
-      setError('Please verify your email and role first.')
-      return
+    if (
+      !formData.firstName.trim() ||
+      !formData.lastName.trim() ||
+      !formData.email.trim() ||
+      !formData.phone.trim() ||
+      !formData.password.trim() ||
+      !formData.confirmPassword.trim()
+    ) {
+      setError("Please fill in all required fields before requesting OTP.");
+      return;
     }
 
-    setIsSubmitting(true)
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      })
+      const { data } = await registerUser({
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim(),
+        address: formData.address.trim(),
+        idProof: formData.idProof.trim(),
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
+      });
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Registration failed')
-      }
-
-      localStorage.setItem('hotelUser', JSON.stringify(data))
-      setMessage(`Registration completed for ${data.user.fullName}.`)
-      setFormData(initialFormData)
-      setIsVerified(false)
+      setSuccess(
+        data?.message ||
+          "Registration successful. Please check your email to verify your account."
+      );
+      setSubmittedEmail(formData.email.trim());
+      setFormData(initialFormData);
     } catch (submitError) {
-      setError(submitError.message)
+      setError(
+        submitError.response?.data?.message ||
+          submitError.message ||
+          "Registration failed."
+      );
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <section className="register-page">
-      <div className="register-copy">
-        <p className="eyebrow">Vivanta-inspired guest onboarding</p>
+      <div className="register-hero">
+        <p className="register-eyebrow">Guest Registration</p>
         <h1>Create your hotel account</h1>
-        <p className="copy-text">
-          Start with role and email verification. Once verified, the rest of the
-          registration form unlocks for a cleaner and more premium flow.
+        <p className="register-copy">
+          This form uses the real backend registration API. The account is
+          created first, and the guest must verify the email link before login.
         </p>
-        <div className="copy-card">
-          <span>Flow</span>
-          <strong>Verify first, register second</strong>
-          <p>User and admin accounts are both supported in the same schema.</p>
+
+        <div className="register-panel">
+          <span>Real API Flow</span>
+          <strong>Register, open email verification link, then login</strong>
+          <p>
+            Required: firstName, lastName, email, phone, password,
+            confirmPassword. Optional: address and idProof.
+          </p>
         </div>
       </div>
 
       <form className="register-card" onSubmit={handleSubmit}>
-        <div className="field-grid field-grid-top">
+        <div className="register-card-heading">
+          <h2>Sign up</h2>
+          <p>After submit, the backend sends a verification link to email.</p>
+        </div>
+
+        <div className="field-grid">
           <label className="field">
-            <span>Account type</span>
-            <select name="role" value={formData.role} onChange={handleChange}>
-              <option value="user">User</option>
-              <option value="admin">Admin</option>
-            </select>
+            <span>First name</span>
+            <input
+              type="text"
+              name="firstName"
+              placeholder="Enter first name"
+              value={formData.firstName}
+              onChange={handleChange}
+            />
           </label>
 
-          <label className="field field-wide">
+          <label className="field">
+            <span>Last name</span>
+            <input
+              type="text"
+              name="lastName"
+              placeholder="Enter last name"
+              value={formData.lastName}
+              onChange={handleChange}
+            />
+          </label>
+
+          <label className="field field-full">
             <span>Email address</span>
             <input
               type="email"
@@ -156,43 +143,37 @@ function Register() {
               onChange={handleChange}
             />
           </label>
-        </div>
-
-        <button
-          type="button"
-          className="primary-button"
-          onClick={handleVerify}
-          disabled={isVerifying}
-        >
-          {isVerifying ? 'Verifying...' : 'Verify'}
-        </button>
-
-        {isVerified ? (
-          <div className="verified-banner">Verified. Complete the remaining fields.</div>
-        ) : null}
-
-        <div className={`details-panel ${isVerified ? 'is-open' : ''}`}>
-          <label className="field">
-            <span>Full name</span>
-            <input
-              type="text"
-              name="fullName"
-              placeholder="Enter your full name"
-              value={formData.fullName}
-              onChange={handleChange}
-              disabled={!isVerified}
-            />
-          </label>
 
           <label className="field">
             <span>Phone number</span>
             <input
               type="text"
               name="phone"
-              placeholder="Enter your phone number"
+              placeholder="Enter phone number"
               value={formData.phone}
               onChange={handleChange}
-              disabled={!isVerified}
+            />
+          </label>
+
+          <label className="field">
+            <span>ID proof</span>
+            <input
+              type="text"
+              name="idProof"
+              placeholder="Aadhaar, passport, driving licence"
+              value={formData.idProof}
+              onChange={handleChange}
+            />
+          </label>
+
+          <label className="field field-full">
+            <span>Address</span>
+            <input
+              type="text"
+              name="address"
+              placeholder="Enter address"
+              value={formData.address}
+              onChange={handleChange}
             />
           </label>
 
@@ -201,10 +182,9 @@ function Register() {
             <input
               type="password"
               name="password"
-              placeholder="Create a password"
+              placeholder="Create password"
               value={formData.password}
               onChange={handleChange}
-              disabled={!isVerified}
             />
           </label>
 
@@ -213,27 +193,38 @@ function Register() {
             <input
               type="password"
               name="confirmPassword"
-              placeholder="Re-enter password"
+              placeholder="Confirm password"
               value={formData.confirmPassword}
               onChange={handleChange}
-              disabled={!isVerified}
             />
           </label>
-
-          <button
-            type="submit"
-            className="secondary-button"
-            disabled={!isVerified || isSubmitting}
-          >
-            {isSubmitting ? 'Creating account...' : 'Complete registration'}
-          </button>
         </div>
 
-        {message ? <p className="form-message success">{message}</p> : null}
+        <button type="submit" className="register-button" disabled={isSubmitting}>
+          {isSubmitting ? "Creating account..." : "Create account"}
+        </button>
+
+        {success ? <p className="form-message success">{success}</p> : null}
         {error ? <p className="form-message error">{error}</p> : null}
+
+        {success ? (
+          <div className="verification-card">
+            <span>Next step</span>
+            <strong>Verify your email</strong>
+            <p>
+              The account for <strong>{submittedEmail}</strong> has been
+              registered. The user must open the verification link sent by the
+              backend before logging in.
+            </p>
+          </div>
+        ) : null}
+
+        <p className="auth-switch">
+          Already have an account? <Link to="/login">Login</Link>
+        </p>
       </form>
     </section>
-  )
-}
+  );
+};
 
-export default Register
+export default Register;

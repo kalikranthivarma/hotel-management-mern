@@ -1,12 +1,12 @@
-import './App.css'
-import Register from './pages/Register'
+import "./App.css";
+import AppRoutes from "./routes/AppRoutes";
 
 function App() {
   return (
     <main className="app-shell">
-      <Register />
+      <AppRoutes />
     </main>
-  )
+  );
 }
 
-export default App
+export default App;

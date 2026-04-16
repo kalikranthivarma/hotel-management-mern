@@ -3,16 +3,16 @@ import axios from "./axios";
 // USER AUTH APIs
 
 export const registerUser = (data) =>
-  axios.post("/user/register", data);
+  axios.post("/auth/user/register", data);
 
 export const loginUser = (data) =>
-  axios.post("/user/login", data);
+  axios.post("/auth/user/login", data);
 
 export const verifyEmail = (token) =>
-  axios.get(`/user/verify-email/${token}`);
+  axios.get(`/auth/user/verify-email/${token}`);
 
 export const forgotPassword = (data) =>
-  axios.post("/user/forgot-password", data);
+  axios.post("/auth/user/forgot-password", data);
 
 export const resetPassword = (token, data) =>
-  axios.put(`/user/reset-password/${token}`, data);
+  axios.put(`/auth/user/reset-password/${token}`, data);

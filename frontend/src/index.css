@@ -3,10 +3,19 @@
 :root {
   color: #1b1732;
   background-color: #fdfcfc;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 * {
   box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
 }
 
 body {
@@ -16,4 +25,15 @@ body {
     radial-gradient(circle at 8% -10%, rgba(76, 44, 146, 0.07), transparent 35%),
     radial-gradient(circle at 92% 0%, rgba(166, 151, 211, 0.12), transparent 32%),
     #fdfcfc;
+  min-width: 320px;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+#root {
+  min-height: 100vh;
 }

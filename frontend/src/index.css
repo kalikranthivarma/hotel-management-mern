@@ -1,1 +1,19 @@
 @import "tailwindcss";
+
+:root {
+  color: #1b1732;
+  background-color: #fdfcfc;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Montserrat", sans-serif;
+  background:
+    radial-gradient(circle at 8% -10%, rgba(76, 44, 146, 0.07), transparent 35%),
+    radial-gradient(circle at 92% 0%, rgba(166, 151, 211, 0.12), transparent 32%),
+    #fdfcfc;
+}

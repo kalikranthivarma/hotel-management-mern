@@ -1,3 +1,4 @@
+
 import Booking from '../models/Booking.js';
 import Room from '../models/Room.js';
 
@@ -133,3 +134,4 @@ const updateBookingStatus = async (req, res, next) => {
 };
 
 export { createBooking, getAllBookings, getMyBookings, updateBookingStatus };
+

@@ -1,3 +1,4 @@
+
 import express from 'express';
 import {
   createRoom,
@@ -24,3 +25,4 @@ router.patch('/:id/availability', protectAdmin, toggleRoomAvailability);
 router.delete('/:id', protectAdmin, deleteRoom);
 
 export default router;
+

@@ -21,9 +21,9 @@ const getStoredAuth = () => {
       user: null,
     };
   }
-};
+};      //restore login after [age refresh]
 
-const persistAuth = (state) => {
+const persistAuth = (state) => {     //saves login data into local storage
   localStorage.setItem(
     storageKey,
     JSON.stringify({
@@ -39,13 +39,13 @@ const clearStoredAuth = () => {
 
 const initialState = getStoredAuth();
 
-const authSlice = createSlice({
+const authSlice = createSlice({   //create redux slice 
   name: "auth",
   initialState,
   reducers: {
-    setCredentials: (state, action) => {
-      state.token = action.payload?.token || "";
-      state.user = action.payload?.user || null;
+    setCredentials: (state, action) => {    //runs when user log in
+      state.token = action.payload?.token || "";    //saves token
+      state.user = action.payload?.user || null;   //saves user
       persistAuth(state);
     },
     logoutUser: (state) => {

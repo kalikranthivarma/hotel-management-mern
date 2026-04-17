@@ -5,14 +5,20 @@ import axios from "./axios";
 export const registerUser = (data) =>
   axios.post("/auth/user/register", data);
 
+export const registerAdmin = (data) =>
+  axios.post("/auth/admin/register", data);
+
 export const loginUser = (data) =>
   axios.post("/auth/user/login", data);
 
-export const verifyEmail = (token) =>
-  axios.get(`/auth/user/verify-email/${token}`);
+export const loginAdmin = (data) =>
+  axios.post("/auth/admin/login", data);
 
-export const forgotPassword = (data) =>
-  axios.post("/auth/user/forgot-password", data);
+export const verifyEmail = (token, role = "user") =>
+  axios.get(`/auth/${role}/verify-email/${token}`);
 
-export const resetPassword = (token, data) =>
-  axios.put(`/auth/user/reset-password/${token}`, data);
+export const forgotPassword = (data, role = "user") =>
+  axios.post(`/auth/${role}/forgot-password`, data);
+
+export const resetPassword = (token, data, role = "user") =>
+  axios.put(`/auth/${role}/reset-password/${token}`, data);

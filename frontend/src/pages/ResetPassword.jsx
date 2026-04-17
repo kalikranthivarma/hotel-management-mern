@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import { resetPassword } from "../api/authApi";
 
 const ResetPassword = () => {
   const { token } = useParams();
+  const { pathname } = useLocation();
   const [formData, setFormData] = useState({
     password: "",
     confirmPassword: "",
@@ -11,6 +12,8 @@ const ResetPassword = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const role = pathname.startsWith("/admin/") ? "admin" : "user";
+  const accountLabel = role === "admin" ? "staff" : "guest";
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -43,7 +46,7 @@ const ResetPassword = () => {
       const { data } = await resetPassword(token, {
         password: formData.password,
         confirmPassword: formData.confirmPassword,
-      });
+      }, role);
       setSuccess(data?.message || "Password updated successfully.");
       setFormData({
         password: "",
@@ -66,7 +69,7 @@ const ResetPassword = () => {
         <div className="auth-heading">
           <p className="register-eyebrow">Reset Password</p>
           <h1>Create a new password</h1>
-          <p>This page uses the real backend reset-password token API.</p>
+          <p>This page uses the real backend {accountLabel} reset-password token API.</p>
         </div>
 
         <label className="field">

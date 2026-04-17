@@ -220,6 +220,10 @@ const Register = () => {
         ) : null}
 
         <p className="auth-switch">
+          Link expired? <Link to="/resend-verification">Resend verification link</Link>
+        </p>
+
+        <p className="auth-switch">
           Already have an account? <Link to="/login">Login</Link>
         </p>
       </form>

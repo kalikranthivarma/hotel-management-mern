@@ -1,18 +1,28 @@
-import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useEffect, useState, useRef } from "react";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { verifyEmail } from "../api/authApi";
 
 const VerifyEmail = () => {
   const { token } = useParams();
+  const navigate = useNavigate();
   const [status, setStatus] = useState("loading");
   const [message, setMessage] = useState("Verifying your email...");
+  const effectRan = useRef(false);
 
   useEffect(() => {
+    if (effectRan.current === true) return;
+
     const verify = async () => {
       try {
         const { data } = await verifyEmail(token);
         setStatus("success");
-        setMessage(data?.message || "Email verified! You can now log in.");
+        setMessage(data?.message || "Email verified! Redirecting to login...");
+        
+        // Redirect to Login page after showing success message
+        setTimeout(() => {
+          navigate("/login", { state: { message: "Email verified successfully! You can now log in." } });
+        }, 3000);
+        
       } catch (error) {
         setStatus("error");
         setMessage(
@@ -29,7 +39,11 @@ const VerifyEmail = () => {
       setStatus("error");
       setMessage("Verification token is missing.");
     }
-  }, [token]);
+
+    return () => {
+      effectRan.current = true;
+    };
+  }, [token, navigate]);
 
   return (
     <section className="auth-page">

@@ -11,6 +11,9 @@ export const loginUser = (data) =>
 export const verifyEmail = (token) =>
   axios.get(`/auth/user/verify-email/${token}`);
 
+export const resendVerification = (data) =>
+  axios.post("/auth/user/resend-verification", data);
+
 export const forgotPassword = (data) =>
   axios.post("/auth/user/forgot-password", data);
 

@@ -6,6 +6,7 @@ import {
   loginUser,
   registerAdmin,
   registerUser,
+  resendUserVerificationEmail,
   resetAdminPassword,
   resetUserPassword,
   verifyAdminEmail,
@@ -16,6 +17,7 @@ const router = express.Router();
 
 // ─── GUEST (USER) ROUTES ──────────────────────────────────────────────────────
 router.post('/user/register', registerUser);
+router.post('/user/resend-verification', resendUserVerificationEmail);
 router.get('/user/verify-email/:token', verifyUserEmail);
 router.post('/user/login', loginUser);
 router.post('/user/forgot-password', forgotUserPassword);

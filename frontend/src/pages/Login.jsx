@@ -1,18 +1,29 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { loginUser } from "../api/authApi";
 import { setCredentials } from "../redux/authSlice";
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState(location.state?.message || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Clear success message when user starts typing or if component remounts differently
+  useEffect(() => {
+    if (location.state?.message) {
+      setSuccessMessage(location.state.message);
+      // Clear location state so refresh doesn't show message again
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -93,10 +104,15 @@ const Login = () => {
           {isSubmitting ? "Signing in..." : "Login"}
         </button>
 
+        {successMessage ? <p className="form-message success">{successMessage}</p> : null}
         {error ? <p className="form-message error">{error}</p> : null}
 
         <p className="auth-switch">
           Don&apos;t have an account? <Link to="/register">Create one</Link>
+        </p>
+
+        <p className="auth-switch">
+          Link expired? <Link to="/resend-verification">Resend verification link</Link>
         </p>
 
         <p className="auth-switch">

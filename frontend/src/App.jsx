@@ -9,6 +9,11 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ResetPassword from "./pages/ResetPassword";
 import VerifyEmail from "./pages/VerifyEmail";
+import Rooms from "./pages/Rooms";
+import RoomDetails from "./pages/RoomDetails";
+import BookingHistory from "./pages/BookingHistory";
+import AdminBookings from "./pages/AdminBookings";
+import ManageRooms from "./pages/ManageRooms";
 import PrivateRoute from "./routes/PrivateRoute";
 
 function App() {
@@ -28,6 +33,34 @@ function App() {
           <Route path="/admin/verify-email/:token" element={<VerifyEmail />} />
           <Route path="/user/reset-password/:token" element={<ResetPassword />} />
           <Route path="/admin/reset-password/:token" element={<ResetPassword />} />
+          <Route path="/rooms" element={<Rooms />} />
+          <Route path="/room/:id" element={<RoomDetails />} />
+          <Route
+            path="/bookings"
+            element={
+              <PrivateRoute>
+                <BookingHistory />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin/bookings"
+            element={
+              <PrivateRoute>
+                <AdminBookings />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin/manage-rooms"
+            element={
+              <PrivateRoute>
+                <ManageRooms />
+              </PrivateRoute>
+            }
+          />
+
+
           <Route
             path="/dashboard"
             element={
@@ -36,6 +69,7 @@ function App() {
               </PrivateRoute>
             }
           />
+
         </Routes>
       </main>
     </BrowserRouter>

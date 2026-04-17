@@ -227,7 +227,12 @@ const Register = () => {
         <p className="auth-switch">
           Already have an account? <Link to="/login">Login</Link>
         </p>
+
+        <p className="auth-switch" style={{ marginTop: '2rem', paddingTop: '1rem', borderTop: '1px solid #E8E4DF' }}>
+          Are you hotel staff? <Link to="/admin/register">Staff Registration</Link>
+        </p>
       </form>
+
     </section>
   );
 };

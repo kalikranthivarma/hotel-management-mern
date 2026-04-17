@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { loginUser } from "../api/authApi";
+import { loginUser, loginAdmin } from "../api/authApi";
+
 import { setCredentials } from "../redux/authSlice";
 
 const Login = () => {
@@ -15,6 +16,11 @@ const Login = () => {
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState(location.state?.message || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const isAdminPath = location.pathname.startsWith("/admin");
+  const loginAction = isAdminPath ? loginAdmin : loginUser;
+  const label = isAdminPath ? "Staff" : "Guest";
+
 
   // Clear success message when user starts typing or if component remounts differently
   useEffect(() => {
@@ -47,10 +53,11 @@ const Login = () => {
     setIsSubmitting(true);
 
     try {
-      const { data } = await loginUser({
+      const { data } = await loginAction({
         email: formData.email.trim(),
         password: formData.password,
       });
+
 
       dispatch(setCredentials({
         token: data.token,
@@ -73,10 +80,11 @@ const Login = () => {
     <section className="auth-page">
       <form className="auth-card" onSubmit={handleSubmit}>
         <div className="auth-heading">
-          <p className="register-eyebrow">Guest Login</p>
+          <p className="register-eyebrow">{label} Login</p>
           <h1>Welcome back</h1>
-          <p>Only verified guest accounts should continue to login.</p>
+          <p>Only verified {label.toLowerCase()} accounts should continue to login.</p>
         </div>
+
 
         <label className="field">
           <span>Email address</span>
@@ -118,7 +126,14 @@ const Login = () => {
         <p className="auth-switch">
           Forgot password? <Link to="/forgot-password">Reset with email link</Link>
         </p>
+
+        <p className="auth-switch" style={{ marginTop: '2rem', paddingTop: '1rem', borderTop: '1px solid #E8E4DF' }}>
+          {isAdminPath ? "Are you a guest?" : "Are you hotel staff?"} 
+          <Link to={isAdminPath ? "/login" : "/admin/login"}> {isAdminPath ? "Guest Login" : "Staff Portal"}</Link>
+        </p>
+
       </form>
+
     </section>
   );
 };

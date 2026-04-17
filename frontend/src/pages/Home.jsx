@@ -435,7 +435,13 @@ function HomeFooter() {
             <a href="mailto:stay@knsustays.com">stay@knsustays.com</a>
             <a href="tel:+918001234567">+91 800-123-4567</a>
           </div>
+          <div>
+            <p className="home-footer__col-title">Staff Portal</p>
+            <Link to="/admin/login">Staff Login</Link>
+            <Link to="/admin/register">Staff Registration</Link>
+          </div>
         </div>
+
       </div>
       <div className="home-footer__bottom">
         <p>© 2026 KNSU Stays. All rights reserved.</p>

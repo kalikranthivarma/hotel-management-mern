@@ -96,8 +96,19 @@ const AdminRegister = () => {
           </label>
           <label className="field field-full">
             <span>Department *</span>
-            <input type="text" name="department" placeholder="Front Desk / Housekeeping / Management" value={form.department} onChange={handleChange} required />
+            <select name="department" value={form.department} onChange={handleChange} required>
+              <option value="">Select Department</option>
+              <option value="Front Desk">Front Desk</option>
+              <option value="Reception">Reception</option>
+              <option value="Management">Management</option>
+              <option value="Housekeeping">Housekeeping</option>
+              <option value="Security">Security</option>
+              <option value="Kitchen">Kitchen</option>
+              <option value="IT">IT</option>
+              <option value="Maintenance">Maintenance</option>
+            </select>
           </label>
+
           <label className="field">
             <span>Password *</span>
             <input type="password" name="password" placeholder="••••••••" value={form.password} onChange={handleChange} required />

@@ -114,6 +114,45 @@ const verifyUserEmail = async (req, res, next) => {
   }
 };
 
+const resendUserVerificationEmail = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      res.status(400);
+      throw new Error('Please provide your email');
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      res.status(404);
+      throw new Error('No guest account found with that email');
+    }
+
+    if (user.verified) {
+      res.status(400);
+      throw new Error('Account is already verified. You can log in.');
+    }
+
+    const { raw, hashed } = createVerificationToken();
+    user.verificationToken = hashed;
+    user.verificationTokenExpires = Date.now() + 24 * 60 * 60 * 1000;
+    await user.save({ validateBeforeSave: false });
+
+    try {
+      await sendVerificationEmail(user.email, 'user', raw, res);
+      res.status(200).json({ success: true, message: 'Verification link resent to your email.' });
+    } catch (err) {
+      user.verificationToken = undefined;
+      user.verificationTokenExpires = undefined;
+      await user.save({ validateBeforeSave: false });
+      res.status(500);
+      throw new Error('Email could not be sent. Please try again.');
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
 const loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -390,6 +429,7 @@ export {
   loginUser,
   registerAdmin,
   registerUser,
+  resendUserVerificationEmail,
   resetAdminPassword,
   resetUserPassword,
   verifyAdminEmail,

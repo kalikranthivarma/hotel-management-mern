@@ -1,21 +1,31 @@
-import { useEffect, useState } from "react";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { verifyEmail } from "../api/authApi";
 
 const VerifyEmail = () => {
   const { token } = useParams();
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const [status, setStatus] = useState("loading");
   const [message, setMessage] = useState("Verifying your email...");
+  const effectRan = useRef(false);
   const role = pathname.startsWith("/admin/") ? "admin" : "user";
   const accountLabel = role === "admin" ? "staff" : "guest";
 
   useEffect(() => {
+    if (effectRan.current) return;
+
     const verify = async () => {
       try {
         const { data } = await verifyEmail(token, role);
         setStatus("success");
-        setMessage(data?.message || "Email verified! You can now log in.");
+        setMessage(data?.message || "Email verified! Redirecting to login...");
+
+        setTimeout(() => {
+          navigate("/login", {
+            state: { message: "Email verified successfully! You can now log in." },
+          });
+        }, 3000);
       } catch (error) {
         setStatus("error");
         setMessage(
@@ -32,7 +42,11 @@ const VerifyEmail = () => {
       setStatus("error");
       setMessage("Verification token is missing.");
     }
-  }, [role, token]);
+
+    return () => {
+      effectRan.current = true;
+    };
+  }, [navigate, role, token]);
 
   return (
     <section className="auth-page">

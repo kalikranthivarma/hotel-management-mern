@@ -5,21 +5,25 @@
 .register-page {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
+  grid-template-columns: minmax(0, 1.05fr) minmax(320px, 540px);
+  align-items: center;
+  gap: 32px;
+  padding: 32px;
   background:
-    radial-gradient(circle at top left, rgba(217, 180, 123, 0.28), transparent 28%),
-    linear-gradient(135deg, #f7f1e7 0%, #efe0c8 48%, #f9f7f2 100%);
+    radial-gradient(circle at top left, rgba(183, 137, 78, 0.22), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(71, 120, 114, 0.14), transparent 28%),
+    linear-gradient(135deg, #f7f1e7 0%, #efe4d3 44%, #fbf8f3 100%);
 }
 
-.register-copy {
-  padding: 88px 72px;
+.register-hero {
+  padding: 56px 40px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 24px;
 }
 
-.eyebrow {
+.register-eyebrow {
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.24em;
@@ -27,20 +31,22 @@
   color: #8a6640;
 }
 
-.register-copy h1 {
+.register-hero h1 {
   margin: 0;
   font-size: clamp(2.75rem, 5vw, 4.8rem);
-  line-height: 0.95;
+  line-height: 0.98;
   max-width: 10ch;
 }
 
-.copy-text {
-  max-width: 56ch;
+.register-copy {
+  margin: 0;
+  max-width: 58ch;
   color: #655a4a;
   font-size: 1.05rem;
+  line-height: 1.7;
 }
 
-.copy-card {
+.register-panel {
   max-width: 24rem;
   padding: 24px;
   border-radius: 24px;
@@ -49,13 +55,13 @@
   box-shadow: 0 18px 45px rgba(91, 67, 42, 0.12);
 }
 
-.copy-card span,
-.copy-card strong,
-.copy-card p {
+.register-panel span,
+.register-panel strong,
+.register-panel p {
   display: block;
 }
 
-.copy-card span {
+.register-panel span {
   color: #a57a4a;
   font-size: 0.82rem;
   text-transform: uppercase;
@@ -63,20 +69,19 @@
   margin-bottom: 10px;
 }
 
-.copy-card strong {
+.register-panel strong {
   color: #27180d;
   font-size: 1.2rem;
   margin-bottom: 8px;
 }
 
-.copy-card p {
+.register-panel p {
   color: #6b5b49;
   margin: 0;
 }
 
 .register-card {
-  margin: 32px;
-  align-self: center;
+  width: 100%;
   background: rgba(255, 253, 249, 0.92);
   border-radius: 30px;
   padding: 32px;
@@ -84,18 +89,29 @@
   border: 1px solid rgba(148, 111, 73, 0.14);
 }
 
+.register-card-heading {
+  margin-bottom: 24px;
+}
+
+.register-card-heading h2 {
+  margin: 0 0 8px;
+  font-size: 1.9rem;
+}
+
+.register-card-heading p {
+  margin: 0;
+  color: #6b5b49;
+  line-height: 1.6;
+}
+
 .field-grid {
   display: grid;
-  grid-template-columns: 1fr 1.4fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
 }
 
-.field-grid-top {
-  margin-bottom: 18px;
-}
-
-.field-wide {
-  grid-column: auto;
+.field-full {
+  grid-column: 1 / -1;
 }
 
 .field {
@@ -118,15 +134,17 @@
   font: inherit;
   background: #fffdfa;
   color: #27180d;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.field input:disabled {
-  background: #f2ebe2;
-  color: #94816b;
+.field input:focus,
+.field select:focus {
+  border-color: #b37b45;
+  box-shadow: 0 0 0 4px rgba(179, 123, 69, 0.12);
 }
 
-.primary-button,
-.secondary-button {
+.register-button {
   width: 100%;
   border: none;
   border-radius: 999px;
@@ -135,53 +153,19 @@
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.2s ease, opacity 0.2s ease;
-}
-
-.primary-button {
   background: linear-gradient(90deg, #8f6335, #c39762);
-  color: #fff9f2;
-}
-
-.secondary-button {
-  background: #1f1811;
   color: #fff9f2;
   margin-top: 8px;
 }
 
-.primary-button:hover,
-.secondary-button:hover {
+.register-button:hover {
   transform: translateY(-1px);
 }
 
-.primary-button:disabled,
-.secondary-button:disabled {
+.register-button:disabled {
   opacity: 0.7;
   cursor: not-allowed;
   transform: none;
-}
-
-.verified-banner {
-  margin-top: 14px;
-  padding: 12px 16px;
-  border-radius: 14px;
-  background: #eef7ed;
-  color: #245b2a;
-  font-weight: 600;
-}
-
-.details-panel {
-  overflow: hidden;
-  max-height: 0;
-  opacity: 0;
-  transform: translateY(12px);
-  transition: max-height 0.35s ease, opacity 0.25s ease, transform 0.25s ease;
-}
-
-.details-panel.is-open {
-  max-height: 520px;
-  opacity: 1;
-  transform: translateY(0);
-  margin-top: 18px;
 }
 
 .form-message {
@@ -201,21 +185,140 @@
   color: #a1271e;
 }
 
+.verification-card {
+  margin-top: 16px;
+  padding: 18px 20px;
+  border-radius: 20px;
+  background: #fff8ef;
+  border: 1px solid #ead8c1;
+}
+
+.verification-card span,
+.verification-card strong,
+.verification-card p {
+  display: block;
+}
+
+.verification-card span {
+  color: #8a6640;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  margin-bottom: 8px;
+}
+
+.verification-card strong {
+  color: #27180d;
+  font-size: 1.05rem;
+  margin-bottom: 8px;
+}
+
+.verification-card p {
+  margin: 0;
+  color: #6b5b49;
+  line-height: 1.6;
+}
+
+.auth-page,
+.dashboard-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at top left, rgba(183, 137, 78, 0.2), transparent 28%),
+    linear-gradient(135deg, #f7f1e7 0%, #efe4d3 48%, #fbf8f3 100%);
+}
+
+.auth-card,
+.dashboard-card {
+  width: min(100%, 480px);
+  background: rgba(255, 253, 249, 0.95);
+  border-radius: 30px;
+  padding: 32px;
+  box-shadow: 0 20px 70px rgba(50, 30, 10, 0.14);
+  border: 1px solid rgba(148, 111, 73, 0.14);
+}
+
+.auth-heading {
+  margin-bottom: 24px;
+}
+
+.auth-heading h1,
+.dashboard-card h1 {
+  margin: 0 0 8px;
+  font-size: clamp(2rem, 5vw, 3rem);
+}
+
+.auth-heading p,
+.dashboard-copy {
+  margin: 0;
+  color: #6b5b49;
+  line-height: 1.6;
+}
+
+.auth-switch {
+  margin: 16px 0 0;
+  color: #6b5b49;
+  text-align: center;
+}
+
+.auth-switch a {
+  color: #8f6335;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.auth-switch strong {
+  color: #27180d;
+}
+
+.dashboard-grid {
+  display: grid;
+  gap: 16px;
+  margin: 24px 0;
+}
+
+.dashboard-panel {
+  padding: 18px 20px;
+  border-radius: 20px;
+  background: #fff8ef;
+  border: 1px solid #ead8c1;
+}
+
+.dashboard-panel span {
+  display: block;
+  color: #8a6640;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  margin-bottom: 8px;
+}
+
+.dashboard-panel strong {
+  color: #27180d;
+  font-size: 1.05rem;
+}
+
 @media (max-width: 900px) {
   .register-page {
     grid-template-columns: 1fr;
+    padding: 16px;
   }
 
-  .register-copy {
-    padding: 56px 24px 12px;
+  .register-hero {
+    padding: 40px 12px 8px;
   }
 
   .register-card {
-    margin: 24px;
     padding: 24px;
   }
 
   .field-grid {
     grid-template-columns: 1fr;
+  }
+
+  .field-full {
+    grid-column: auto;
   }
 }

@@ -42,11 +42,8 @@ const userSchema = new mongoose.Schema(
       country: { type: String, trim: true },
     },
     idProof: {
-      idType: {
-        type: String,
-        enum: ['Passport', 'Driving License', 'National ID', 'Other'],
-      },
-      idNumber: { type: String, trim: true },
+      type: String,
+      trim: true,
     },
     loyaltyPoints: {
       type: Number,

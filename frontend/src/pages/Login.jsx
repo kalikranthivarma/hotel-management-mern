@@ -75,7 +75,7 @@ const Login = () => {
         <div className="auth-heading">
           <p className="register-eyebrow">Guest Login</p>
           <h1>Welcome back</h1>
-          <p>Only verified guest accounts should continue to login.</p>
+          <p>Login to your verified account to continue.</p>
         </div>
 
         <label className="field">
@@ -112,11 +112,7 @@ const Login = () => {
         </p>
 
         <p className="auth-switch">
-          Link expired? <Link to="/resend-verification">Resend verification link</Link>
-        </p>
-
-        <p className="auth-switch">
-          Forgot password? <Link to="/forgot-password">Reset with email link</Link>
+          Forgot password? <Link to="/forgot-password">Reset with OTP</Link>
         </p>
       </form>
     </section>

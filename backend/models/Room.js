@@ -4,23 +4,53 @@ const roomSchema = new mongoose.Schema(
   {
     roomNumber: {
       type: String,
-      required: [true, 'Room number is required'],
+      required: true,
       unique: true,
       trim: true,
     },
-    roomType: {
+    title: {
       type: String,
-      required: [true, 'Room type is required'],
-      enum: ['Single', 'Double', 'Suite', 'Deluxe'],
-    },
-    pricePerNight: {
-      type: Number,
-      required: [true, 'Price is required'],
-      min: 0,
+      required: true,
+      trim: true,
     },
     description: {
       type: String,
-      trim: true,
+      required: true,
+    },
+    type: {
+      type: String,
+      enum: ['single', 'double', 'deluxe', 'suite', 'family', 'presidential'],
+      required: true,
+    },
+    bedType: {
+      type: String,
+      enum: ['single', 'double', 'twin', 'king', 'queen'],
+      required: true,
+    },
+    view: {
+      type: String,
+      enum: ['garden', 'pool', 'city', 'mountain', 'sea', 'courtyard'],
+      default: 'garden',
+    },
+    floor: {
+      type: Number,
+      required: true,
+    },
+    size: {
+      type: Number, // in sq. ft.
+      required: true,
+    },
+    pricePerNight: {
+      type: Number,
+      required: true,
+    },
+    maxGuests: {
+      type: Number,
+      required: true,
+    },
+    amenities: {
+      type: [String],
+      default: [],
     },
     images: {
       type: [String],
@@ -30,16 +60,16 @@ const roomSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
-    amenities: {
-      type: [String],
-      default: [],
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    isFeatured: {
+      type: Boolean,
+      default: false,
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-const Room = mongoose.model('Room', roomSchema);
-
-export default Room;
+export default mongoose.model('Room', roomSchema);

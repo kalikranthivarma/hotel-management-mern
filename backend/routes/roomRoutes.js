@@ -2,21 +2,25 @@ import express from 'express';
 import {
   createRoom,
   deleteRoom,
+  getAllRooms,
+  getFeaturedRooms,
   getRoomById,
-  getRooms,
+  toggleRoomAvailability,
   updateRoom,
 } from '../controllers/roomController.js';
 import { protectAdmin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-router.route('/')
-  .get(getRooms)
-  .post(protectAdmin, createRoom);
+// PUBLIC ROUTES 
+router.get('/', getAllRooms);
+router.get('/featured', getFeaturedRooms);
+router.get('/:id', getRoomById);
 
-router.route('/:id')
-  .get(getRoomById)
-  .put(protectAdmin, updateRoom)
-  .delete(protectAdmin, deleteRoom);
+// ADMIN-ONLY ROUTES 
+router.post('/', protectAdmin, createRoom);
+router.put('/:id', protectAdmin, updateRoom);
+router.patch('/:id/availability', protectAdmin, toggleRoomAvailability);
+router.delete('/:id', protectAdmin, deleteRoom);
 
 export default router;

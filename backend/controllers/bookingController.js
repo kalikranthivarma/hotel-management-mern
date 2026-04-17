@@ -111,8 +111,8 @@ const updateBookingStatus = async (req, res, next) => {
       throw new Error('Booking not found');
     }
 
-    // Check ownership if not admin
-    if (req.user && booking.user.toString() !== req.user._id.toString()) {
+    // Guests can only update their own bookings; admins can update any booking
+    if (req.user.role === 'guest' && booking.user.toString() !== req.user._id.toString()) {
       res.status(401);
       throw new Error('Not authorized to update this booking');
     }

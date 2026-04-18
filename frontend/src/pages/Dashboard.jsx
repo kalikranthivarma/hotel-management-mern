@@ -37,6 +37,16 @@ const Dashboard = () => {
           copy: "Review and update reservation statuses.",
           to: "/admin/bookings",
         },
+        {
+          title: "Dining Orders",
+          copy: "Track live dining requests and update order status.",
+          to: "/admin/dining-orders",
+        },
+        {
+          title: "Manage Menu",
+          copy: "Create, edit, and remove dishes from the dining menu.",
+          to: "/admin/menu",
+        },
       ]
     : [
         {

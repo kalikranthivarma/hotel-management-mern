@@ -50,15 +50,17 @@ const Navbar = () => {
       return [
         { to: "/", label: "Home" },
         { to: "/dashboard", label: "Dashboard" },
-        { to: "/rooms", label: "Manage Rooms" },
+        { to: "/admin/manage-rooms", label: "Manage Rooms" },
         { to: "/admin/bookings", label: "All Bookings" },
+        { to: "/admin/dining-orders", label: "Dining Orders" },
+        { to: "/admin/menu", label: "Manage Menu" },
       ];
     }
 
     const links = [
       { to: "/#hotels", label: "Hotels" },
       { to: "/rooms", label: "Rooms" },
-      { to: "/#deals", label: "Dining" },
+      { to: "/dining", label: "Dining" },
     ];
 
     if (user) {

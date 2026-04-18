@@ -1,4 +1,5 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { useSelector } from "react-redux";
 import Navbar from "./components/Navbar";
 import AdminRegister from "./pages/AdminRegister";
 import Dashboard from "./pages/Dashboard";
@@ -14,7 +15,22 @@ import RoomDetails from "./pages/RoomDetails";
 import BookingHistory from "./pages/BookingHistory";
 import AdminBookings from "./pages/AdminBookings";
 import ManageRooms from "./pages/ManageRooms";
+import Dining from "./pages/Dining";
+import AdminDiningOrders from "./pages/AdminDiningOrders";
+import AdminMenuManagement from "./pages/AdminMenuManagement";
 import PrivateRoute from "./routes/PrivateRoute";
+
+const adminRoles = ["admin", "superAdmin"];
+
+const RoomsEntryRoute = () => {
+  const role = useSelector((state) => state.auth.user?.role);
+
+  if (adminRoles.includes(role)) {
+    return <Navigate to="/admin/manage-rooms" replace />;
+  }
+
+  return <Rooms />;
+};
 
 function App() {
   return (
@@ -34,12 +50,13 @@ function App() {
           <Route path="/admin/verify-email/:token" element={<VerifyEmail />} />
           <Route path="/user/reset-password/:token" element={<ResetPassword />} />
           <Route path="/admin/reset-password/:token" element={<ResetPassword />} />
-          <Route path="/rooms" element={<Rooms />} />
+          <Route path="/rooms" element={<RoomsEntryRoute />} />
+          <Route path="/dining" element={<Dining />} />
           <Route path="/room/:id" element={<RoomDetails />} />
           <Route
             path="/bookings"
             element={
-              <PrivateRoute>
+              <PrivateRoute allowedRoles={["guest"]}>
                 <BookingHistory />
               </PrivateRoute>
             }
@@ -47,7 +64,7 @@ function App() {
           <Route
             path="/admin/bookings"
             element={
-              <PrivateRoute>
+              <PrivateRoute allowedRoles={adminRoles}>
                 <AdminBookings />
               </PrivateRoute>
             }
@@ -55,8 +72,24 @@ function App() {
           <Route
             path="/admin/manage-rooms"
             element={
-              <PrivateRoute>
+              <PrivateRoute allowedRoles={adminRoles}>
                 <ManageRooms />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin/dining-orders"
+            element={
+              <PrivateRoute allowedRoles={adminRoles}>
+                <AdminDiningOrders />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin/menu"
+            element={
+              <PrivateRoute allowedRoles={adminRoles}>
+                <AdminMenuManagement />
               </PrivateRoute>
             }
           />

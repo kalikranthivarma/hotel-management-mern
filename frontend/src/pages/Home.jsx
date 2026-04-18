@@ -236,7 +236,7 @@ function HotelsSection() {
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
                 <div className="rounded-2xl bg-luxe-smoke px-4 py-3 text-sm">{h.rooms}</div>
                 <div className="rounded-2xl bg-luxe-smoke px-4 py-3 text-sm">{h.checkin}</div>
-                <div className="rounded-2xl bg-luxe-smoke px-4 py-3 text-sm">{h.dining}</div>
+                <Link to="/dining" className="rounded-2xl bg-luxe-smoke px-4 py-3 text-sm transition hover:bg-luxe-charcoal hover:text-white">{h.dining}</Link>
                 <div className="rounded-2xl bg-luxe-smoke px-4 py-3 text-sm">{h.banquet}</div>
               </div>
               <div className="mt-6 rounded-2xl border border-luxe-border px-4 py-4 text-sm leading-7 text-luxe-muted">
@@ -301,7 +301,9 @@ function DealsSection() {
                 <p className="mt-5 text-xs font-bold uppercase tracking-[0.25em] text-luxe-bronze">Validity</p>
                 <p className="mt-2 font-semibold">{deal.validity}</p>
                 <div className="mt-6 flex gap-3">
-                  <button className="rounded-full border border-luxe-border px-4 py-3 text-sm font-semibold">Know More</button>
+                  <Link to="/dining" className="rounded-full border border-luxe-border px-4 py-3 text-sm font-semibold">
+                    Know More
+                  </Link>
                   <Link to="/login" className="rounded-full bg-luxe-bronze px-4 py-3 text-sm font-semibold text-white">
                     Login / Join
                   </Link>

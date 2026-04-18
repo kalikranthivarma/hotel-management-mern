@@ -9,6 +9,7 @@ const inputClass =
 const BookingForm = ({ roomId, pricePerNight }) => {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
+  const isAdmin = user?.role === "admin" || user?.role === "superAdmin";
 
   const [dates, setDates] = useState({
     checkInDate: "",
@@ -43,6 +44,11 @@ const BookingForm = ({ roomId, pricePerNight }) => {
     e.preventDefault();
     if (!user) {
       navigate("/login");
+      return;
+    }
+
+    if (isAdmin) {
+      setError("Staff accounts cannot create bookings. Please use a guest account to book a room.");
       return;
     }
 
@@ -126,12 +132,14 @@ const BookingForm = ({ roomId, pricePerNight }) => {
         <button
           type="submit"
           className="w-full rounded-2xl bg-luxe-bronze px-5 py-3.5 font-semibold text-white transition hover:bg-luxe-charcoal disabled:cursor-wait disabled:opacity-70"
-          disabled={loading}
+          disabled={loading || isAdmin}
         >
-          {loading ? "Processing..." : user ? "Reserve Now" : "Login to Book"}
+          {loading ? "Processing..." : isAdmin ? "Staff Cannot Book" : user ? "Reserve Now" : "Login to Book"}
         </button>
 
-        <p className="text-center text-sm text-luxe-muted">You will not be charged yet.</p>
+        <p className="text-center text-sm text-luxe-muted">
+          {isAdmin ? "Switch to a guest account to make a reservation." : "You will not be charged yet."}
+        </p>
       </form>
     </div>
   );

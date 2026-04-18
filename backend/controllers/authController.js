@@ -1,72 +1,131 @@
 import crypto from 'crypto';
+import Admin from '../models/Admin.js';
 import User from '../models/User.js';
 import generateToken from '../utils/generateToken.js';
 import sendEmail from '../utils/sendEmail.js';
 
-// ─── PRIVATE HELPERS ──────────────────────────────────────────────────────────
+// ─── HELPER: shared OTP + email logic ───────────────────────────────────────
 
-// Generates a raw token for emails and its hashed counterpart for DB storage
-const createToken = () => {
-  const raw = crypto.randomBytes(32).toString('hex');
-  const hashed = crypto.createHash('sha256').update(raw).digest('hex');
-  return { raw, hashed };
+const generateOTP = () => {
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  return otp;
 };
 
-// Maps internal role to the URL segment used in frontend links
-const urlRole = (role) => (role === 'guest' ? 'user' : 'admin');
-
-const sendVerificationEmail = async (email, role, rawToken) => {
-  const verifyUrl = `${process.env.FRONTEND_URL}/${urlRole(role)}/verify-email/${rawToken}`;
+const sendOTPEmail = async (email, name, role, otp, isReset = false) => {
+  const action = isReset ? 'Reset Your Password' : 'Verify Your Email';
   const html = `
-    <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto">
-      <h2 style="color:#1a3c5e">Welcome to Hotel Management 🏨</h2>
-      <p>You have registered as a <strong>${urlRole(role)}</strong>. Please verify your email:</p>
-      <a href="${verifyUrl}" style="display:inline-block;padding:12px 24px;background:#1a3c5e;color:#fff;border-radius:6px;text-decoration:none;">
-        Verify Email
-      </a>
-      <p style="color:#888;font-size:12px;margin-top:20px">This link expires in 24 hours.</p>
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;border:1px solid #ddd;padding:20px;border-radius:10px;">
+      <h2 style="color:#1a3c5e;text-align:center;">Hotel Management 🏨</h2>
+      <h3 style="text-align:center;">${action}</h3>
+      <p>Hello <strong>${name}</strong>,</p>
+      <p>Your 6-digit One-Time Password (OTP) is:</p>
+      <div style="text-align:center;margin:30px 0;">
+        <span style="display:inline-block;padding:15px 30px;background:#f4f4f4;border:2px dashed #1a3c5e;font-size:24px;font-weight:bold;letter-spacing:5px;color:#1a3c5e;">
+          ${otp}
+        </span>
+      </div>
+      <p style="text-align:center;color:#888;font-size:14px;">This OTP is valid for 10 minutes.</p>
     </div>
   `;
-  await sendEmail({ email, subject: 'Hotel Management – Verify Your Email', html });
+  await sendEmail({ email, subject: `Hotel Management – ${action}`, html });
 };
 
-const sendResetEmail = async (email, role, rawToken) => {
-  const resetUrl = `${process.env.FRONTEND_URL}/${urlRole(role)}/reset-password/${rawToken}`;
-  const html = `
-    <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto">
-      <h2 style="color:#1a3c5e">Password Reset Request 🔑</h2>
-      <p>Click the link below to reset your password. This link expires in <strong>10 minutes</strong>.</p>
-      <a href="${resetUrl}" style="display:inline-block;padding:12px 24px;background:#c0392b;color:#fff;border-radius:6px;text-decoration:none;">
-        Reset Password
-      </a>
-      <p style="color:#888;font-size:12px;margin-top:20px">If you did not request this, please ignore this email.</p>
-    </div>
-  `;
-  await sendEmail({ email, subject: 'Hotel Management – Password Reset', html });
-};
+// ─── USER (GUEST) CONTROLLERS ─────────────────────────────────────────────────
 
-// ─── CORE REUSABLE LOGIC ──────────────────────────────────────────────────────
-
-// Shared registration logic — called by registerUser and registerAdmin
-const registerAccount = async (req, res, next, role) => {
+// Step 1: Send OTP to User
+const registerUserStep1 = async (req, res, next) => {
   try {
-    const {
-      firstName, lastName, email, password, confirmPassword,
-      phone, address, idProof, employeeId, department,
-    } = req.body;
+    const { firstName, lastName, email } = req.body;
 
-    const isStaff = role !== 'guest';
-
-    // Required for everyone
-    if (!firstName || !lastName || !email || !password || !confirmPassword || !phone) {
+    if (!firstName || !lastName || !email) {
       res.status(400);
-      throw new Error('Please fill in all required fields');
+      throw new Error('Please provide first name, last name, and email');
     }
 
-    // Required for staff only
-    if (isStaff && (!employeeId || !department)) {
+    const emailLower = email.toLowerCase();
+    let user = await User.findOne({ email: emailLower });
+
+    if (user && user.verified && user.password) {
+      res.status(409);
+      throw new Error('An account with this email already exists and is fully registered.');
+    }
+
+    const otp = generateOTP();
+    const otpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+    if (!user) {
+      user = await User.create({
+        firstName,
+        lastName,
+        email: emailLower,
+        verified: false,
+        otp,
+        otpExpires,
+      });
+    } else {
+      user.firstName = firstName;
+      user.lastName = lastName;
+      user.otp = otp;
+      user.otpExpires = otpExpires;
+      await user.save({ validateBeforeSave: false });
+    }
+
+    try {
+      await sendOTPEmail(user.email, user.firstName, 'user', otp, false);
+      res.status(200).json({ success: true, message: 'OTP sent to your email.' });
+    } catch (err) {
+      user.otp = undefined;
+      user.otpExpires = undefined;
+      await user.save({ validateBeforeSave: false });
+      res.status(500);
+      throw new Error('Email could not be sent. Contact support.');
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Step 2: Verify User OTP
+const verifyUserOTP = async (req, res, next) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
       res.status(400);
-      throw new Error('Employee ID and department are required for staff accounts');
+      throw new Error('Please provide email and OTP');
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() }).select('+otp +otpExpires');
+
+    if (!user) {
+      res.status(404);
+      throw new Error('Account not found');
+    }
+
+    if (user.otp !== otp || user.otpExpires < Date.now()) {
+      res.status(400);
+      throw new Error('Invalid or expired OTP');
+    }
+
+    user.verified = true;
+    user.otp = undefined;
+    user.otpExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+
+    res.status(200).json({ success: true, message: 'Email verified successfully! You can now proceed.' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Step 3: Complete User Registration
+const registerUserStep3 = async (req, res, next) => {
+  try {
+    const { email, phone, address, idProof, password, confirmPassword } = req.body;
+
+    if (!email || !phone || !password || !confirmPassword) {
+      res.status(400);
+      throw new Error('Please fill in all required fields');
     }
 
     if (password !== confirmPassword) {
@@ -74,62 +133,45 @@ const registerAccount = async (req, res, next, role) => {
       throw new Error('Passwords do not match');
     }
 
-    if (await User.findOne({ email: email.toLowerCase() })) {
-      res.status(409);
-      throw new Error('An account with this email already exists');
+    const user = await User.findOne({ email: email.toLowerCase() });
+
+    if (!user) {
+      res.status(404);
+      throw new Error('Account not found');
     }
 
-    if (isStaff && (await User.findOne({ employeeId }))) {
-      res.status(409);
-      throw new Error('This Employee ID is already registered');
+    if (!user.verified) {
+      res.status(401);
+      throw new Error('Please verify your email first');
     }
 
-    const { raw, hashed } = !isStaff ? createToken() : { raw: undefined, hashed: undefined };
+    user.phone = phone;
+    user.address = address;
+    user.idProof = idProof;
+    user.password = password;
+    await user.save(); // Password will be hashed by pre-save hook 
 
-    const user = await User.create({
-      firstName,
-      lastName,
-      email: email.toLowerCase(),
-      password,
-      phone,
-      role,
-      // Guest-only
-      ...(role === 'guest' && { address, idProof }),
-      // Staff-only
-      ...(isStaff && { employeeId, department }),
-      verified: isStaff, // Auto-verify staff
-      verificationToken: hashed,
-      verificationTokenExpires: hashed ? Date.now() + 24 * 60 * 60 * 1000 : undefined,
+    const token = generateToken(user._id, 'user');
+
+    res.status(201).json({
+      success: true,
+      message: 'Registration completed successfully!',
+      token,
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone,
+        loyaltyPoints: user.loyaltyPoints,
+      },
     });
-
-    if (isStaff) {
-      return res.status(201).json({
-        success: true,
-        message: 'Admin registration successful! You can now log in.',
-      });
-    }
-
-    try {
-      await sendVerificationEmail(user.email, role, raw);
-      res.status(201).json({
-        success: true,
-        message: 'Registration successful! Please check your email to verify your account.',
-      });
-    } catch (emailErr) {
-      // If email fails, clean up the token but keep the account
-      user.verificationToken = undefined;
-      user.verificationTokenExpires = undefined;
-      await user.save({ validateBeforeSave: false });
-      res.status(500);
-      throw new Error('Account created but verification email could not be sent. Contact support.');
-    }
   } catch (error) {
     next(error);
   }
 };
 
-// Shared login logic — allowedRoles determines who can log in via this endpoint
-const loginAccount = async (req, res, next, allowedRoles) => {
+const loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
@@ -145,61 +187,52 @@ const loginAccount = async (req, res, next, allowedRoles) => {
       throw new Error('Invalid email or password');
     }
 
-    // Block wrong account type from using the wrong login endpoint
-    if (!allowedRoles.includes(user.role)) {
-      res.status(403);
-      throw new Error('Access denied: incorrect account type for this login');
-    }
-
     if (!user.verified) {
       res.status(401);
       throw new Error('Please verify your email before logging in');
     }
 
-    const token = generateToken(user._id, user.role);
+    const token = generateToken(user._id, 'user');
 
-    // Build response — include role-specific extra fields
-    const userData = {
-      id: user._id,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      role: user.role,
-      phone: user.phone,
-    };
-    if (user.role === 'guest') userData.loyaltyPoints = user.loyaltyPoints;
-    if (user.role !== 'guest') {
-      userData.employeeId = user.employeeId;
-      userData.department = user.department;
-    }
-
-    res.status(200).json({ success: true, message: 'Login successful!', token, user: userData });
+    res.status(200).json({
+      success: true,
+      message: 'Welcome back!',
+      token,
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone,
+        loyaltyPoints: user.loyaltyPoints,
+      },
+    });
   } catch (error) {
     next(error);
   }
 };
 
-// Shared forgot password logic
-const forgotPasswordAccount = async (req, res, next, role) => {
+const forgotUserPassword = async (req, res, next) => {
   try {
-    const user = await User.findOne({ email: req.body.email?.toLowerCase() });
+    const { email } = req.body;
+    const user = await User.findOne({ email: email?.toLowerCase() });
 
     if (!user) {
       res.status(404);
-      throw new Error('No account found with that email');
+      throw new Error('No guest account found with that email');
     }
 
-    const { raw, hashed } = createToken();
-    user.resetPasswordToken = hashed;
-    user.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
+    const otp = generateOTP();
+    user.resetPasswordOtp = otp;
+    user.resetPasswordOtpExpires = Date.now() + 10 * 60 * 1000;
     await user.save({ validateBeforeSave: false });
 
     try {
-      await sendResetEmail(user.email, role, raw);
-      res.status(200).json({ success: true, message: 'Reset link sent to your email' });
-    } catch (emailErr) {
-      user.resetPasswordToken = undefined;
-      user.resetPasswordExpire = undefined;
+      await sendOTPEmail(user.email, user.firstName, 'user', otp, true);
+      res.status(200).json({ success: true, message: 'Password reset OTP sent to your email.' });
+    } catch (err) {
+      user.resetPasswordOtp = undefined;
+      user.resetPasswordOtpExpires = undefined;
       await user.save({ validateBeforeSave: false });
       res.status(500);
       throw new Error('Email could not be sent');
@@ -209,55 +242,35 @@ const forgotPasswordAccount = async (req, res, next, role) => {
   }
 };
 
-// ─── SHARED CONTROLLERS (used by both user & admin routes) ────────────────────
-
-// Verify email — works for both guests and staff via the same token logic
-const verifyEmail = async (req, res, next) => {
+const resetUserPassword = async (req, res, next) => {
   try {
-    const hashed = crypto.createHash('sha256').update(req.params.token).digest('hex');
-    const user = await User.findOne({
-      verificationToken: hashed,
-      verificationTokenExpires: { $gt: Date.now() },
-    });
+    const { email, otp, password, confirmPassword } = req.body;
 
-    if (!user) {
+    if (!email || !otp || !password || !confirmPassword) {
       res.status(400);
-      throw new Error('Invalid or expired verification link');
+      throw new Error('Please provide all details');
     }
 
-    user.verified = true;
-    user.verificationToken = undefined;
-    user.verificationTokenExpires = undefined;
-    await user.save();
-
-    res.status(200).json({ success: true, message: 'Email verified! You can now log in.' });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// Reset password — works for both guests and staff
-const resetPassword = async (req, res, next) => {
-  try {
-    const hashed = crypto.createHash('sha256').update(req.params.token).digest('hex');
-    const user = await User.findOne({
-      resetPasswordToken: hashed,
-      resetPasswordExpire: { $gt: Date.now() },
-    });
+    const user = await User.findOne({ email: email.toLowerCase() }).select('+resetPasswordOtp +resetPasswordOtpExpires');
 
     if (!user) {
-      res.status(400);
-      throw new Error('Invalid or expired reset token');
+      res.status(404);
+      throw new Error('User not found');
     }
 
-    if (!req.body.password || req.body.password !== req.body.confirmPassword) {
+    if (user.resetPasswordOtp !== otp || user.resetPasswordOtpExpires < Date.now()) {
+      res.status(400);
+      throw new Error('Invalid or expired OTP');
+    }
+
+    if (password !== confirmPassword) {
       res.status(400);
       throw new Error('Passwords do not match');
     }
 
-    user.password = req.body.password;
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpire = undefined;
+    user.password = password;
+    user.resetPasswordOtp = undefined;
+    user.resetPasswordOtpExpires = undefined;
     await user.save();
 
     res.status(200).json({ success: true, message: 'Password updated successfully' });
@@ -266,67 +279,271 @@ const resetPassword = async (req, res, next) => {
   }
 };
 
-// Resend verification email
-const resendVerificationEmail = async (req, res, next) => {
+// ─── ADMIN (STAFF) CONTROLLERS ────────────────────────────────────────────────
+
+// Step 1: Send OTP to Admin
+const registerAdminStep1 = async (req, res, next) => {
   try {
-    const { email } = req.body;
+    const { firstName, lastName, email } = req.body;
 
-    if (!email) {
+    if (!firstName || !lastName || !email) {
       res.status(400);
-      throw new Error('Please provide your email');
+      throw new Error('Please provide first name, last name, and email');
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const emailLower = email.toLowerCase();
+    let admin = await Admin.findOne({ email: emailLower });
 
-    if (!user) {
-      res.status(404);
-      throw new Error('No account found with that email');
+    if (admin && admin.verified && admin.password) {
+      res.status(409);
+      throw new Error('A staff account with this email already exists and is fully registered.');
     }
 
-    if (user.verified) {
-      res.status(400);
-      throw new Error('Account is already verified. You can log in.');
-    }
+    const otp = generateOTP();
+    const otpExpires = Date.now() + 10 * 60 * 1000;
 
-    const { raw, hashed } = createToken();
-    user.verificationToken = hashed;
-    user.verificationTokenExpires = Date.now() + 24 * 60 * 60 * 1000;
-    await user.save({ validateBeforeSave: false });
+    if (!admin) {
+      admin = await Admin.create({
+        firstName,
+        lastName,
+        email: emailLower,
+        verified: false,
+        otp,
+        otpExpires,
+      });
+    } else {
+      admin.firstName = firstName;
+      admin.lastName = lastName;
+      admin.otp = otp;
+      admin.otpExpires = otpExpires;
+      await admin.save({ validateBeforeSave: false });
+    }
 
     try {
-      await sendVerificationEmail(user.email, user.role, raw);
-      res.status(200).json({ success: true, message: 'Verification link resent to your email.' });
-    } catch (emailErr) {
-      user.verificationToken = undefined;
-      user.verificationTokenExpires = undefined;
-      await user.save({ validateBeforeSave: false });
+      await sendOTPEmail(admin.email, admin.firstName, 'admin', otp, false);
+      res.status(200).json({ success: true, message: 'OTP sent to your email.' });
+    } catch (err) {
+      admin.otp = undefined;
+      admin.otpExpires = undefined;
+      await admin.save({ validateBeforeSave: false });
       res.status(500);
-      throw new Error('Email could not be sent. Please try again.');
+      throw new Error('Email could not be sent.');
     }
   } catch (error) {
     next(error);
   }
 };
 
-// ─── EXPORTED ROUTE HANDLERS ──────────────────────────────────────────────────
+// Step 2: Verify Admin OTP
+const verifyAdminOTP = async (req, res, next) => {
+  try {
+    const { email, otp } = req.body;
 
-const registerUser  = (req, res, next) => registerAccount(req, res, next, 'guest');
-const registerAdmin = (req, res, next) => registerAccount(req, res, next, 'admin');
+    if (!email || !otp) {
+      res.status(400);
+      throw new Error('Please provide email and OTP');
+    }
 
-const loginUser  = (req, res, next) => loginAccount(req, res, next, ['guest', 'admin', 'superAdmin']);
-const loginAdmin = (req, res, next) => loginAccount(req, res, next, ['admin', 'superAdmin']);
+    const admin = await Admin.findOne({ email: email.toLowerCase() }).select('+otp +otpExpires');
 
-const forgotUserPassword  = (req, res, next) => forgotPasswordAccount(req, res, next, 'guest');
-const forgotAdminPassword = (req, res, next) => forgotPasswordAccount(req, res, next, 'admin');
+    if (!admin) {
+      res.status(404);
+      throw new Error('Staff account not found');
+    }
+
+    if (admin.otp !== otp || admin.otpExpires < Date.now()) {
+      res.status(400);
+      throw new Error('Invalid or expired OTP');
+    }
+
+    admin.verified = true;
+    admin.otp = undefined;
+    admin.otpExpires = undefined;
+    await admin.save({ validateBeforeSave: false });
+
+    res.status(200).json({ success: true, message: 'Email verified successfully! You can now proceed.' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Step 3: Complete Admin Registration
+const registerAdminStep3 = async (req, res, next) => {
+  try {
+    const { email, phone, employeeId, department, password, confirmPassword } = req.body;
+
+    if (!email || !phone || !employeeId || !department || !password || !confirmPassword) {
+      res.status(400);
+      throw new Error('Please fill in all required fields');
+    }
+
+    if (password !== confirmPassword) {
+      res.status(400);
+      throw new Error('Passwords do not match');
+    }
+
+    const admin = await Admin.findOne({ email: email.toLowerCase() });
+
+    if (!admin) {
+      res.status(404);
+      throw new Error('Account not found');
+    }
+
+    if (!admin.verified) {
+      res.status(401);
+      throw new Error('Please verify your email first');
+    }
+
+    if (await Admin.findOne({ employeeId })) {
+      res.status(409);
+      throw new Error('This Employee ID is already registered');
+    }
+
+    admin.phone = phone;
+    admin.employeeId = employeeId;
+    admin.department = department;
+    admin.password = password;
+    await admin.save();
+
+    const token = generateToken(admin._id, 'admin');
+
+    res.status(201).json({
+      success: true,
+      message: 'Staff registration completed successfully!',
+      token,
+      admin: {
+        id: admin._id,
+        firstName: admin.firstName,
+        lastName: admin.lastName,
+        email: admin.email,
+        department: admin.department,
+        employeeId: admin.employeeId,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const loginAdmin = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      res.status(400);
+      throw new Error('Please provide your email and password');
+    }
+
+    const admin = await Admin.findOne({ email: email.toLowerCase() }).select('+password');
+
+    if (!admin || !(await admin.matchPassword(password))) {
+      res.status(401);
+      throw new Error('Invalid email or password');
+    }
+
+    if (!admin.verified) {
+      res.status(401);
+      throw new Error('Please verify your email before logging in');
+    }
+
+    const token = generateToken(admin._id, 'admin');
+
+    res.status(200).json({
+      success: true,
+      message: 'Welcome, Staff Member!',
+      token,
+      admin: {
+        id: admin._id,
+        firstName: admin.firstName,
+        lastName: admin.lastName,
+        email: admin.email,
+        department: admin.department,
+        employeeId: admin.employeeId,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const forgotAdminPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const admin = await Admin.findOne({ email: email?.toLowerCase() });
+
+    if (!admin) {
+      res.status(404);
+      throw new Error('No staff account found with that email');
+    }
+
+    const otp = generateOTP();
+    admin.resetPasswordOtp = otp;
+    admin.resetPasswordOtpExpires = Date.now() + 10 * 60 * 1000;
+    await admin.save({ validateBeforeSave: false });
+
+    try {
+      await sendOTPEmail(admin.email, admin.firstName, 'admin', otp, true);
+      res.status(200).json({ success: true, message: 'Password reset OTP sent to your email.' });
+    } catch (err) {
+      admin.resetPasswordOtp = undefined;
+      admin.resetPasswordOtpExpires = undefined;
+      await admin.save({ validateBeforeSave: false });
+      res.status(500);
+      throw new Error('Email could not be sent');
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+const resetAdminPassword = async (req, res, next) => {
+  try {
+    const { email, otp, password, confirmPassword } = req.body;
+
+    if (!email || !otp || !password || !confirmPassword) {
+      res.status(400);
+      throw new Error('Please provide all details');
+    }
+
+    const admin = await Admin.findOne({ email: email.toLowerCase() }).select('+resetPasswordOtp +resetPasswordOtpExpires');
+
+    if (!admin) {
+      res.status(404);
+      throw new Error('Staff not found');
+    }
+
+    if (admin.resetPasswordOtp !== otp || admin.resetPasswordOtpExpires < Date.now()) {
+      res.status(400);
+      throw new Error('Invalid or expired OTP');
+    }
+
+    if (password !== confirmPassword) {
+      res.status(400);
+      throw new Error('Passwords do not match');
+    }
+
+    admin.password = password;
+    admin.resetPasswordOtp = undefined;
+    admin.resetPasswordOtpExpires = undefined;
+    await admin.save();
+
+    res.status(200).json({ success: true, message: 'Password updated successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
 
 export {
   forgotAdminPassword,
   forgotUserPassword,
   loginAdmin,
   loginUser,
-  registerAdmin,
-  registerUser,
-  resendVerificationEmail,
-  resetPassword,
-  verifyEmail,
+  registerAdminStep1,
+  registerAdminStep3,
+  registerUserStep1,
+  registerUserStep3,
+  resetAdminPassword,
+  resetUserPassword,
+  verifyAdminOTP,
+  verifyUserOTP,
 };

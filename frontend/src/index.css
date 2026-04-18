@@ -1,19 +1,29 @@
+@import url('https://fonts.googleapis.com/css2?family=Tenor+Sans&family=Montserrat:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
+/* ── Design Tokens ─────────────────────────────────────── */
 :root {
-  color: #1b1732;
-  background-color: #fdfcfc;
+  --ivory:        #FAFAF8;
+  --charcoal:     #1C1C1C;
+  --bronze:       #B8956A;
+  --bronze-light: #D4B08A;
+  --smoke:        #F2F0EC;
+  --muted:        #8A8580;
+  --border:       #E8E4DF;
+  --white:        #FFFFFF;
+
+  font-family: 'Montserrat', sans-serif;
+  color: var(--charcoal);
+  background-color: var(--ivory);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  font-family: "Montserrat", sans-serif;
-  background:
-    radial-gradient(circle at 8% -10%, rgba(76, 44, 146, 0.07), transparent 35%),
-    radial-gradient(circle at 92% 0%, rgba(166, 151, 211, 0.12), transparent 32%),
-    #fdfcfc;
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; }
+body { min-width: 320px; background-color: var(--ivory); color: var(--charcoal); }
+button, input, select, textarea { font: inherit; }
+a { text-decoration: none; color: inherit; }
+#root { min-height: 100vh; }

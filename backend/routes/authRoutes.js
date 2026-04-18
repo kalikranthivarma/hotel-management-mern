@@ -4,28 +4,32 @@ import {
   forgotUserPassword,
   loginAdmin,
   loginUser,
-  registerAdmin,
-  registerUser,
-  resendVerificationEmail,
-  resetPassword,
-  verifyEmail,
+  registerAdminStep1,
+  registerAdminStep3,
+  registerUserStep1,
+  registerUserStep3,
+  resetAdminPassword,
+  resetUserPassword,
+  verifyAdminOTP,
+  verifyUserOTP,
 } from '../controllers/authController.js';
 
 const router = express.Router();
 
 // ─── GUEST (USER) ROUTES ──────────────────────────────────────────────────────
-router.post('/user/register', registerUser);
-router.post('/user/resend-verification', resendVerificationEmail);
-router.get('/user/verify-email/:token', verifyEmail);
+router.post('/user/register-step-1', registerUserStep1);
+router.post('/user/verify-otp', verifyUserOTP);
+router.post('/user/register-step-3', registerUserStep3);
 router.post('/user/login', loginUser);
 router.post('/user/forgot-password', forgotUserPassword);
-router.put('/user/reset-password/:token', resetPassword);
+router.post('/user/reset-password', resetUserPassword); 
 
 // ─── STAFF (ADMIN) ROUTES ─────────────────────────────────────────────────────
-router.post('/admin/register', registerAdmin);
-router.get('/admin/verify-email/:token', verifyEmail);
+router.post('/admin/register-step-1', registerAdminStep1);
+router.post('/admin/verify-otp', verifyAdminOTP);
+router.post('/admin/register-step-3', registerAdminStep3);
 router.post('/admin/login', loginAdmin);
 router.post('/admin/forgot-password', forgotAdminPassword);
-router.put('/admin/reset-password/:token', resetPassword);
+router.post('/admin/reset-password', resetAdminPassword); 
 
 export default router;

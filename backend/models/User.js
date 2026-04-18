@@ -27,13 +27,11 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: [true, 'Password is required'],
       minlength: 6,
       select: false,
     },
     phone: {
       type: String,
-      required: [true, 'Phone number is required'],
       trim: true,
     },
 
@@ -45,13 +43,7 @@ const userSchema = new mongoose.Schema(
     },
 
     // ─── Guest-Only Fields ────────────────────────────────────────────────────
-    address: {
-      street: { type: String, trim: true },
-      city: { type: String, trim: true },
-      state: { type: String, trim: true },
-      zip: { type: String, trim: true },
-      country: { type: String, trim: true },
-    },
+    address: { type: String, trim: true },
     idProof: { type: String, trim: true },
     loyaltyPoints: { type: Number, default: 0 },
 
@@ -74,6 +66,12 @@ const userSchema = new mongoose.Schema(
     verificationTokenExpires: Date,
     resetPasswordToken: String,
     resetPasswordExpire: Date,
+
+    // ─── OTP Fields ──────────────────────────────────────────────────────────
+    otp: { type: String, select: false },
+    otpExpires: { type: Date, select: false },
+    resetPasswordOtp: { type: String, select: false },
+    resetPasswordOtpExpires: { type: Date, select: false },
   },
   { timestamps: true }
 );

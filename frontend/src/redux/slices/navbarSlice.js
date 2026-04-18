@@ -25,4 +25,3 @@ export const { toggleMobileMenu, closeMobileMenu, toggleAuth } =
   navbarSlice.actions
 
 export default navbarSlice.reducer
-

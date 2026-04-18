@@ -4,7 +4,6 @@ import Loader from "../components/Loader";
 import "../styles/Admin.css";
 import "../styles/Rooms.css";
 
-
 const ManageRooms = () => {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,10 +19,11 @@ const ManageRooms = () => {
 
   const fetchRooms = async () => {
     try {
-      const { data } = await getAllRooms();
-      setRooms(data.rooms);
+      const data = await getAllRooms();
+      setRooms(Array.isArray(data?.rooms) ? data.rooms : []);
     } catch (err) {
       console.error(err);
+      setRooms([]);
     } finally {
       setLoading(false);
     }
@@ -47,9 +47,9 @@ const ManageRooms = () => {
         title: room.title,
         type: room.type,
         pricePerNight: room.pricePerNight,
-        maxPeople: room.maxPeople,
-        desc: room.desc,
-        image: room.image || ""
+        maxPeople: room.maxGuests,
+        desc: room.description,
+        image: room.images?.[0] || ""
       });
     } else {
       setEditingRoom(null);
@@ -61,14 +61,29 @@ const ManageRooms = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const payload = {
+        title: formData.title,
+        type: String(formData.type || "").toLowerCase(),
+        pricePerNight: Number(formData.pricePerNight),
+        maxGuests: Number(formData.maxPeople),
+        description: formData.desc,
+        images: formData.image ? [formData.image] : [],
+        roomNumber: editingRoom?.roomNumber || `RM-${Date.now()}`,
+        bedType: editingRoom?.bedType || "queen",
+        floor: editingRoom?.floor ?? 1,
+        size: editingRoom?.size ?? 300,
+        amenities: editingRoom?.amenities || [],
+      };
+
       if (editingRoom) {
-        await updateRoom(editingRoom._id, formData);
+        await updateRoom(editingRoom._id, payload);
       } else {
-        await createRoom(formData);
+        await createRoom(payload);
       }
       setShowModal(false);
       fetchRooms();
     } catch (err) {
+      console.error(err);
       alert("Error saving room");
     }
   };
@@ -102,12 +117,12 @@ const ManageRooms = () => {
               {rooms.map((room) => (
                 <tr key={room._id}>
                   <td>
-                    <img src={room.image || "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=50"} alt={room.title} className="thumb" />
+                    <img src={room.images?.[0] || "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=50"} alt={room.title} className="thumb" />
                   </td>
                   <td><strong>{room.title}</strong></td>
                   <td>{room.type}</td>
-                  <td>₹{room.pricePerNight}</td>
-                  <td>{room.maxPeople} Guests</td>
+                  <td>Rs {room.pricePerNight}</td>
+                  <td>{room.maxGuests} Guests</td>
                   <td className="actions-cell">
                     <button className="edit-link" onClick={() => handleOpenModal(room)}>Edit</button>
                     <button className="delete-link" onClick={() => handleDelete(room._id)}>Delete</button>
@@ -132,10 +147,12 @@ const ManageRooms = () => {
                     <label>Type</label>
                     <select value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})} required>
                       <option value="">Select Type</option>
-                      <option value="Single">Single</option>
-                      <option value="Double">Double</option>
-                      <option value="Suite">Suite</option>
-                      <option value="Penthouse">Penthouse</option>
+                      <option value="single">Single</option>
+                      <option value="double">Double</option>
+                      <option value="deluxe">Deluxe</option>
+                      <option value="suite">Suite</option>
+                      <option value="family">Family</option>
+                      <option value="presidential">Presidential</option>
                     </select>
                   </div>
                   <div className="form-group">

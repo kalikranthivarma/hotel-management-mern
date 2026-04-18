@@ -84,7 +84,7 @@ const registerAccount = async (req, res, next, role) => {
       throw new Error('This Employee ID is already registered');
     }
 
-    const { raw, hashed } = createToken();
+    const { raw, hashed } = !isStaff ? createToken() : { raw: undefined, hashed: undefined };
 
     const user = await User.create({
       firstName,
@@ -97,10 +97,17 @@ const registerAccount = async (req, res, next, role) => {
       ...(role === 'guest' && { address, idProof }),
       // Staff-only
       ...(isStaff && { employeeId, department }),
-      verified: false,
+      verified: isStaff, // Auto-verify staff
       verificationToken: hashed,
-      verificationTokenExpires: Date.now() + 24 * 60 * 60 * 1000,
+      verificationTokenExpires: hashed ? Date.now() + 24 * 60 * 60 * 1000 : undefined,
     });
+
+    if (isStaff) {
+      return res.status(201).json({
+        success: true,
+        message: 'Admin registration successful! You can now log in.',
+      });
+    }
 
     try {
       await sendVerificationEmail(user.email, role, raw);
@@ -306,7 +313,7 @@ const resendVerificationEmail = async (req, res, next) => {
 const registerUser  = (req, res, next) => registerAccount(req, res, next, 'guest');
 const registerAdmin = (req, res, next) => registerAccount(req, res, next, 'admin');
 
-const loginUser  = (req, res, next) => loginAccount(req, res, next, ['guest']);
+const loginUser  = (req, res, next) => loginAccount(req, res, next, ['guest', 'admin', 'superAdmin']);
 const loginAdmin = (req, res, next) => loginAccount(req, res, next, ['admin', 'superAdmin']);
 
 const forgotUserPassword  = (req, res, next) => forgotPasswordAccount(req, res, next, 'guest');

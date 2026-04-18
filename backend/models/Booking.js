@@ -1,45 +1,68 @@
-import mongoose from 'mongoose';
+
+import mongoose from "mongoose";
 
 const bookingSchema = new mongoose.Schema(
   {
-    room: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Room',
-      required: [true, 'Room is required'],
-    },
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: [true, 'User is required'],
+      ref: "User",
+      required: false
     },
-    checkInDate: {
+    room: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Room",
+      required: true,
+    },
+    guestName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    guestEmail: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    guestPhone: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    checkIn: {
       type: Date,
-      required: [true, 'Check-in date is required'],
+      required: true,
     },
-    checkOutDate: {
+    checkOut: {
       type: Date,
-      required: [true, 'Check-out date is required'],
+      required: true,
     },
-    totalAmount: {
+    guestsCount: {
       type: Number,
-      required: [true, 'Total amount is required'],
+      required: true,
+    },
+    totalPrice: {
+      type: Number,
+      required: true,
     },
     status: {
       type: String,
-      enum: ['Pending', 'Confirmed', 'Cancelled', 'Completed'],
-      default: 'Pending',
+      required: true,
+      enum: ["pending", "confirmed", "cancelled", "completed"],
+      default: "confirmed",
     },
     paymentStatus: {
       type: String,
-      enum: ['Pending', 'Paid', 'Failed'],
-      default: 'Pending',
+      required: true,
+      enum: ["pending", "paid", "failed"],
+      default: "pending",
+    },
+    specialRequests: {
+      type: String,
+      default: "",
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-const Booking = mongoose.model('Booking', bookingSchema);
+export default mongoose.model("Booking", bookingSchema);
 
-export default Booking;

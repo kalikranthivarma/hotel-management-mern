@@ -1,0 +1,268 @@
+/* Room Details & Booking Form — Modern Class Aesthetic */
+
+.room-details-page {
+  background-color: #FEF9F3; /* Ivory */
+  min-height: 100vh;
+  padding: 120px 0 100px;
+}
+
+.room-details-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.breadcrumb {
+  margin-bottom: 30px;
+  font-size: 14px;
+  color: #666;
+}
+
+.breadcrumb a {
+  color: #A67C52;
+  text-decoration: none;
+}
+
+.room-grid {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 50px;
+  align-items: start;
+}
+
+/* Room Content */
+.room-title {
+  font-size: 42px;
+  font-weight: 300;
+  font-family: 'Tenor Sans', sans-serif;
+  color: #1A1A1A;
+  margin-bottom: 12px;
+}
+
+.room-meta-top {
+  display: flex;
+  gap: 20px;
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 40px;
+}
+
+.room-type {
+  color: #A67C52;
+  font-weight: 600;
+}
+
+/* Gallery */
+.room-gallery {
+  margin-bottom: 50px;
+}
+
+.main-image {
+  height: 500px;
+  width: 100%;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 15px;
+}
+
+.main-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumbnail-strip {
+  display: flex;
+  gap: 15px;
+}
+
+.thumb {
+  width: 100px;
+  height: 70px;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  padding: 0;
+}
+
+.thumb.active {
+  border-color: #A67C52;
+}
+
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Sections */
+.room-section {
+  margin-bottom: 50px;
+}
+
+.section-title {
+  font-size: 24px;
+  font-weight: 400;
+  font-family: 'Tenor Sans', sans-serif;
+  margin-bottom: 20px;
+  color: #1A1A1A;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.description-text {
+  line-height: 1.8;
+  color: #444;
+}
+
+.amenities-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+
+.amenity-item {
+  font-size: 15px;
+  color: #444;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.amenity-item .icon {
+  color: #A67C52;
+}
+
+.details-table {
+  background: white;
+  padding: 20px;
+  border-radius: 4px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-row span:first-child {
+  font-weight: 600;
+  color: #666;
+}
+
+/* Booking Card & Sidebar */
+.room-sidebar {
+  position: sticky;
+  top: 100px;
+}
+
+.booking-card {
+  background: white;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 15px 45px rgba(0,0,0,0.08);
+  border: 1px solid #eee;
+}
+
+.booking-card__header {
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.booking-card__header .price {
+  font-size: 28px;
+  font-weight: 600;
+  color: #1A1A1A;
+}
+
+.booking-card__header .unit {
+  color: #666;
+  margin-left: 5px;
+}
+
+.booking-form .form-group {
+  margin-bottom: 20px;
+}
+
+.booking-form label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  color: #1A1A1A;
+}
+
+.booking-form input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  outline: none;
+}
+
+.booking-summary {
+  background: #FEF9F3;
+  padding: 15px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.summary-row.total {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #ddd;
+  font-weight: 700;
+  font-size: 16px;
+  color: #A67C52;
+}
+
+.booking-btn {
+  width: 100%;
+  padding: 16px;
+  background: #1A1A1A;
+  color: white;
+  border: none;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s;
+  margin-bottom: 15px;
+}
+
+.booking-btn:hover {
+  background: #A67C52;
+}
+
+.booking-error { color: #d93025; font-size: 13px; margin-bottom: 15px; }
+.booking-success { color: #1e8e3e; font-size: 13px; margin-bottom: 15px; }
+
+.booking-note {
+  text-align: center;
+  font-size: 12px;
+  color: #666;
+}
+
+@media (max-width: 900px) {
+  .room-grid {
+    grid-template-columns: 1fr;
+  }
+  .room-sidebar {
+    position: static;
+    margin-top: 40px;
+  }
+}

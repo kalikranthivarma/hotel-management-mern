@@ -1,5 +1,5 @@
-import "./App.css";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import "./App.css";
 import Navbar from "./components/Navbar";
 import AdminRegister from "./pages/AdminRegister";
 import Dashboard from "./pages/Dashboard";
@@ -19,7 +19,7 @@ import PrivateRoute from "./routes/PrivateRoute";
 function App() {
   return (
     <BrowserRouter>
-      <main className="app-shell">
+      <main className="min-h-screen bg-luxe-ivory font-sans text-luxe-charcoal selection:bg-luxe-gold selection:text-white">
         <Navbar />
         <Routes>
           <Route path="/" element={<Home />} />

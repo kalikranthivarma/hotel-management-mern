@@ -95,7 +95,7 @@ const verifyUserOTP = async (req, res, next) => {
       throw new Error('Please provide email and OTP');
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const user = await User.findOne({ email: email.toLowerCase() }).select('+otp +otpExpires');
 
     if (!user) {
       res.status(404);
@@ -251,7 +251,7 @@ const resetUserPassword = async (req, res, next) => {
       throw new Error('Please provide all details');
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const user = await User.findOne({ email: email.toLowerCase() }).select('+resetPasswordOtp +resetPasswordOtpExpires');
 
     if (!user) {
       res.status(404);
@@ -344,7 +344,7 @@ const verifyAdminOTP = async (req, res, next) => {
       throw new Error('Please provide email and OTP');
     }
 
-    const admin = await Admin.findOne({ email: email.toLowerCase() });
+    const admin = await Admin.findOne({ email: email.toLowerCase() }).select('+otp +otpExpires');
 
     if (!admin) {
       res.status(404);
@@ -505,7 +505,7 @@ const resetAdminPassword = async (req, res, next) => {
       throw new Error('Please provide all details');
     }
 
-    const admin = await Admin.findOne({ email: email.toLowerCase() });
+    const admin = await Admin.findOne({ email: email.toLowerCase() }).select('+resetPasswordOtp +resetPasswordOtpExpires');
 
     if (!admin) {
       res.status(404);

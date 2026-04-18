@@ -350,6 +350,28 @@
   background: #fff;
 }
 
+.field select {
+  width: 100%;
+  padding: 0.95rem 1rem;
+  border: 1px solid rgba(138, 133, 128, 0.24);
+  border-radius: 16px;
+  background: rgba(250, 250, 248, 0.9);
+  color: var(--charcoal);
+  outline: none;
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.field select:focus {
+  border-color: rgba(184, 149, 106, 0.75);
+  box-shadow: 0 0 0 4px rgba(184, 149, 106, 0.12);
+  background: #fff;
+}
+
 .register-button {
   width: 100%;
   margin-top: 1.35rem;
@@ -421,6 +443,24 @@
 
 .auth-switch a:hover,
 .auth-switch a:focus-visible {
+  color: #8f6b43;
+}
+
+/* Plain button styled as inline link (used for "Go back" in OTP step) */
+.link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--bronze);
+  font-weight: 700;
+  font-size: inherit;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color 160ms;
+}
+
+.link-btn:hover,
+.link-btn:focus-visible {
   color: #8f6b43;
 }
 

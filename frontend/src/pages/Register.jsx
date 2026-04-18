@@ -229,6 +229,7 @@ const Register = () => {
                     <input
                       type="text"
                       name="firstName"
+                      autoComplete="given-name"
                       value={step1Data.firstName}
                       onChange={handleStep1Change}
                       placeholder="Enter first name"
@@ -240,6 +241,7 @@ const Register = () => {
                     <input
                       type="text"
                       name="lastName"
+                      autoComplete="family-name"
                       value={step1Data.lastName}
                       onChange={handleStep1Change}
                       placeholder="Enter last name"
@@ -252,6 +254,7 @@ const Register = () => {
                   <input
                     type="email"
                     name="email"
+                    autoComplete="email"
                     value={step1Data.email}
                     onChange={handleStep1Change}
                     placeholder="name@example.com"
@@ -319,6 +322,7 @@ const Register = () => {
                     <input
                       type="text"
                       name="phone"
+                      autoComplete="tel"
                       value={step3Data.phone}
                       onChange={handleStep3Change}
                       placeholder="Enter phone number"
@@ -330,6 +334,7 @@ const Register = () => {
                     <input
                       type="text"
                       name="idProof"
+                      autoComplete="off"
                       value={step3Data.idProof}
                       onChange={handleStep3Change}
                       placeholder="Aadhaar, passport..."
@@ -342,6 +347,7 @@ const Register = () => {
                   <input
                     type="text"
                     name="address"
+                    autoComplete="street-address"
                     value={step3Data.address}
                     onChange={handleStep3Change}
                     placeholder="Enter address"
@@ -355,6 +361,7 @@ const Register = () => {
                       <input
                         type={showPassword ? "text" : "password"}
                         name="password"
+                        autoComplete="new-password"
                         value={step3Data.password}
                         onChange={handleStep3Change}
                         placeholder="Create password"
@@ -375,6 +382,7 @@ const Register = () => {
                       <input
                         type={showConfirm ? "text" : "password"}
                         name="confirmPassword"
+                        autoComplete="new-password"
                         value={step3Data.confirmPassword}
                         onChange={handleStep3Change}
                         placeholder="Confirm password"

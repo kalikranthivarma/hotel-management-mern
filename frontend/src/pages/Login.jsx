@@ -361,6 +361,7 @@ const Login = () => {
                 <input
                   type="email"
                   name="email"
+                  autoComplete={isAdminPath ? "username" : "email"}
                   placeholder="name@example.com"
                   value={formData.email}
                   onChange={handleChange}
@@ -393,6 +394,7 @@ const Login = () => {
                   <input
                     type={showPassword ? "text" : "password"}
                     name="password"
+                    autoComplete="current-password"
                     placeholder="Enter password"
                     value={formData.password}
                     onChange={handleChange}

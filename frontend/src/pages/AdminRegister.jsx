@@ -230,6 +230,7 @@ const AdminRegister = () => {
                     <input
                       type="text"
                       name="firstName"
+                      autoComplete="given-name"
                       value={step1Data.firstName}
                       onChange={handleStep1Change}
                       placeholder="e.g. Priya"
@@ -241,6 +242,7 @@ const AdminRegister = () => {
                     <input
                       type="text"
                       name="lastName"
+                      autoComplete="family-name"
                       value={step1Data.lastName}
                       onChange={handleStep1Change}
                       placeholder="e.g. Menon"
@@ -253,6 +255,7 @@ const AdminRegister = () => {
                   <input
                     type="email"
                     name="email"
+                    autoComplete="email"
                     value={step1Data.email}
                     onChange={handleStep1Change}
                     placeholder="priya.menon@knsu.com"
@@ -320,6 +323,7 @@ const AdminRegister = () => {
                     <input
                       type="text"
                       name="phone"
+                      autoComplete="tel"
                       value={step3Data.phone}
                       onChange={handleStep3Change}
                       placeholder="+91 98000 00000"
@@ -331,6 +335,7 @@ const AdminRegister = () => {
                     <input
                       type="text"
                       name="employeeId"
+                      autoComplete="off"
                       value={step3Data.employeeId}
                       onChange={handleStep3Change}
                       placeholder="KNSU-0042"
@@ -363,6 +368,7 @@ const AdminRegister = () => {
                     <input
                       type="password"
                       name="password"
+                      autoComplete="new-password"
                       value={step3Data.password}
                       onChange={handleStep3Change}
                       placeholder="Create password"
@@ -374,6 +380,7 @@ const AdminRegister = () => {
                     <input
                       type="password"
                       name="confirmPassword"
+                      autoComplete="new-password"
                       value={step3Data.confirmPassword}
                       onChange={handleStep3Change}
                       placeholder="Confirm password"

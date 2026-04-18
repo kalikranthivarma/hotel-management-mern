@@ -1,12 +1,25 @@
 
+import fs from 'fs';
 import multer from 'multer';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import MenuItem from '../models/MenuItem.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const uploadDirectory = path.join(__dirname, '..', 'uploads', 'menu');
+
+const ensureUploadDirectory = () => {
+  if (!fs.existsSync(uploadDirectory)) {
+    fs.mkdirSync(uploadDirectory, { recursive: true });
+  }
+};
 
 // Multer Storage Configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/menu');
+    ensureUploadDirectory();
+    cb(null, uploadDirectory);
   },
   filename: (req, file, cb) => {
     cb(null, `${Date.now()}-${file.originalname}`);

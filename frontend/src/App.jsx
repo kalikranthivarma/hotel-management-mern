@@ -1,5 +1,4 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import "./App.css";
 import Navbar from "./components/Navbar";
 import AdminRegister from "./pages/AdminRegister";
 import Dashboard from "./pages/Dashboard";
@@ -7,6 +6,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ResendVerification from "./pages/ResendVerification";
 import ResetPassword from "./pages/ResetPassword";
 import VerifyEmail from "./pages/VerifyEmail";
 import Rooms from "./pages/Rooms";
@@ -19,7 +19,7 @@ import PrivateRoute from "./routes/PrivateRoute";
 function App() {
   return (
     <BrowserRouter>
-      <main className="min-h-screen bg-luxe-ivory font-sans text-luxe-charcoal selection:bg-luxe-gold selection:text-white">
+      <main className="min-h-screen bg-luxe-ivory font-sans text-luxe-charcoal selection:bg-luxe-bronze selection:text-white">
         <Navbar />
         <Routes>
           <Route path="/" element={<Home />} />
@@ -27,6 +27,7 @@ function App() {
           <Route path="/admin/register" element={<AdminRegister />} />
           <Route path="/login" element={<Login />} />
           <Route path="/admin/login" element={<Login />} />
+          <Route path="/resend-verification" element={<ResendVerification />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/admin/forgot-password" element={<ForgotPassword />} />
           <Route path="/user/verify-email/:token" element={<VerifyEmail />} />
@@ -59,8 +60,6 @@ function App() {
               </PrivateRoute>
             }
           />
-
-
           <Route
             path="/dashboard"
             element={
@@ -69,7 +68,6 @@ function App() {
               </PrivateRoute>
             }
           />
-
         </Routes>
       </main>
     </BrowserRouter>

@@ -1,10 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  registerAdminStep1,
-  verifyAdminOTP,
-  registerAdminStep3,
-} from "../api/authApi";
+import { registerAdminStep1, verifyAdminOTP, registerAdminStep3 } from "../api/authApi";
 
 const initStep1 = { firstName: "", lastName: "", email: "" };
 const initStep3 = {
@@ -15,18 +11,22 @@ const initStep3 = {
   confirmPassword: "",
 };
 
+const inputCls =
+  "w-full rounded-xl border border-[#E8E0D8] bg-white px-4 py-3 text-sm text-[#160842] placeholder:text-gray-300 outline-none transition-all duration-200 focus:border-[#5B3FA6] focus:ring-2 focus:ring-[#5B3FA6]/10 hover:border-[#5B3FA6]/40";
+const labelCls =
+  "mb-1.5 block text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-[#160842]/60";
+
 const AdminRegister = () => {
   const navigate = useNavigate();
-
   const [step, setStep] = useState(1);
-
   const [step1Data, setStep1Data] = useState(initStep1);
   const [otp, setOtp] = useState("");
   const [step3Data, setStep3Data] = useState(initStep3);
-
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const stepLabel = ["Send OTP", "Verify OTP", "Complete Registration"];
 
   const handleStep1Change = (e) => {
     setStep1Data((p) => ({ ...p, [e.target.name]: e.target.value }));
@@ -38,17 +38,12 @@ const AdminRegister = () => {
     if (error) setError("");
   };
 
-  // ── Step 1: request OTP ──
   const handleStep1Submit = async (e) => {
     e.preventDefault();
     setError("");
     setSuccess("");
 
-    if (
-      !step1Data.firstName.trim() ||
-      !step1Data.lastName.trim() ||
-      !step1Data.email.trim()
-    ) {
+    if (!step1Data.firstName.trim() || !step1Data.lastName.trim() || !step1Data.email.trim()) {
       setError("Please fill in first name, last name, and corporate email.");
       return;
     }
@@ -63,15 +58,12 @@ const AdminRegister = () => {
       setSuccess(data?.message || "OTP sent to your corporate email.");
       setStep(2);
     } catch (err) {
-      setError(
-        err.response?.data?.message || err.message || "Failed to send OTP."
-      );
+      setError(err.response?.data?.message || err.message || "Failed to send OTP.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // ── Step 2: verify OTP ──
   const handleStep2Submit = async (e) => {
     e.preventDefault();
     setError("");
@@ -91,15 +83,12 @@ const AdminRegister = () => {
       setSuccess(data?.message || "Email verified! Please complete your staff profile.");
       setStep(3);
     } catch (err) {
-      setError(
-        err.response?.data?.message || err.message || "OTP verification failed."
-      );
+      setError(err.response?.data?.message || err.message || "OTP verification failed.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // ── Step 3: complete registration ──
   const handleStep3Submit = async (e) => {
     e.preventDefault();
     setError("");
@@ -132,179 +121,300 @@ const AdminRegister = () => {
         confirmPassword: step3Data.confirmPassword,
       });
       setSuccess(data?.message || "Staff registration completed successfully!");
-      setTimeout(() => navigate("/admin/login"), 2000);
+      setTimeout(() => navigate("/admin/login"), 1500);
     } catch (err) {
-      setError(
-        err.response?.data?.message || err.message || "Registration failed."
-      );
+      setError(err.response?.data?.message || err.message || "Registration failed.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const stepLabel = ["Send OTP", "Verify OTP", "Complete Registration"];
-
   return (
-    <section className="register-page register-page-admin">
+    <div className="min-h-screen w-full bg-[#FAFAF8] lg:flex">
+      <div className="relative hidden flex-shrink-0 overflow-hidden lg:flex lg:w-[42%] xl:w-[38%]">
+        <img
+          src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1200&q=85"
+          alt="Luxury hotel lobby"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#120a32]/94 via-[#3b216e]/75 to-[#120a32]/88" />
+        <div className="absolute left-10 top-10 h-14 w-14 border-l-2 border-t-2 border-white/20" />
+        <div className="absolute right-10 top-10 h-14 w-14 border-r-2 border-t-2 border-white/20" />
+        <div className="absolute bottom-10 left-10 h-14 w-14 border-b-2 border-l-2 border-white/20" />
+        <div className="absolute bottom-10 right-10 h-14 w-14 border-b-2 border-r-2 border-white/20" />
 
-      {/* ── LEFT: Hero ── */}
-      <div className="register-hero">
-        <p className="register-eyebrow">Staff Onboarding</p>
-        <h1>KNSU Internal Operations</h1>
-        <p className="register-copy">
-          Welcome to the KNSU stays team. This secure portal is reserved for verified hotel staff and management personnel only.
-        </p>
-        <div className="register-panel">
-          <span>Step {step} of 3</span>
-          <strong>{stepLabel[step - 1]}</strong>
-          <p>
-            {step === 1 && "Enter your name and corporate email to receive a 6-digit OTP."}
-            {step === 2 && `Enter the OTP sent to ${step1Data.email}.`}
-            {step === 3 && "Fill in your staff credentials to complete registration."}
+        <div className="relative z-10 flex min-h-screen flex-col p-10 text-white">
+          <Link to="/" className="flex items-center gap-3">
+            <span className="text-2xl font-light tracking-[0.15em]">KNSU</span>
+            <span className="text-xs uppercase tracking-[0.3em] text-purple-300">STAYS</span>
+          </Link>
+
+          <div className="my-auto max-w-sm">
+            <div className="mb-8 h-px w-12 bg-purple-400/60" />
+            <p className="mb-5 text-[0.68rem] uppercase tracking-[0.35em] text-purple-300">
+              Staff Onboarding
+            </p>
+            <h2 className="mb-6 font-serif text-4xl leading-[1.1] xl:text-[2.6rem]">
+              Secure Access
+              <br />
+              For The
+              <br />
+              <span className="text-purple-300">KNSU Team</span>
+            </h2>
+            <p className="text-sm leading-relaxed text-white/55">
+              Complete corporate onboarding in three guided steps with email OTP verification.
+            </p>
+            <div className="mt-8 rounded-2xl border border-white/10 bg-white/8 p-5 backdrop-blur-sm">
+              <p className="text-[0.62rem] font-bold uppercase tracking-[0.22em] text-purple-300">
+                Step {step} of 3
+              </p>
+              <p className="mt-2 text-lg font-semibold">{stepLabel[step - 1]}</p>
+              <p className="mt-2 text-sm text-white/60">
+                {step === 1 && "Enter your name and corporate email to receive a 6-digit OTP."}
+                {step === 2 && `Enter the OTP sent to ${step1Data.email}.`}
+                {step === 3 && "Finish your staff profile with employee credentials."}
+              </p>
+            </div>
+          </div>
+
+          <p className="text-[0.65rem] uppercase tracking-[0.25em] text-white/25">
+            Internal Access · Verified Staff Only
           </p>
         </div>
       </div>
 
-      {/* ── STEP 1: Name + Email ── */}
-      {step === 1 && (
-        <form className="register-card" onSubmit={handleStep1Submit}>
-          <div className="register-card-heading">
-            <h2>Staff Registration</h2>
-            <p>Enter your name and corporate email — we'll send a verification OTP.</p>
+      <div className="flex min-h-screen flex-1 flex-col overflow-y-auto">
+        <div className="flex items-center justify-between border-b border-[#E8E0D8] bg-white px-6 py-5 lg:hidden">
+          <Link to="/" className="flex items-center gap-2">
+            <span className="text-lg font-light tracking-[0.15em] text-[#160842]">KNSU</span>
+            <span className="text-[0.6rem] uppercase tracking-[0.3em] text-[#5B3FA6]">STAYS</span>
+          </Link>
+          <span className="text-[0.65rem] font-medium uppercase tracking-[0.2em] text-[#5B3FA6]/70">
+            Step {step} of 3
+          </span>
+        </div>
+
+        <div className="flex-1 px-6 py-10 sm:px-10 lg:px-12 xl:px-16">
+          <div className="mx-auto w-full max-w-2xl lg:mx-0">
+            <div className="mb-8">
+              <p className="mb-3 text-[0.65rem] font-bold uppercase tracking-[0.3em] text-[#5B3FA6]">
+                Staff Registration
+              </p>
+              <h1 className="mb-2 font-serif text-3xl leading-tight text-[#160842] sm:text-4xl">
+                {step === 1 && "Start onboarding"}
+                {step === 2 && "Verify corporate email"}
+                {step === 3 && "Complete staff profile"}
+              </h1>
+              <p className="text-sm leading-relaxed text-gray-400">
+                Use your official employee details. Each step maps directly to the incoming backend
+                flow.
+              </p>
+            </div>
+
+            {success && (
+              <div className="mb-6 rounded-2xl border border-green-200 bg-green-50 px-5 py-4 text-sm text-green-700">
+                {success}
+              </div>
+            )}
+            {error && (
+              <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-600">
+                {error}
+              </div>
+            )}
+
+            {step === 1 && (
+              <form onSubmit={handleStep1Submit} className="space-y-5">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className={labelCls}>First name</label>
+                    <input
+                      type="text"
+                      name="firstName"
+                      value={step1Data.firstName}
+                      onChange={handleStep1Change}
+                      placeholder="e.g. Priya"
+                      className={inputCls}
+                    />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Last name</label>
+                    <input
+                      type="text"
+                      name="lastName"
+                      value={step1Data.lastName}
+                      onChange={handleStep1Change}
+                      placeholder="e.g. Menon"
+                      className={inputCls}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className={labelCls}>Corporate email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={step1Data.email}
+                    onChange={handleStep1Change}
+                    placeholder="priya.menon@knsu.com"
+                    className={inputCls}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full rounded-full bg-[#5B3FA6] px-8 py-4 text-[0.85rem] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-[#4a3288] disabled:opacity-60"
+                >
+                  {isSubmitting ? "Sending OTP..." : "Send OTP"}
+                </button>
+              </form>
+            )}
+
+            {step === 2 && (
+              <form onSubmit={handleStep2Submit} className="space-y-5">
+                <div className="rounded-2xl border border-[#5B3FA6]/15 bg-[#5B3FA6]/5 px-5 py-4 text-sm text-[#160842]/65">
+                  A 6-digit OTP was sent to{" "}
+                  <strong className="text-[#5B3FA6]">{step1Data.email}</strong>.
+                </div>
+                <div>
+                  <label className={labelCls}>Enter OTP</label>
+                  <input
+                    type="text"
+                    name="otp"
+                    maxLength={6}
+                    value={otp}
+                    onChange={(e) => {
+                      setOtp(e.target.value);
+                      if (error) setError("");
+                    }}
+                    placeholder="Enter 6-digit OTP"
+                    className={`${inputCls} text-center text-lg tracking-[0.45em]`}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full rounded-full bg-[#5B3FA6] px-8 py-4 text-[0.85rem] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-[#4a3288] disabled:opacity-60"
+                >
+                  {isSubmitting ? "Verifying..." : "Verify OTP"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStep(1);
+                    setOtp("");
+                    setError("");
+                    setSuccess("");
+                  }}
+                  className="w-full text-sm font-medium text-[#5B3FA6]"
+                >
+                  Go back
+                </button>
+              </form>
+            )}
+
+            {step === 3 && (
+              <form onSubmit={handleStep3Submit} className="space-y-5">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className={labelCls}>Official phone</label>
+                    <input
+                      type="text"
+                      name="phone"
+                      value={step3Data.phone}
+                      onChange={handleStep3Change}
+                      placeholder="+91 98000 00000"
+                      className={inputCls}
+                    />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Employee ID</label>
+                    <input
+                      type="text"
+                      name="employeeId"
+                      value={step3Data.employeeId}
+                      onChange={handleStep3Change}
+                      placeholder="KNSU-0042"
+                      className={inputCls}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className={labelCls}>Department</label>
+                  <select
+                    name="department"
+                    value={step3Data.department}
+                    onChange={handleStep3Change}
+                    className={inputCls}
+                  >
+                    <option value="">Select Department</option>
+                    <option value="Front Desk">Front Desk</option>
+                    <option value="Reception">Reception</option>
+                    <option value="Management">Management</option>
+                    <option value="Housekeeping">Housekeeping</option>
+                    <option value="Security">Security</option>
+                    <option value="Kitchen">Kitchen</option>
+                    <option value="IT">IT</option>
+                    <option value="Maintenance">Maintenance</option>
+                  </select>
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className={labelCls}>Password</label>
+                    <input
+                      type="password"
+                      name="password"
+                      value={step3Data.password}
+                      onChange={handleStep3Change}
+                      placeholder="Create password"
+                      className={inputCls}
+                    />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Confirm password</label>
+                    <input
+                      type="password"
+                      name="confirmPassword"
+                      value={step3Data.confirmPassword}
+                      onChange={handleStep3Change}
+                      placeholder="Confirm password"
+                      className={inputCls}
+                    />
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full rounded-full bg-[#5B3FA6] px-8 py-4 text-[0.85rem] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-[#4a3288] disabled:opacity-60"
+                >
+                  {isSubmitting ? "Registering Staff Profile..." : "Register Staff Profile"}
+                </button>
+              </form>
+            )}
+
+            <div className="my-7 flex items-center gap-4">
+              <div className="h-px flex-1 bg-[#E8E0D8]" />
+              <span className="text-[0.65rem] uppercase tracking-[0.2em] text-gray-300">or</span>
+              <div className="h-px flex-1 bg-[#E8E0D8]" />
+            </div>
+
+            <div className="space-y-3 text-center text-sm text-gray-400">
+              <p>
+                Already registered?{" "}
+                <Link to="/admin/login" className="font-medium text-[#5B3FA6] hover:text-[#4a3288]">
+                  Staff Login
+                </Link>
+              </p>
+              <p>
+                Guest registration?{" "}
+                <Link to="/register" className="font-medium text-[#5B3FA6] hover:text-[#4a3288]">
+                  Member Enrollment →
+                </Link>
+              </p>
+            </div>
           </div>
-
-          <div className="field-grid">
-            <label className="field">
-              <span>First Name *</span>
-              <input type="text" name="firstName" placeholder="e.g. Priya" value={step1Data.firstName} onChange={handleStep1Change} required />
-            </label>
-            <label className="field">
-              <span>Last Name *</span>
-              <input type="text" name="lastName" placeholder="e.g. Menon" value={step1Data.lastName} onChange={handleStep1Change} required />
-            </label>
-            <label className="field field-full">
-              <span>Corporate Email *</span>
-              <input type="email" name="email" placeholder="priya.menon@knsu.com" value={step1Data.email} onChange={handleStep1Change} required />
-            </label>
-          </div>
-
-          <button type="submit" className="register-button" disabled={isSubmitting}>
-            {isSubmitting ? "Sending OTP..." : "Send OTP"}
-          </button>
-
-          {success && <p className="form-message success">{success}</p>}
-          {error && <p className="form-message error">{error}</p>}
-
-          <div style={{ marginTop: "2rem", paddingTop: "1.5rem", borderTop: "1px solid #E8E4DF", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-            <p className="auth-switch" style={{ margin: 0 }}>
-              Already registered? <Link to="/admin/login">Staff Login</Link>
-            </p>
-            <p className="auth-switch" style={{ margin: 0 }}>
-              Guest registration? <Link to="/register">Member Enrollment</Link>
-            </p>
-          </div>
-        </form>
-      )}
-
-      {/* ── STEP 2: OTP Verification ── */}
-      {step === 2 && (
-        <form className="register-card" onSubmit={handleStep2Submit}>
-          <div className="register-card-heading">
-            <h2>Verify your email</h2>
-            <p>
-              A 6-digit OTP was sent to <strong>{step1Data.email}</strong>. Enter
-              it below to verify your corporate email.
-            </p>
-          </div>
-
-          <div className="field-grid">
-            <label className="field field-full">
-              <span>Enter OTP</span>
-              <input
-                type="text"
-                name="otp"
-                placeholder="Enter 6-digit OTP"
-                maxLength={6}
-                value={otp}
-                onChange={(e) => {
-                  setOtp(e.target.value);
-                  if (error) setError("");
-                }}
-              />
-            </label>
-          </div>
-
-          <button type="submit" className="register-button" disabled={isSubmitting}>
-            {isSubmitting ? "Verifying..." : "Verify OTP"}
-          </button>
-
-          {success && <p className="form-message success">{success}</p>}
-          {error && <p className="form-message error">{error}</p>}
-
-          <p className="auth-switch">
-            Wrong email?{" "}
-            <button
-              type="button"
-              className="link-btn"
-              onClick={() => { setStep(1); setOtp(""); setError(""); setSuccess(""); }}
-            >
-              Go back
-            </button>
-          </p>
-        </form>
-      )}
-
-      {/* ── STEP 3: Complete Registration ── */}
-      {step === 3 && (
-        <form className="register-card" onSubmit={handleStep3Submit}>
-          <div className="register-card-heading">
-            <h2>Complete Staff Profile</h2>
-            <p>Email verified! Register your professional profile using your official employee details.</p>
-          </div>
-
-          <div className="field-grid">
-            <label className="field">
-              <span>Official Phone *</span>
-              <input type="tel" name="phone" placeholder="+91 98000 00000" value={step3Data.phone} onChange={handleStep3Change} required />
-            </label>
-            <label className="field">
-              <span>Employee ID *</span>
-              <input type="text" name="employeeId" placeholder="KNSU-0042" value={step3Data.employeeId} onChange={handleStep3Change} required />
-            </label>
-            <label className="field field-full">
-              <span>Department *</span>
-              <select name="department" value={step3Data.department} onChange={handleStep3Change} required>
-                <option value="">Select Department</option>
-                <option value="Front Desk">Front Desk</option>
-                <option value="Reception">Reception</option>
-                <option value="Management">Management</option>
-                <option value="Housekeeping">Housekeeping</option>
-                <option value="Security">Security</option>
-                <option value="Kitchen">Kitchen</option>
-                <option value="IT">IT</option>
-                <option value="Maintenance">Maintenance</option>
-              </select>
-            </label>
-            <label className="field">
-              <span>Password *</span>
-              <input type="password" name="password" placeholder="••••••••" value={step3Data.password} onChange={handleStep3Change} required />
-            </label>
-            <label className="field">
-              <span>Confirm Password *</span>
-              <input type="password" name="confirmPassword" placeholder="••••••••" value={step3Data.confirmPassword} onChange={handleStep3Change} required />
-            </label>
-          </div>
-
-          <button type="submit" className="register-button" disabled={isSubmitting}>
-            {isSubmitting ? "Registering Staff Profile..." : "Register Staff Profile"}
-          </button>
-
-          {success && <p className="form-message success">{success}</p>}
-          {error && <p className="form-message error">{error}</p>}
-        </form>
-      )}
-
-    </section>
+        </div>
+      </div>
+    </div>
   );
 };
 

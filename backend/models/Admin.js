@@ -6,3 +6,4 @@
  * will transparently receive the User model.
  */
 export { default } from './User.js';
+

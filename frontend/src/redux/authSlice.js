@@ -5,15 +5,22 @@ const storageKey = "hotelAuth";
 const normalizeUser = (payload) => {
   if (!payload) return null;
 
-  if (payload.role) {
+  const validRoles = ["guest", "admin", "superAdmin"];
+  const hasStaffFields = Boolean(payload.employeeId || payload.department);
+
+  // If backend explicitly sent a valid role, trust it
+  if (payload.role && validRoles.includes(payload.role)) {
+    // Extra safety: if role is admin/superAdmin but no staff fields exist, demote to guest
+    if ((payload.role === "admin" || payload.role === "superAdmin") && !hasStaffFields) {
+      return { ...payload, role: "guest" };
+    }
     return payload;
   }
 
-  const isStaffAccount = Boolean(payload.employeeId || payload.department);
-
+  // No role from backend: infer from staff fields
   return {
     ...payload,
-    role: isStaffAccount ? "admin" : "guest",
+    role: hasStaffFields ? "admin" : "guest",
   };
 };
 

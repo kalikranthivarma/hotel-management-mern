@@ -56,7 +56,7 @@ function App() {
           <Route
             path="/bookings"
             element={
-              <PrivateRoute allowedRoles={["guest"]}>
+              <PrivateRoute allowedRoles={["guest", "admin", "superAdmin"]}>
                 <BookingHistory />
               </PrivateRoute>
             }

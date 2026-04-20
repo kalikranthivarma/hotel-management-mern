@@ -395,9 +395,9 @@ const Login = () => {
       const normalizedUser = account
         ? {
             ...account,
-            role:
-              account.role ||
-              (isAdmin || account.employeeId || account.department ? "admin" : "guest"),
+            // NEVER use isAdminPath to determine role — always trust the backend.
+            // If backend sends no role, only staff fields (employeeId/department) indicate admin.
+            role: account.role || (account.employeeId || account.department ? "admin" : "guest"),
           }
         : null;
 

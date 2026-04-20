@@ -193,7 +193,13 @@ const loginUser = async (req, res, next) => {
       throw new Error('Please verify your email before logging in');
     }
 
-    const token = generateToken(user._id, user.role || 'guest');
+    // Block admin/superAdmin accounts from using the guest login portal
+    if (user.role === 'admin' || user.role === 'superAdmin') {
+      res.status(403);
+      throw new Error('Staff accounts must log in through the Staff Portal (/admin/login)');
+    }
+
+    const token = generateToken(user._id, 'user');
 
     res.status(200).json({
       success: true,
@@ -455,9 +461,10 @@ const loginAdmin = async (req, res, next) => {
       throw new Error('Please verify your email before logging in');
     }
 
+    // Block guest accounts from using the staff login portal
     if (admin.role !== 'admin' && admin.role !== 'superAdmin') {
-      admin.role = 'admin';
-      await admin.save({ validateBeforeSave: false });
+      res.status(403);
+      throw new Error('This account does not have staff privileges. Please use the Guest Login page instead.');
     }
 
     const token = generateToken(admin._id, 'admin');
@@ -474,7 +481,6 @@ const loginAdmin = async (req, res, next) => {
         role: admin.role,
         department: admin.department,
         employeeId: admin.employeeId,
-        role: admin.role,
       },
     });
   } catch (error) {

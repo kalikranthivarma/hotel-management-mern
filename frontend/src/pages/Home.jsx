@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-
 import { Link } from "react-router-dom";
+
 import hero1 from "../assets/hero1.png";
 import hero2 from "../assets/hero2.png";
 import hero3 from "../assets/hero3.png";
@@ -34,10 +34,9 @@ const hotels = [
     desc: "Wake up to breathtaking mountain views where adventure and relaxation go hand in hand.",
     rooms: "78 rooms & 12 Suites",
     checkin: "Check-in: 2:00 PM  |  Check-out: 11:00 AM",
-
     dining: "Two mountain-view restaurants",
     banquet: "280 sq.m. of event space",
-    address: "12 Mall Road, Shimla, Himachal Pradesh, 171001",
+    address: "Shimla, Himachal Pradesh",
   },
   {
     id: 3,
@@ -46,10 +45,9 @@ const hotels = [
     desc: "Where tropical bliss meets modern luxury.",
     rooms: "96 rooms & 24 pool villas",
     checkin: "Check-in: 3:00 PM  |  Check-out: 12:00 Noon",
-
     dining: "Four beachside restaurants",
     banquet: "450 sq.m. of open-air event space",
-    address: "Candolim Beach Road, North Goa, 403515",
+    address: "North Goa",
   },
 ];
 
@@ -60,14 +58,12 @@ const deals = [
     title: "Celebrating Our Bond — Double The Joy",
     desc: "Rediscover luxury at unbeatable prices.",
     validity: "20 Mar 2026 — 30 Apr 2026",
-
   },
   {
     id: 2,
     image: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&q=80",
     title: "Suite Surprises — Member Only",
     desc: "Enhanced comfort stay beyond ordinary.",
-
     validity: "Round the Year",
   },
   {
@@ -79,21 +75,15 @@ const deals = [
   },
 ];
 
-/* ─── HERO ───────────────────────────────────── */
-
+/* ─── COMPONENT: HERO ───────────────────────────────────── */
 function HeroCarousel() {
   const [active, setActive] = useState(0);
   const timerRef = useRef(null);
 
-  const startTimer = () => {
-    clearInterval(timerRef.current);
+  useEffect(() => {
     timerRef.current = setInterval(() => {
       setActive((p) => (p + 1) % heroSlides.length);
     }, 5000);
-  };
-
-  useEffect(() => {
-    startTimer();
     return () => clearInterval(timerRef.current);
   }, []);
 
@@ -108,11 +98,9 @@ function HeroCarousel() {
           style={{ backgroundImage: `url(${slide.image})` }}
         >
           <div className="absolute inset-0 bg-black/60" />
-
           <div className="absolute bottom-20 left-1/2 -translate-x-1/2 text-center text-white w-[90%] max-w-3xl">
             <h1 className="text-4xl md:text-6xl font-serif">{slide.label}</h1>
             <p className="mt-4 text-lg">{slide.subtitle}</p>
-
             <div className="mt-6 flex flex-wrap gap-4 justify-center">
               <Link to="/rooms" className="px-6 py-3 bg-[#5B3FA6] hover:bg-[#4a3288] transition rounded-full">
                 Explore Hotels
@@ -120,16 +108,15 @@ function HeroCarousel() {
               <Link to="/register" className="px-6 py-3 border rounded-full">
                 Join Now
               </Link>
-
             </div>
           </div>
         </div>
       ))}
-
     </section>
   );
 }
 
+/* ─── COMPONENT: SEARCH BAR ───────────────────────────────────── */
 function SearchBar() {
   return (
     <section className="mx-auto -mt-10 max-w-6xl px-4 relative z-20">
@@ -166,9 +153,7 @@ function SearchBar() {
   );
 }
 
-/* ─── HOTELS ───────────────────────────────────── */
-
-
+/* ─── COMPONENT: HOTELS ───────────────────────────────────── */
 function HotelsSection() {
   const [country, setCountry] = useState("");
   const [city, setCity] = useState("");
@@ -240,7 +225,7 @@ function HotelsSection() {
   );
 }
 
-/* ─── DEALS ───────────────────────────────────── */
+/* ─── COMPONENT: DEALS ───────────────────────────────────── */
 function DealsSection() {
   return (
     <section className="bg-black py-20 md:py-24 px-4">
@@ -248,7 +233,6 @@ function DealsSection() {
         <h2 className="text-3xl md:text-5xl text-white text-center font-serif">
           MEMBER DEALS
         </h2>
-
         <div className="grid md:grid-cols-3 gap-6">
           {deals.map((d) => (
             <div key={d.id} className="bg-white/10 rounded-xl overflow-hidden">
@@ -266,6 +250,7 @@ function DealsSection() {
   );
 }
 
+/* ─── COMPONENT: WHY KNSU ───────────────────────────────────── */
 function WhyKNSU() {
   const perks = [
     { title: "Award-Winning Hospitality", desc: "Recognised globally for service excellence and guest satisfaction." },
@@ -293,7 +278,7 @@ function WhyKNSU() {
   );
 }
 
-/* ─── CTA BANNER ────────────────────────────────────────── */
+/* ─── COMPONENT: CTA BANNER ────────────────────────────────────────── */
 function CTABanner() {
   return (
     <section className="bg-[#F5F5F5] py-20 px-4">
@@ -323,8 +308,8 @@ function CTABanner() {
   );
 }
 
-/* ─── FOOTER ────────────────────────────────────────────── */
-function HomeFooter() {
+/* ─── COMPONENT: FOOTER ────────────────────────────────────────────── */
+function Footer() {
   const cols = [
     { title: "Explore",  links: [["Hotels", "#hotels"], ["Experiences", "#experiences"], ["Dining", "#"], ["Wellness", "#"], ["Offers", "#offers"]] },
     { title: "Account",  links: [["Register", "/register"], ["Login", "/login"], ["Dashboard", "/dashboard"], ["My Bookings", "/dashboard"], ["Membership", "/register"]] },
@@ -406,6 +391,7 @@ function HomeFooter() {
   );
 }
 
+/* ─── PAGE ───────────────────────────────────── */
 export default function Home() {
   return (
     <div className="w-full overflow-x-hidden bg-[#FAFAF8] text-[#1C1C1C] leading-relaxed">
@@ -415,25 +401,8 @@ export default function Home() {
       <WhyKNSU />
       <DealsSection />
       <CTABanner />
-      <HomeFooter />
-    </div>
-  );
->>>>>>> 298c34d48303cdd83b8a15fbf77b676009de5532
-      </div>
-    </footer>
-  );
-}
-
-export default function Home() {
-  return (
-    <div className="w-full overflow-x-hidden bg-[#FAFAF8] text-[#1C1C1C] leading-relaxed">
-
-      <HeroCarousel />
-      <SearchBar />
-      <HotelsSection />
-      <DealsSection />
-      <CTABanner />
-      <HomeFooter />
+      <Footer />
     </div>
   );
 }
+

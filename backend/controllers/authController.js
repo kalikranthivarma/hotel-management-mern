@@ -204,6 +204,7 @@ const loginUser = async (req, res, next) => {
         lastName: user.lastName,
         email: user.email,
         phone: user.phone,
+        role: user.role,
         loyaltyPoints: user.loyaltyPoints,
       },
     });
@@ -415,7 +416,7 @@ const registerAdminStep3 = async (req, res, next) => {
       success: true,
       message: 'Staff registration completed successfully!',
       token,
-      admin: {
+      user: {
         id: admin._id,
         firstName: admin.firstName,
         lastName: admin.lastName,
@@ -423,6 +424,7 @@ const registerAdminStep3 = async (req, res, next) => {
         role: admin.role,
         department: admin.department,
         employeeId: admin.employeeId,
+        role: admin.role,
       },
     });
   } catch (error) {
@@ -462,7 +464,7 @@ const loginAdmin = async (req, res, next) => {
       success: true,
       message: 'Welcome, Staff Member!',
       token,
-      admin: {
+      user: {
         id: admin._id,
         firstName: admin.firstName,
         lastName: admin.lastName,
@@ -470,6 +472,7 @@ const loginAdmin = async (req, res, next) => {
         role: admin.role,
         department: admin.department,
         employeeId: admin.employeeId,
+        role: admin.role,
       },
     });
   } catch (error) {

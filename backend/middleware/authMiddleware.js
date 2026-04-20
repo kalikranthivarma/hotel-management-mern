@@ -1,6 +1,14 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
+const normalizeRole = (role) => {
+  if (role === 'user') {
+    return 'guest';
+  }
+
+  return role;
+};
+
 // ─── CORE MIDDLEWARE ──────────────────────────────────────────────────────────
 
 // Authenticate any logged-in user regardless of role.
@@ -22,6 +30,9 @@ const protect = async (req, res, next) => {
       res.status(401);
       return next(new Error('User not found'));
     }
+
+    // Support legacy guest tokens/user documents that used "user" or lacked a role.
+    req.user.role = normalizeRole(req.user.role) || normalizeRole(decoded.role) || 'guest';
 
     next();
   } catch {

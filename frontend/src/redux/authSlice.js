@@ -2,6 +2,21 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const storageKey = "hotelAuth";
 
+const normalizeUser = (payload) => {
+  if (!payload) return null;
+
+  if (payload.role) {
+    return payload;
+  }
+
+  const isStaffAccount = Boolean(payload.employeeId || payload.department);
+
+  return {
+    ...payload,
+    role: isStaffAccount ? "admin" : "guest",
+  };
+};
+
 const getStoredAuth = () => {
   const raw = localStorage.getItem(storageKey);
 
@@ -13,7 +28,11 @@ const getStoredAuth = () => {
   }
 
   try {
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return {
+      token: parsed?.token || "",
+      user: normalizeUser(parsed?.user),
+    };
   } catch {
     localStorage.removeItem(storageKey);
     return {
@@ -45,7 +64,7 @@ const authSlice = createSlice({   //create redux slice
   reducers: {
     setCredentials: (state, action) => {    //runs when user log in
       state.token = action.payload?.token || "";    //saves token
-      state.user = action.payload?.user || null;   //saves user
+      state.user = normalizeUser(action.payload?.user || action.payload?.admin);   //saves user
       persistAuth(state);
     },
     logoutUser: (state) => {

@@ -1,1 +1,54 @@
+@import url("https://fonts.googleapis.com/css2?family=Tenor+Sans&family=Montserrat:wght@300;400;500;600;700;800&display=swap");
 @import "tailwindcss";
+
+@theme {
+  --font-sans: "Montserrat", sans-serif;
+  --font-serif: "Tenor Sans", serif;
+
+  --color-luxe-ivory: #fafaf8;
+  --color-luxe-charcoal: #1c1c1c;
+  --color-luxe-bronze: #b8956a;
+  --color-luxe-bronze-light: #d4b08a;
+  --color-luxe-smoke: #f2f0ec;
+  --color-luxe-muted: #8a8580;
+  --color-luxe-border: #e8e4df;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    min-width: 320px;
+    background:
+      radial-gradient(circle at top, rgba(212, 176, 138, 0.16), transparent 35%),
+      #fafaf8;
+    color: #1c1c1c;
+    font-family: "Montserrat", sans-serif;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  #root {
+    min-height: 100vh;
+  }
+}

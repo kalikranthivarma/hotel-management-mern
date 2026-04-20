@@ -1,165 +1,4 @@
-// import { useState } from "react";
-// import { Link, useLocation, useNavigate } from "react-router-dom";
-// import { useDispatch, useSelector } from "react-redux";
-// import { logoutUser } from "../redux/authSlice";
-
-// const navLinks = [
-//   { to: "/#hotels",  label: "Hotels"       },
-//   { to: "/#deals",   label: "Dining"       },
-//   { to: "/#deals",   label: "Offers"       },
-//   { to: "/#why-knsu",label: "Memberships"  },
-//   { to: "/#why-knsu",label: "More"         },
-// ];
-
-// const Navbar = () => {
-//   const location = useLocation();
-//   const navigate = useNavigate();
-//   const dispatch = useDispatch();
-//   const [menuOpen, setMenuOpen] = useState(false);
-  
-//   const { user } = useSelector((state) => state.auth);
-//   const isHome = location.pathname === "/";
-//   const role = user?.role || "guest_visit";
-
-//   const handleLogout = () => {
-//     dispatch(logoutUser());
-//     setMenuOpen(false);
-//     navigate("/login");
-//   };
-
-//   // Define links based on user role
-//   const getNavLinks = () => {
-//     if (role === "admin" || role === "superAdmin") {
-//       return [
-//         { to: "/", label: "Home" },
-//         { to: "/dashboard", label: "Dashboard" },
-//         { to: "/rooms", label: "Manage Rooms" },
-//         { to: "/admin/bookings", label: "All Bookings" },
-//       ];
-//     }
-    
-//     // Default Guest/User links
-//     const links = [
-//       { to: "/#hotels", label: "Hotels" },
-//       { to: "/rooms", label: "Rooms" },
-//       { to: "/#deals", label: "Dining" },
-//     ];
-
-//     if (user) {
-//       links.push({ to: "/bookings", label: "My Bookings" });
-//     }
-
-//     return links;
-//   };
-
-//   const navLinks = getNavLinks();
-
-//   return (
-//     <header className={`topbar ${isHome ? "topbar--home" : ""}`}>
-//       {/* Brand */}
-//       <div className="topbar__brand">
-//         <Link to="/">KNSU stays</Link>
-//       </div>
-
-//       {/* Desktop nav */}
-//       <nav className="topbar__nav" aria-label="Main navigation">
-//         {navLinks.map((link) => (
-//           link.to.startsWith("/#") ? (
-//             <a key={link.label} href={link.to} className="topbar__link">
-//               {link.label}
-//             </a>
-//           ) : (
-//             <Link key={link.label} to={link.to} className="topbar__link">
-//               {link.label}
-//             </Link>
-//           )
-//         ))}
-//       </nav>
-
-//       {/* Right actions */}
-//       <div className="topbar__actions">
-//         {user ? (
-//           <div className="topbar__user-actions">
-//             <span className="topbar__user-name">Hi, {user.firstName}</span>
-//             <button onClick={handleLogout} className="topbar__link logout-btn">
-//               Logout
-//             </button>
-//           </div>
-//         ) : (
-//           <Link
-//             to="/login"
-//             className={`topbar__link ${location.pathname === "/login" ? "active" : ""}`}
-//           >
-//             Login / Join
-//           </Link>
-//         )}
-        
-//         {!user && (
-//           <Link to="/register" className="topbar__book-btn">
-//             Book Now
-//           </Link>
-//         )}
-
-//         {/* Hamburger */}
-//         <button
-//           className="topbar__hamburger"
-//           aria-label="Toggle menu"
-//           aria-expanded={menuOpen}
-//           onClick={() => setMenuOpen((v) => !v)}
-//         >
-//           <span />
-//           <span />
-//           <span />
-//         </button>
-//       </div>
-
-//       {/* Mobile drawer */}
-//       {menuOpen && (
-//         <div className="topbar__mobile-menu">
-//           {navLinks.map((link) => (
-//              link.to.startsWith("/#") ? (
-//               <a
-//                 key={link.label}
-//                 href={link.to}
-//                 className="topbar__mobile-link"
-//                 onClick={() => setMenuOpen(false)}
-//               >
-//                 {link.label}
-//               </a>
-//             ) : (
-//               <Link
-//                 key={link.label}
-//                 to={link.to}
-//                 className="topbar__mobile-link"
-//                 onClick={() => setMenuOpen(false)}
-//               >
-//                 {link.label}
-//               </Link>
-//             )
-//           ))}
-          
-//           {user ? (
-//             <button onClick={handleLogout} className="topbar__mobile-link logout-btn">
-//               Logout
-//             </button>
-//           ) : (
-//             <>
-//               <Link to="/login" className="topbar__mobile-link" onClick={() => setMenuOpen(false)}>Login / Join</Link>
-//               <Link to="/register" className="topbar__mobile-cta" onClick={() => setMenuOpen(false)}>Book Now</Link>
-//             </>
-//           )}
-//         </div>
-//       )}
-//     </header>
-//   );
-// };
-
-
-// export default Navbar;
-
-
-
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logoutUser } from "../redux/authSlice";
@@ -170,13 +9,16 @@ const Navbar = () => {
   const dispatch = useDispatch();
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const profileRef = useRef(null);
 
   const { user } = useSelector((state) => state.auth);
   const role = user?.role || "guest_visit";
 
   useEffect(() => {
     setMenuOpen(false);
+    setProfileOpen(false);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -185,9 +27,21 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setProfileOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const handleLogout = () => {
     dispatch(logoutUser());
     setMenuOpen(false);
+    setProfileOpen(false);
     navigate("/login");
   };
 
@@ -196,15 +50,17 @@ const Navbar = () => {
       return [
         { to: "/", label: "Home" },
         { to: "/dashboard", label: "Dashboard" },
-        { to: "/rooms", label: "Manage Rooms" },
+        { to: "/admin/manage-rooms", label: "Manage Rooms" },
         { to: "/admin/bookings", label: "All Bookings" },
+        { to: "/admin/dining-orders", label: "Dining Orders" },
+        { to: "/admin/menu", label: "Manage Menu" },
       ];
     }
 
     const links = [
       { to: "/#hotels", label: "Hotels" },
       { to: "/rooms", label: "Rooms" },
-      { to: "/#deals", label: "Dining" },
+      { to: "/dining", label: "Dining" },
     ];
 
     if (user) {
@@ -219,33 +75,24 @@ const Navbar = () => {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-          scrolled
-            ? "bg-[#0e0c0a]/85 backdrop-blur-md shadow-lg"
-            : "bg-black/60 backdrop-blur-md"
+        className={`fixed left-0 right-0 top-0 z-50 transition-all duration-500 ${
+          scrolled ? "bg-[#0e0c0a]/85 shadow-lg backdrop-blur-md" : "bg-black/60 backdrop-blur-md"
         }`}
       >
-        <div className="max-w-7xl mx-auto px-6 lg:px-10">
-          <div className="flex h-16 lg:h-20 items-center justify-between">
-
-            {/* BRAND */}
+        <div className="mx-auto max-w-7xl px-6 lg:px-10">
+          <div className="flex h-16 items-center justify-between lg:h-20">
             <Link to="/" className="flex items-center gap-3">
-              <span className="text-2xl tracking-[0.15em] font-light text-white drop-shadow-sm">
-                KNSU
-              </span>
-              <span className="text-xs tracking-[0.3em] text-[#B8956A] uppercase">
-                STAYS
-              </span>
+              <span className="text-2xl font-light tracking-[0.15em] text-white drop-shadow-sm">KNSU</span>
+              <span className="text-xs uppercase tracking-[0.3em] text-[#B8956A]">STAYS</span>
             </Link>
 
-            {/* NAV LINKS */}
-            <nav className="hidden lg:flex items-center gap-10">
+            <nav className="hidden items-center gap-10 lg:flex">
               {navLinks.map((link) =>
                 link.to.startsWith("/#") ? (
                   <a
                     key={link.label}
                     href={link.to}
-                    className="text-[0.85rem] tracking-[0.15em] uppercase text-white/90 hover:text-white drop-shadow-sm relative after:absolute after:left-0 after:-bottom-1 after:h-[1px] after:w-0 after:bg-[#B8956A] after:transition-all hover:after:w-full"
+                    className="relative text-[0.85rem] uppercase tracking-[0.15em] text-white/90 drop-shadow-sm after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-0 after:bg-[#B8956A] after:transition-all hover:text-white hover:after:w-full"
                   >
                     {link.label}
                   </a>
@@ -253,64 +100,88 @@ const Navbar = () => {
                   <Link
                     key={link.label}
                     to={link.to}
-                    className="text-[0.85rem] tracking-[0.15em] uppercase text-white/90 hover:text-white drop-shadow-sm relative after:absolute after:left-0 after:-bottom-1 after:h-[1px] after:w-0 after:bg-[#B8956A] after:transition-all hover:after:w-full"
+                    className="relative text-[0.85rem] uppercase tracking-[0.15em] text-white/90 drop-shadow-sm after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-0 after:bg-[#B8956A] after:transition-all hover:text-white hover:after:w-full"
                   >
                     {link.label}
                   </Link>
-                )
+                ),
               )}
             </nav>
 
-            {/* RIGHT SIDE */}
-            <div className="hidden lg:flex items-center gap-6">
+            <div className="hidden items-center gap-6 lg:flex">
               {user ? (
-                <>
-                  <span className="text-sm text-white/90 drop-shadow-sm">
-                    Hi, {user.firstName}
-                  </span>
-
+                <div className="relative" ref={profileRef}>
                   <button
-                    onClick={handleLogout}
-                    className="text-sm text-white/70 hover:text-white transition"
+                    onClick={() => setProfileOpen((value) => !value)}
+                    className="flex items-center gap-3 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm text-white/90 transition hover:bg-white/10"
                   >
-                    Logout
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#B8956A] text-xs font-semibold uppercase text-white">
+                      {user.firstName?.[0] || "U"}
+                    </span>
+                    <span>Hi, {user.firstName}</span>
+                    <span className={`text-xs transition ${profileOpen ? "rotate-180" : ""}`}>▼</span>
                   </button>
-                </>
+
+                  {profileOpen && (
+                    <div className="absolute right-0 mt-3 w-52 overflow-hidden rounded-2xl border border-white/10 bg-[#171411] shadow-2xl backdrop-blur-md">
+                      <Link
+                        to="/dashboard"
+                        className="block px-4 py-3 text-sm text-white/90 transition hover:bg-white/8"
+                        onClick={() => setProfileOpen(false)}
+                      >
+                        Profile
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full px-4 py-3 text-left text-sm text-red-300 transition hover:bg-white/8"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <>
                   <Link
                     to="/login"
-                    className="text-[0.85rem] tracking-[0.12em] text-white/90 hover:text-white drop-shadow-sm"
+                    className="text-[0.85rem] tracking-[0.12em] text-white/90 drop-shadow-sm hover:text-white"
                   >
                     LOGIN / JOIN
                   </Link>
 
                   <Link
                     to="/register"
-                    className="px-6 py-2 rounded-full bg-[#5B3FA6] text-white text-sm tracking-wide hover:bg-[#4a3288] transition"
+                    className="rounded-full bg-[#5B3FA6] px-6 py-2 text-sm tracking-wide text-white transition hover:bg-[#4a3288]"
                   >
                     BOOK NOW
                   </Link>
                 </>
               )}
-
             </div>
 
-            {/* MOBILE MENU BUTTON */}
             <button
-              className="lg:hidden flex flex-col gap-1.5"
+              className="flex flex-col gap-1.5 lg:hidden"
               onClick={() => setMenuOpen((v) => !v)}
+              aria-label="Toggle menu"
             >
-              <span className="w-5 h-[2px] bg-white"></span>
-              <span className="w-5 h-[2px] bg-white"></span>
-              <span className="w-5 h-[2px] bg-white"></span>
+              <span className="h-[2px] w-5 bg-white" />
+              <span className="h-[2px] w-5 bg-white" />
+              <span className="h-[2px] w-5 bg-white" />
             </button>
           </div>
         </div>
 
-        {/* MOBILE MENU */}
         {menuOpen && (
-          <div className="lg:hidden bg-[#0e0c0a] text-white px-6 py-6 space-y-5">
+          <div className="space-y-5 bg-[#0e0c0a] px-6 py-6 text-white lg:hidden">
+            {user && (
+              <Link
+                to="/dashboard"
+                className="block rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm"
+              >
+                Profile
+              </Link>
+            )}
+
             {navLinks.map((link) =>
               link.to.startsWith("/#") ? (
                 <a key={link.label} href={link.to} className="block text-sm">
@@ -320,7 +191,7 @@ const Navbar = () => {
                 <Link key={link.label} to={link.to} className="block text-sm">
                   {link.label}
                 </Link>
-              )
+              ),
             )}
 
             {user ? (
@@ -332,10 +203,7 @@ const Navbar = () => {
                 <Link to="/login" className="block text-sm">
                   LOGIN / JOIN
                 </Link>
-                <Link
-                  to="/register"
-                  className="block text-center bg-[#5B3FA6] py-2 rounded-full"
-                >
+                <Link to="/register" className="block rounded-full bg-[#5B3FA6] py-2 text-center">
                   BOOK NOW
                 </Link>
               </>
@@ -344,7 +212,6 @@ const Navbar = () => {
         )}
       </header>
 
-      {/* Spacer */}
       <div className="h-16 lg:h-20" />
     </>
   );

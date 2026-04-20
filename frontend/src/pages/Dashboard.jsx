@@ -1,133 +1,116 @@
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
-import "../styles/Dashboard.css";
+
+const cardClass =
+  "rounded-[30px] border border-luxe-border bg-white p-6 shadow-[0_18px_50px_rgba(28,28,28,0.06)]";
 
 const Dashboard = () => {
-  const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
-  
-  if (!user) return <div className="loader-container">Loading profile...</div>;
+
+  if (!user) {
+    return <div className="px-4 py-16 text-center text-luxe-muted">Loading profile...</div>;
+  }
 
   const isAdmin = user.role === "admin" || user.role === "superAdmin";
 
+  const profileFields = [
+    { label: "Full Name", value: `${user.firstName || ""} ${user.lastName || ""}`.trim() || "Not available" },
+    { label: "Email Address", value: user.email || "Not available" },
+    { label: "Phone Number", value: user.phone || "Not provided" },
+    { label: "Role", value: user.role || "Not available" },
+    ...(typeof user.loyaltyPoints === "number"
+      ? [{ label: "Loyalty Points", value: String(user.loyaltyPoints) }]
+      : []),
+    ...(user.employeeId ? [{ label: "Employee ID", value: user.employeeId }] : []),
+    ...(user.department ? [{ label: "Department", value: user.department }] : []),
+  ];
+
+  const quickLinks = isAdmin
+    ? [
+        {
+          title: "Manage Rooms",
+          copy: "Add, edit or deactivate property listings.",
+          to: "/admin/manage-rooms",
+        },
+        {
+          title: "Booking Requests",
+          copy: "Review and update reservation statuses.",
+          to: "/admin/bookings",
+        },
+        {
+          title: "Dining Orders",
+          copy: "Track live dining requests and update order status.",
+          to: "/admin/dining-orders",
+        },
+        {
+          title: "Manage Menu",
+          copy: "Create, edit, and remove dishes from the dining menu.",
+          to: "/admin/menu",
+        },
+      ]
+    : [
+        {
+          title: "My Stay History",
+          copy: "See all your real booking records in one place.",
+          to: "/bookings",
+        },
+        {
+          title: "Book a New Stay",
+          copy: "Browse available rooms and make a new reservation.",
+          to: "/rooms",
+        },
+      ];
+
   return (
-    <div className="dashboard-page">
-      <div className="dashboard-container">
-        {/* Header Section */}
-        <header className="dashboard-header">
-          <div className="header-text">
-            <p className="eyebrow">✦ {isAdmin ? "Admin Console" : "Guest Portal"}</p>
-            <h1 className="welcome-text">
-              Welcome Back, <span className="name">{user.firstName}</span>
-            </h1>
+    <div className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
+      <header className="mb-8 flex flex-col gap-5 rounded-[34px] bg-luxe-charcoal px-6 py-8 text-white shadow-[0_18px_60px_rgba(28,28,28,0.14)] sm:px-8 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.35em] text-luxe-bronze-light">
+            {isAdmin ? "Staff Profile" : "Guest Profile"}
+          </p>
+          <h1 className="mt-4 font-serif text-5xl leading-none">
+            Welcome back, <span className="text-luxe-bronze-light">{user.firstName}</span>
+          </h1>
+          <p className="mt-4 max-w-2xl text-base leading-7 text-white/70">
+            This page is showing your actual account information from the current login session.
+          </p>
+        </div>
+        <Link
+          to={isAdmin ? "/admin/bookings" : "/rooms"}
+          className="rounded-full bg-luxe-bronze px-5 py-3 text-sm font-semibold text-white transition hover:bg-white hover:text-luxe-charcoal"
+        >
+          {isAdmin ? "View All Bookings" : "Explore Rooms"}
+        </Link>
+      </header>
+
+      <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+        <section className={cardClass}>
+          <h2 className="font-serif text-3xl">Profile Details</h2>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            {profileFields.map((field) => (
+              <div key={field.label} className="rounded-[24px] bg-luxe-smoke p-5">
+                <span className="text-xs uppercase tracking-[0.24em] text-luxe-muted">{field.label}</span>
+                <p className="mt-3 break-words font-semibold capitalize">{field.value}</p>
+              </div>
+            ))}
           </div>
-          <div className="header-actions">
-            {!isAdmin && (
-              <Link to="/rooms" className="dash-btn dash-btn--primary">
-                Explore Rooms
+        </section>
+
+        <section className={cardClass}>
+          <h2 className="font-serif text-3xl">{isAdmin ? "Staff Actions" : "Quick Links"}</h2>
+          <div className="mt-6 space-y-4">
+            {quickLinks.map((item) => (
+              <Link
+                key={item.title}
+                to={item.to}
+                className="block rounded-[24px] border border-luxe-border p-5 transition hover:border-luxe-bronze hover:bg-luxe-smoke"
+              >
+                <h3 className="text-xl font-semibold">{item.title}</h3>
+                <p className="mt-2 text-sm leading-7 text-luxe-muted">{item.copy}</p>
               </Link>
-            )}
-            {isAdmin && (
-              <Link to="/admin/bookings" className="dash-btn dash-btn--primary">
-                View All Bookings
-              </Link>
-            )}
+            ))}
           </div>
-        </header>
-
-        {isAdmin ? (
-          /* Admin View */
-          <div className="admin-grid">
-            <section className="dashboard-section main-stats">
-              <h2 className="section-title">System Overview</h2>
-              <div className="stats-row">
-                <div className="stat-card">
-                  <span className="stat-label">Total Rooms</span>
-                  <span className="stat-value">24</span>
-                </div>
-                <div className="stat-card">
-                  <span className="stat-label">Active Bookings</span>
-                  <span className="stat-value">12</span>
-                </div>
-                <div className="stat-card">
-                  <span className="stat-label">Revenue (Month)</span>
-                  <span className="stat-value bronze">₹1,42,000</span>
-                </div>
-              </div>
-            </section>
-
-            <section className="dashboard-section quick-actions">
-              <h2 className="section-title">Management Actions</h2>
-              <div className="actions-grid">
-                <Link to="/admin/manage-rooms" className="action-card">
-                  <span className="icon">🛏</span>
-                  <div className="text">
-                    <h3>Manage Rooms</h3>
-                    <p>Add, edit or deactivate property listings.</p>
-                  </div>
-                </Link>
-
-                <Link to="/admin/bookings" className="action-card">
-                  <span className="icon">📅</span>
-                  <div className="text">
-                    <h3>Booking Requests</h3>
-                    <p>Approve or cancel reservation requests.</p>
-                  </div>
-                </Link>
-                <div className="action-card disabled">
-                  <span className="icon">👥</span>
-                  <div className="text">
-                    <h3>Guest List</h3>
-                    <p>View and manage registered members.</p>
-                  </div>
-                </div>
-              </div>
-            </section>
-          </div>
-        ) : (
-          /* Guest View */
-          <div className="guest-grid">
-            <section className="dashboard-section profile-info">
-              <h2 className="section-title">Profile Details</h2>
-              <div className="info-grid">
-                <div className="info-item">
-                  <span className="label">FULL NAME</span>
-                  <span className="value">{user.firstName} {user.lastName}</span>
-                </div>
-                <div className="info-item">
-                  <span className="label">EMAIL ADDRESS</span>
-                  <span className="value">{user.email}</span>
-                </div>
-                <div className="info-item">
-                  <span className="label">PHONE NUMBER</span>
-                  <span className="value">{user.phone || "Not provided"}</span>
-                </div>
-                <div className="info-item">
-                  <span className="label">ACCOUNT STATUS</span>
-                  <span className="value status-active">Active Member</span>
-                </div>
-              </div>
-            </section>
-
-            <section className="dashboard-section quick-links">
-              <h2 className="section-title">Quick Links</h2>
-              <div className="links-row">
-                <Link to="/bookings" className="link-card">
-                  <span className="icon">🕒</span>
-                  <h3>My Stay History</h3>
-                </Link>
-                <Link to="/rooms" className="link-card">
-                  <span className="icon">🏨</span>
-                  <h3>Book a New Stay</h3>
-                </Link>
-                <div className="link-card">
-                  <span className="icon">💎</span>
-                  <h3>Member Rewards</h3>
-                </div>
-              </div>
-            </section>
-          </div>
-        )}
+        </section>
       </div>
     </div>
   );

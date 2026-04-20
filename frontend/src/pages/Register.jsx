@@ -1,14 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  registerUserStep1,
-  verifyUserOTP,
-  registerUserStep3,
-} from "../api/authApi";
+import { registerUserStep1, verifyUserOTP, registerUserStep3 } from "../api/authApi";
 
-// ── Step 1 state
 const initStep1 = { firstName: "", lastName: "", email: "" };
-// ── Step 3 state
 const initStep3 = {
   phone: "",
   address: "",
@@ -17,21 +11,25 @@ const initStep3 = {
   confirmPassword: "",
 };
 
+const inputCls =
+  "w-full rounded-xl border border-[#E8E0D8] bg-white px-4 py-3 text-sm text-[#160842] placeholder:text-gray-300 outline-none transition-all duration-200 focus:border-[#5B3FA6] focus:ring-2 focus:ring-[#5B3FA6]/10 hover:border-[#5B3FA6]/40";
+const labelCls =
+  "mb-1.5 block text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-[#160842]/60";
+
 const Register = () => {
   const navigate = useNavigate();
-
-  // Which step are we on? 1, 2, or 3
   const [step, setStep] = useState(1);
-
   const [step1Data, setStep1Data] = useState(initStep1);
   const [otp, setOtp] = useState("");
   const [step3Data, setStep3Data] = useState(initStep3);
-
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
-  // ── Generic change handlers ──
+  const stepLabel = ["Send OTP", "Verify OTP", "Complete Registration"];
+
   const handleStep1Change = (e) => {
     setStep1Data((p) => ({ ...p, [e.target.name]: e.target.value }));
     if (error) setError("");
@@ -42,17 +40,12 @@ const Register = () => {
     if (error) setError("");
   };
 
-  // ── Step 1: request OTP ──
   const handleStep1Submit = async (e) => {
     e.preventDefault();
     setError("");
     setSuccess("");
 
-    if (
-      !step1Data.firstName.trim() ||
-      !step1Data.lastName.trim() ||
-      !step1Data.email.trim()
-    ) {
+    if (!step1Data.firstName.trim() || !step1Data.lastName.trim() || !step1Data.email.trim()) {
       setError("Please fill in first name, last name, and email.");
       return;
     }
@@ -67,15 +60,12 @@ const Register = () => {
       setSuccess(data?.message || "OTP sent to your email.");
       setStep(2);
     } catch (err) {
-      setError(
-        err.response?.data?.message || err.message || "Failed to send OTP."
-      );
+      setError(err.response?.data?.message || err.message || "Failed to send OTP.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // ── Step 2: verify OTP ──
   const handleStep2Submit = async (e) => {
     e.preventDefault();
     setError("");
@@ -95,25 +85,18 @@ const Register = () => {
       setSuccess(data?.message || "Email verified! Please complete your registration.");
       setStep(3);
     } catch (err) {
-      setError(
-        err.response?.data?.message || err.message || "OTP verification failed."
-      );
+      setError(err.response?.data?.message || err.message || "OTP verification failed.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // ── Step 3: complete registration ──
   const handleStep3Submit = async (e) => {
     e.preventDefault();
     setError("");
     setSuccess("");
 
-    if (
-      !step3Data.phone.trim() ||
-      !step3Data.password.trim() ||
-      !step3Data.confirmPassword.trim()
-    ) {
+    if (!step3Data.phone.trim() || !step3Data.password.trim() || !step3Data.confirmPassword.trim()) {
       setError("Please fill in all required fields.");
       return;
     }
@@ -134,223 +117,316 @@ const Register = () => {
         confirmPassword: step3Data.confirmPassword,
       });
       setSuccess(data?.message || "Registration completed successfully!");
-      setTimeout(() => navigate("/login"), 2000);
+      setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          err.message ||
-          "Registration failed."
-      );
+      setError(err.response?.data?.message || err.message || "Registration failed.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // ── Step indicator ──
-  const stepLabel = ["Send OTP", "Verify OTP", "Complete Registration"];
-
   return (
-    <section className="register-page">
-      <div className="register-hero">
-        <p className="register-eyebrow">Guest Registration</p>
-        <h1>Create your hotel account</h1>
-        <p className="register-copy">
-          Register in 3 simple steps: enter your email, verify via OTP, then
-          complete your profile.
-        </p>
+    <div className="min-h-screen w-full bg-[#FAFAF8] lg:flex">
+      <div className="relative hidden flex-shrink-0 overflow-hidden lg:flex lg:w-[42%] xl:w-[38%]">
+        <img
+          src="https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=1200&q=85"
+          alt="Luxury hotel"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#160842]/92 via-[#5B3FA6]/65 to-[#160842]/85" />
+        <div className="absolute left-10 top-10 h-14 w-14 border-l-2 border-t-2 border-white/20" />
+        <div className="absolute right-10 top-10 h-14 w-14 border-r-2 border-t-2 border-white/20" />
+        <div className="absolute bottom-10 left-10 h-14 w-14 border-b-2 border-l-2 border-white/20" />
+        <div className="absolute bottom-10 right-10 h-14 w-14 border-b-2 border-r-2 border-white/20" />
 
-        <div className="register-panel">
-          <span>Step {step} of 3</span>
-          <strong>{stepLabel[step - 1]}</strong>
-          <p>
-            {step === 1 && "Enter your name and email to receive a 6-digit OTP."}
-            {step === 2 && `Enter the OTP sent to ${step1Data.email}.`}
-            {step === 3 && "Fill in your remaining details to complete registration."}
+        <div className="relative z-10 flex min-h-screen flex-col p-10 text-white">
+          <Link to="/" className="flex items-center gap-3">
+            <span className="text-2xl font-light tracking-[0.15em]">KNSU</span>
+            <span className="text-xs uppercase tracking-[0.3em] text-purple-300">STAYS</span>
+          </Link>
+
+          <div className="my-auto max-w-sm">
+            <div className="mb-8 h-px w-12 bg-purple-400/60" />
+            <p className="mb-5 text-[0.68rem] uppercase tracking-[0.35em] text-purple-300">
+              Guest Registration
+            </p>
+            <h2 className="mb-6 font-serif text-4xl leading-[1.1] xl:text-[2.6rem]">
+              Begin Your
+              <br />
+              Journey With
+              <br />
+              <span className="text-purple-300">KNSU Stays</span>
+            </h2>
+            <p className="text-sm leading-relaxed text-white/55">
+              Register in three guided steps: request OTP, verify email, then complete your guest
+              profile.
+            </p>
+            <div className="mt-8 rounded-2xl border border-white/10 bg-white/8 p-5 backdrop-blur-sm">
+              <p className="text-[0.62rem] font-bold uppercase tracking-[0.22em] text-purple-300">
+                Step {step} of 3
+              </p>
+              <p className="mt-2 text-lg font-semibold">{stepLabel[step - 1]}</p>
+              <p className="mt-2 text-sm text-white/60">
+                {step === 1 && "Enter your name and email to receive a 6-digit OTP."}
+                {step === 2 && `Enter the OTP sent to ${step1Data.email}.`}
+                {step === 3 && "Finish your account with phone, address, and password."}
+              </p>
+            </div>
+          </div>
+
+          <p className="text-[0.65rem] uppercase tracking-[0.25em] text-white/25">
+            Curated Luxury · Iconic Destinations
           </p>
         </div>
       </div>
 
-      {/* ── STEP 1: Name + Email ── */}
-      {step === 1 && (
-        <form className="register-card" onSubmit={handleStep1Submit}>
-          <div className="register-card-heading">
-            <h2>Sign up</h2>
-            <p>Enter your name and email — we'll send a verification OTP.</p>
+      <div className="flex min-h-screen flex-1 flex-col overflow-y-auto">
+        <div className="flex items-center justify-between border-b border-[#E8E0D8] bg-white px-6 py-5 lg:hidden">
+          <Link to="/" className="flex items-center gap-2">
+            <span className="text-lg font-light tracking-[0.15em] text-[#160842]">KNSU</span>
+            <span className="text-[0.6rem] uppercase tracking-[0.3em] text-[#5B3FA6]">STAYS</span>
+          </Link>
+          <span className="text-[0.65rem] font-medium uppercase tracking-[0.2em] text-[#5B3FA6]/70">
+            Step {step} of 3
+          </span>
+        </div>
+
+        <div className="flex-1 px-6 py-10 sm:px-10 lg:px-12 xl:px-16">
+          <div className="mx-auto w-full max-w-2xl lg:mx-0">
+            <div className="mb-8">
+              <p className="mb-3 text-[0.65rem] font-bold uppercase tracking-[0.3em] text-[#5B3FA6]">
+                New Account
+              </p>
+              <h1 className="mb-2 font-serif text-3xl leading-tight text-[#160842] sm:text-4xl">
+                {step === 1 && "Get started"}
+                {step === 2 && "Verify your email"}
+                {step === 3 && "Complete registration"}
+              </h1>
+              <p className="text-sm leading-relaxed text-gray-400">
+                {step === 1 && "Enter your basic details and we will send a verification OTP."}
+                {step === 2 && "Check your inbox and enter the 6-digit code to continue."}
+                {step === 3 &&
+                  "Finish the remaining account details to create your guest profile."}
+              </p>
+            </div>
+
+            {success && (
+              <div className="mb-6 rounded-2xl border border-green-200 bg-green-50 px-5 py-4 text-sm text-green-700">
+                {success}
+              </div>
+            )}
+            {error && (
+              <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-600">
+                {error}
+              </div>
+            )}
+
+            {step === 1 && (
+              <form onSubmit={handleStep1Submit} className="space-y-5">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className={labelCls}>First name</label>
+                    <input
+                      type="text"
+                      name="firstName"
+                      value={step1Data.firstName}
+                      onChange={handleStep1Change}
+                      placeholder="Enter first name"
+                      className={inputCls}
+                    />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Last name</label>
+                    <input
+                      type="text"
+                      name="lastName"
+                      value={step1Data.lastName}
+                      onChange={handleStep1Change}
+                      placeholder="Enter last name"
+                      className={inputCls}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className={labelCls}>Email address</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={step1Data.email}
+                    onChange={handleStep1Change}
+                    placeholder="name@example.com"
+                    className={inputCls}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full rounded-full bg-[#5B3FA6] px-8 py-4 text-[0.85rem] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-[#4a3288] disabled:opacity-60"
+                >
+                  {isSubmitting ? "Sending OTP..." : "Send OTP"}
+                </button>
+              </form>
+            )}
+
+            {step === 2 && (
+              <form onSubmit={handleStep2Submit} className="space-y-5">
+                <div className="rounded-2xl border border-[#5B3FA6]/15 bg-[#5B3FA6]/5 px-5 py-4 text-sm text-[#160842]/65">
+                  A 6-digit OTP was sent to{" "}
+                  <strong className="text-[#5B3FA6]">{step1Data.email}</strong>.
+                </div>
+                <div>
+                  <label className={labelCls}>Enter OTP</label>
+                  <input
+                    type="text"
+                    name="otp"
+                    maxLength={6}
+                    value={otp}
+                    onChange={(e) => {
+                      setOtp(e.target.value);
+                      if (error) setError("");
+                    }}
+                    placeholder="Enter 6-digit OTP"
+                    className={`${inputCls} text-center text-lg tracking-[0.45em]`}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full rounded-full bg-[#5B3FA6] px-8 py-4 text-[0.85rem] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-[#4a3288] disabled:opacity-60"
+                >
+                  {isSubmitting ? "Verifying..." : "Verify OTP"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStep(1);
+                    setOtp("");
+                    setError("");
+                    setSuccess("");
+                  }}
+                  className="w-full text-sm font-medium text-[#5B3FA6]"
+                >
+                  Go back
+                </button>
+              </form>
+            )}
+
+            {step === 3 && (
+              <form onSubmit={handleStep3Submit} className="space-y-5">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className={labelCls}>Phone number</label>
+                    <input
+                      type="text"
+                      name="phone"
+                      value={step3Data.phone}
+                      onChange={handleStep3Change}
+                      placeholder="Enter phone number"
+                      className={inputCls}
+                    />
+                  </div>
+                  <div>
+                    <label className={labelCls}>ID proof</label>
+                    <input
+                      type="text"
+                      name="idProof"
+                      value={step3Data.idProof}
+                      onChange={handleStep3Change}
+                      placeholder="Aadhaar, passport..."
+                      className={inputCls}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className={labelCls}>Address</label>
+                  <input
+                    type="text"
+                    name="address"
+                    value={step3Data.address}
+                    onChange={handleStep3Change}
+                    placeholder="Enter address"
+                    className={inputCls}
+                  />
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className={labelCls}>Password</label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        name="password"
+                        value={step3Data.password}
+                        onChange={handleStep3Change}
+                        placeholder="Create password"
+                        className={`${inputCls} pr-14`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((v) => !v)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-[0.62rem] tracking-wider text-gray-300 hover:text-[#5B3FA6]"
+                      >
+                        {showPassword ? "HIDE" : "SHOW"}
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className={labelCls}>Confirm password</label>
+                    <div className="relative">
+                      <input
+                        type={showConfirm ? "text" : "password"}
+                        name="confirmPassword"
+                        value={step3Data.confirmPassword}
+                        onChange={handleStep3Change}
+                        placeholder="Confirm password"
+                        className={`${inputCls} pr-14`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirm((v) => !v)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-[0.62rem] tracking-wider text-gray-300 hover:text-[#5B3FA6]"
+                      >
+                        {showConfirm ? "HIDE" : "SHOW"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full rounded-full bg-[#5B3FA6] px-8 py-4 text-[0.85rem] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-[#4a3288] disabled:opacity-60"
+                >
+                  {isSubmitting ? "Creating account..." : "Create account"}
+                </button>
+              </form>
+            )}
+
+            <div className="my-7 flex items-center gap-4">
+              <div className="h-px flex-1 bg-[#E8E0D8]" />
+              <span className="text-[0.65rem] uppercase tracking-[0.2em] text-gray-300">or</span>
+              <div className="h-px flex-1 bg-[#E8E0D8]" />
+            </div>
+
+            <div className="space-y-3 text-center text-sm text-gray-400">
+              <p>
+                Already have an account?{" "}
+                <Link to="/login" className="font-medium text-[#5B3FA6] hover:text-[#4a3288]">
+                  Login
+                </Link>
+              </p>
+              <p>
+                Are you hotel staff?{" "}
+                <Link
+                  to="/admin/register"
+                  className="font-medium text-[#5B3FA6] hover:text-[#4a3288]"
+                >
+                  Staff Registration →
+                </Link>
+              </p>
+            </div>
           </div>
-
-          <div className="field-grid">
-            <label className="field">
-              <span>First name</span>
-              <input
-                type="text"
-                name="firstName"
-                placeholder="Enter first name"
-                value={step1Data.firstName}
-                onChange={handleStep1Change}
-              />
-            </label>
-
-            <label className="field">
-              <span>Last name</span>
-              <input
-                type="text"
-                name="lastName"
-                placeholder="Enter last name"
-                value={step1Data.lastName}
-                onChange={handleStep1Change}
-              />
-            </label>
-
-            <label className="field field-full">
-              <span>Email address</span>
-              <input
-                type="email"
-                name="email"
-                placeholder="name@example.com"
-                value={step1Data.email}
-                onChange={handleStep1Change}
-              />
-            </label>
-          </div>
-
-          <button type="submit" className="register-button" disabled={isSubmitting}>
-            {isSubmitting ? "Sending OTP..." : "Send OTP"}
-          </button>
-
-          {success && <p className="form-message success">{success}</p>}
-          {error && <p className="form-message error">{error}</p>}
-
-          <p className="auth-switch">
-            Already have an account? <Link to="/login">Login</Link>
-          </p>
-          <p className="auth-switch" style={{ marginTop: "2rem", paddingTop: "1rem", borderTop: "1px solid #E8E4DF" }}>
-            Are you hotel staff? <Link to="/admin/register">Staff Registration</Link>
-          </p>
-        </form>
-      )}
-
-      {/* ── STEP 2: OTP Verification ── */}
-      {step === 2 && (
-        <form className="register-card" onSubmit={handleStep2Submit}>
-          <div className="register-card-heading">
-            <h2>Verify your email</h2>
-            <p>
-              A 6-digit OTP was sent to <strong>{step1Data.email}</strong>. Enter
-              it below to verify your email.
-            </p>
-          </div>
-
-          <div className="field-grid">
-            <label className="field field-full">
-              <span>Enter OTP</span>
-              <input
-                type="text"
-                name="otp"
-                placeholder="Enter 6-digit OTP"
-                maxLength={6}
-                value={otp}
-                onChange={(e) => {
-                  setOtp(e.target.value);
-                  if (error) setError("");
-                }}
-              />
-            </label>
-          </div>
-
-          <button type="submit" className="register-button" disabled={isSubmitting}>
-            {isSubmitting ? "Verifying..." : "Verify OTP"}
-          </button>
-
-          {success && <p className="form-message success">{success}</p>}
-          {error && <p className="form-message error">{error}</p>}
-
-          <p className="auth-switch">
-            Wrong email?{" "}
-            <button
-              type="button"
-              className="link-btn"
-              onClick={() => { setStep(1); setOtp(""); setError(""); setSuccess(""); }}
-            >
-              Go back
-            </button>
-          </p>
-        </form>
-      )}
-
-      {/* ── STEP 3: Complete Registration ── */}
-      {step === 3 && (
-        <form className="register-card" onSubmit={handleStep3Submit}>
-          <div className="register-card-heading">
-            <h2>Complete registration</h2>
-            <p>Email verified! Fill in the remaining details to finish.</p>
-          </div>
-
-          <div className="field-grid">
-            <label className="field">
-              <span>Phone number</span>
-              <input
-                type="text"
-                name="phone"
-                placeholder="Enter phone number"
-                value={step3Data.phone}
-                onChange={handleStep3Change}
-              />
-            </label>
-
-            <label className="field">
-              <span>ID proof</span>
-              <input
-                type="text"
-                name="idProof"
-                placeholder="Aadhaar, passport, driving licence"
-                value={step3Data.idProof}
-                onChange={handleStep3Change}
-              />
-            </label>
-
-            <label className="field field-full">
-              <span>Address</span>
-              <input
-                type="text"
-                name="address"
-                placeholder="Enter address"
-                value={step3Data.address}
-                onChange={handleStep3Change}
-              />
-            </label>
-
-            <label className="field">
-              <span>Password</span>
-              <input
-                type="password"
-                name="password"
-                placeholder="Create password"
-                value={step3Data.password}
-                onChange={handleStep3Change}
-              />
-            </label>
-
-            <label className="field">
-              <span>Confirm password</span>
-              <input
-                type="password"
-                name="confirmPassword"
-                placeholder="Confirm password"
-                value={step3Data.confirmPassword}
-                onChange={handleStep3Change}
-              />
-            </label>
-          </div>
-
-          <button type="submit" className="register-button" disabled={isSubmitting}>
-            {isSubmitting ? "Creating account..." : "Create account"}
-          </button>
-
-          {success && <p className="form-message success">{success}</p>}
-          {error && <p className="form-message error">{error}</p>}
-        </form>
-      )}
-    </section>
+        </div>
+      </div>
+    </div>
   );
 };
 

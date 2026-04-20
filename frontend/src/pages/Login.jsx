@@ -49,8 +49,24 @@ const Login = () => {
         password: formData.password,
       });
 
-      dispatch(setCredentials({ token: data.token, user: data.user }));
-      navigate("/dashboard", { replace: true });
+      const account = data.user || data.admin;
+      const normalizedUser = account
+        ? {
+            ...account,
+            role:
+              account.role ||
+              (isAdminPath || account.employeeId || account.department ? "admin" : "guest"),
+          }
+        : null;
+
+      dispatch(setCredentials({ token: data.token, user: normalizedUser }));
+      
+      const nextRoute =
+        normalizedUser?.role === "admin" || normalizedUser?.role === "superAdmin"
+          ? "/admin/manage-rooms"
+          : "/rooms";
+
+      navigate(nextRoute, { replace: true });
     } catch (submitError) {
       setError(
         submitError.response?.data?.message ||
@@ -196,7 +212,7 @@ const Login = () => {
                     Password
                   </label>
                   <Link
-                    to="/forgot-password"
+                    to={isAdminPath ? "/admin/forgot-password" : "/forgot-password"}
                     className="text-[0.72rem] text-[#5B3FA6] hover:text-[#4a3288] transition-colors"
                   >
                     Forgot password?
@@ -271,7 +287,10 @@ const Login = () => {
             <div className="space-y-3 text-center">
               <p className="text-sm text-gray-400">
                 Don't have an account?{" "}
-                <Link to="/register" className="text-[#5B3FA6] font-medium hover:text-[#4a3288] transition-colors">
+                <Link
+                  to={isAdminPath ? "/admin/register" : "/register"}
+                  className="text-[#5B3FA6] font-medium hover:text-[#4a3288] transition-colors"
+                >
                   Create one
                 </Link>
               </p>

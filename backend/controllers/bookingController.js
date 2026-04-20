@@ -134,4 +134,3 @@ const updateBookingStatus = async (req, res, next) => {
 };
 
 export { createBooking, getAllBookings, getMyBookings, updateBookingStatus };
-

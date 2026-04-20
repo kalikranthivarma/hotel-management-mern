@@ -29,3 +29,18 @@ export const bookDiningTable = async (reservationData) => {
   const response = await api.post("/dining/book-table", reservationData);
   return response.data;
 };
+
+export const getMyDiningReservations = async () => {
+  const response = await api.get("/dining/my-reservations");
+  return response.data;
+};
+
+export const getAllDiningReservations = async () => {
+  const response = await api.get("/dining/reservations");
+  return response.data;
+};
+
+export const updateDiningReservationStatus = async (id, reservationData) => {
+  const response = await api.put(`/dining/reservation/${id}`, reservationData);
+  return response.data;
+};

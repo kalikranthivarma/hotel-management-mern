@@ -67,6 +67,7 @@ const Navbar = () => {
     { to: "/admin/bookings", label: "Bookings" },
     { to: "/admin/dining-orders", label: "Orders" },
     { to: "/admin/menu", label: "Menu" },
+    { to: "/admin/reservations", label: "Reservations" },
   ];
 
   const navLinks = isAdmin ? adminLinks : guestLinks;

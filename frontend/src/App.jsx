@@ -18,6 +18,7 @@ import ManageRooms from "./pages/ManageRooms";
 import Dining from "./pages/Dining";
 import AdminDiningOrders from "./pages/AdminDiningOrders";
 import AdminMenuManagement from "./pages/AdminMenuManagement";
+import AdminReservations from "./pages/AdminReservations";
 import PrivateRoute from "./routes/PrivateRoute";
 
 const adminRoles = ["admin", "superAdmin"];
@@ -90,6 +91,14 @@ function App() {
             element={
               <PrivateRoute allowedRoles={adminRoles}>
                 <AdminMenuManagement />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin/reservations"
+            element={
+              <PrivateRoute allowedRoles={adminRoles}>
+                <AdminReservations />
               </PrivateRoute>
             }
           />

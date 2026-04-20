@@ -7,6 +7,7 @@ import {
   createDiningOrder,
   getDiningTables,
   getMyDiningOrders,
+  getMyDiningReservations,
 } from "../api/diningApi";
 import { getMenuItems } from "../api/menuApi";
 import api from "../api/axios";
@@ -78,6 +79,8 @@ export default function Dining() {
   const [pageMessage, setPageMessage] = useState("");
 
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [dietaryFilters, setDietaryFilters] = useState([]);
   const [cart, setCart] = useState([]);
   const [activeTab, setActiveTab] = useState("order");
   const [orderForm, setOrderForm] = useState({
@@ -91,7 +94,9 @@ export default function Dining() {
     tableNumber: "",
     reservationTime: "",
     guestsCount: 2,
+    specialRequests: "",
   });
+  const [reservations, setReservations] = useState([]);
   const [submittingOrder, setSubmittingOrder] = useState(false);
   const [submittingReservation, setSubmittingReservation] = useState(false);
   const [orderMessage, setOrderMessage] = useState({ text: "", type: "" });
@@ -106,6 +111,16 @@ export default function Dining() {
     () => tables.filter((table) => table.status === "Available"),
     [tables],
   );
+
+  const filteredMenuItems = useMemo(() => {
+    return menuItems.filter((item) => {
+      const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                           item.description?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesDietary = dietaryFilters.length === 0 || 
+                            dietaryFilters.every(filter => item.dietaryInfo?.includes(filter));
+      return matchesSearch && matchesDietary;
+    });
+  }, [menuItems, searchQuery, dietaryFilters]);
 
   useEffect(() => {
     const loadMenu = async () => {
@@ -140,13 +155,15 @@ export default function Dining() {
     const loadProtectedData = async () => {
       try {
         setLoadingProtectedData(true);
-        const [tablesResponse, ordersResponse] = await Promise.all([
+        const [tablesResponse, ordersResponse, reservationsResponse] = await Promise.all([
           getDiningTables(),
           getMyDiningOrders(),
+          getMyDiningReservations(),
         ]);
 
         setTables(Array.isArray(tablesResponse?.data) ? tablesResponse.data : []);
         setOrders(Array.isArray(ordersResponse?.data) ? ordersResponse.data : []);
+        setReservations(Array.isArray(reservationsResponse?.data) ? reservationsResponse.data : []);
       } catch (error) {
         console.error("Failed to fetch dining data:", error);
       } finally {
@@ -282,6 +299,7 @@ export default function Dining() {
         tableNumber: reservationForm.tableNumber,
         reservationTime: reservationForm.reservationTime,
         guestsCount: reservationForm.guestsCount,
+        specialRequests: reservationForm.specialRequests,
       });
 
       setReserveMessage({ text: `Table ${reservationForm.tableNumber} reserved successfully.`, type: "success" });
@@ -289,16 +307,27 @@ export default function Dining() {
         tableNumber: "",
         reservationTime: "",
         guestsCount: 2,
+        specialRequests: "",
       });
 
-      const tablesResponse = await getDiningTables();
+      const [tablesResponse, reservationsResponse] = await Promise.all([
+        getDiningTables(),
+        getMyDiningReservations(),
+      ]);
       setTables(Array.isArray(tablesResponse?.data) ? tablesResponse.data : []);
+      setReservations(Array.isArray(reservationsResponse?.data) ? reservationsResponse.data : []);
     } catch (error) {
       console.error("Failed to reserve table:", error);
       setReserveMessage({ text: error.response?.data?.message || "Unable to reserve the table right now.", type: "error" });
     } finally {
       setSubmittingReservation(false);
     }
+  };
+
+  const toggleDietaryFilter = (filter) => {
+    setDietaryFilters(prev => 
+      prev.includes(filter) ? prev.filter(f => f !== filter) : [...prev, filter]
+    );
   };
 
   return (
@@ -329,29 +358,65 @@ export default function Dining() {
         <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_360px]">
           <main className="min-w-0">
             <section className="rounded-[30px] border border-luxe-border bg-white p-5 shadow-[0_18px_50px_rgba(28,28,28,0.06)] sm:p-6">
-              <div className="flex flex-col gap-4">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.35em] text-luxe-bronze">
-                    Menu
-                  </p>
-                  <h2 className="mt-3 font-serif text-3xl leading-none sm:text-4xl">
-                    Browse by category
-                  </h2>
+              <div className="flex flex-col gap-6">
+                <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold uppercase tracking-[0.35em] text-luxe-bronze">
+                      Menu
+                    </p>
+                    <h2 className="mt-3 font-serif text-3xl leading-none sm:text-4xl">
+                      Browse by category
+                    </h2>
+                  </div>
+                  <div className="relative w-full lg:max-w-xs">
+                    <input
+                      type="text"
+                      placeholder="Search for dishes..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full rounded-2xl border border-luxe-border bg-luxe-smoke py-3 pl-11 pr-4 text-sm outline-none transition focus:border-luxe-bronze focus:bg-white focus:ring-4 focus:ring-luxe-bronze/10"
+                    />
+                    <svg
+                      className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-luxe-muted"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
                 </div>
 
-                <div className="flex gap-3 overflow-x-auto pb-2">
+                <div className="flex gap-3 overflow-x-auto pb-1">
                   {categories.map((category) => (
                     <button
                       key={category}
                       type="button"
                       onClick={() => setSelectedCategory(category)}
-                      className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition ${
+                      className={`shrink-0 rounded-full px-5 py-2.5 text-sm font-semibold transition ${
                         selectedCategory === category
-                          ? "bg-luxe-charcoal text-white"
-                          : "border border-luxe-border bg-luxe-smoke text-luxe-charcoal"
+                          ? "bg-luxe-charcoal text-white shadow-lg shadow-luxe-charcoal/20"
+                          : "border border-luxe-border bg-white text-luxe-charcoal hover:bg-luxe-smoke"
                       }`}
                     >
                       {category}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-luxe-border/50">
+                  <span className="text-xs font-bold uppercase tracking-wider text-luxe-muted mr-2">Filters:</span>
+                  {Object.keys(badgeStyles).map((filter) => (
+                    <button
+                      key={filter}
+                      onClick={() => toggleDietaryFilter(filter)}
+                      className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all ${
+                        dietaryFilters.includes(filter)
+                          ? "bg-luxe-bronze text-white shadow-md shadow-luxe-bronze/30"
+                          : "bg-luxe-smoke text-luxe-muted hover:text-luxe-charcoal"
+                      }`}
+                    >
+                      {filter}
                     </button>
                   ))}
                 </div>
@@ -365,9 +430,9 @@ export default function Dining() {
                 <h3 className="font-serif text-3xl">Menu unavailable</h3>
                 <p className="mt-3 text-luxe-muted">{menuError}</p>
               </div>
-            ) : menuItems.length > 0 ? (
+            ) : filteredMenuItems.length > 0 ? (
               <section className="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                {menuItems.map((item) => {
+                {filteredMenuItems.map((item) => {
                   const cartItem = cart.find((entry) => entry._id === item._id);
 
                   return (
@@ -469,9 +534,79 @@ export default function Dining() {
             ) : (
               <div className="mt-6 rounded-[30px] border border-dashed border-luxe-border bg-white px-6 py-14 text-center">
                 <h3 className="font-serif text-3xl">No dishes found</h3>
-                <p className="mt-3 text-luxe-muted">No menu items are available in this category.</p>
+                <p className="mt-3 text-luxe-muted">
+                  {searchQuery || dietaryFilters.length > 0 
+                    ? "Try adjusting your search or filters to find what you're looking for." 
+                    : "No menu items are available in this category."}
+                </p>
               </div>
             )}
+
+            <section className="mt-8 rounded-[30px] border border-luxe-border bg-white p-5 shadow-[0_18px_50px_rgba(28,28,28,0.06)] sm:p-6">
+              <p className="text-xs font-bold uppercase tracking-[0.35em] text-luxe-bronze">
+                My Reservations
+              </p>
+              <h2 className="mt-3 font-serif text-3xl leading-none sm:text-4xl">
+                Table bookings
+              </h2>
+
+              {user ? (
+                isAdmin ? (
+                  <div className="mt-6 rounded-[24px] border border-dashed border-luxe-border px-5 py-10 text-center text-luxe-muted">
+                    Admin users do not have a guest reservation history here.
+                  </div>
+                ) : loadingProtectedData ? (
+                  <Loader />
+                ) : reservations.length > 0 ? (
+                  <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {reservations.map((res) => (
+                      <div
+                        key={res._id}
+                        className="rounded-[24px] border border-luxe-border bg-luxe-smoke p-5"
+                      >
+                        <div className="flex items-start justify-between">
+                          <h3 className="font-serif text-2xl">Table {res.tableNumber}</h3>
+                          <span
+                            className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${
+                              statusStyles[res.status] || "bg-white text-luxe-charcoal"
+                            }`}
+                          >
+                            {res.status}
+                          </span>
+                        </div>
+                        <div className="mt-4 space-y-1.5 text-sm text-luxe-muted">
+                          <p className="flex items-center gap-2">
+                             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                             {new Date(res.reservationTime).toLocaleDateString()}
+                          </p>
+                          <p className="flex items-center gap-2">
+                             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                             {new Date(res.reservationTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                          <p className="flex items-center gap-2 font-semibold text-luxe-charcoal">
+                             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                             {res.guestsCount} Guests
+                          </p>
+                        </div>
+                        {res.specialRequests && (
+                          <div className="mt-3 rounded-xl bg-white/50 p-2 text-xs italic text-luxe-muted line-clamp-2">
+                             "{res.specialRequests}"
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="mt-6 rounded-[24px] border border-dashed border-luxe-border px-5 py-10 text-center text-luxe-muted">
+                    No table reservations yet.
+                  </div>
+                )
+              ) : (
+                <div className="mt-6 rounded-[24px] border border-dashed border-luxe-border px-5 py-10 text-center text-luxe-muted">
+                  Log in to see your table reservations.
+                </div>
+              )}
+            </section>
 
             <section className="mt-8 rounded-[30px] border border-luxe-border bg-white p-5 shadow-[0_18px_50px_rgba(28,28,28,0.06)] sm:p-6">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -855,6 +990,21 @@ export default function Dining() {
                       value={reservationForm.guestsCount}
                       onChange={handleReservationInputChange}
                       className={inputClass}
+                    />
+                  </div>
+
+                  <div className="mt-4">
+                    <label htmlFor="specialRequests" className="text-sm font-semibold text-luxe-charcoal">
+                      Special Requests
+                    </label>
+                    <textarea
+                      id="specialRequests"
+                      name="specialRequests"
+                      rows="3"
+                      value={reservationForm.specialRequests}
+                      onChange={handleReservationInputChange}
+                      className={inputClass}
+                      placeholder="Eg. Window seat, anniversary, dietary allergies..."
                     />
                   </div>
 

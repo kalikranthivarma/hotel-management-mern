@@ -3,6 +3,7 @@ import DiningOrder from '../models/DiningOrder.js';
 import DiningTable from '../models/DiningTable.js';
 import Booking from '../models/Booking.js';
 import MenuItem from '../models/MenuItem.js';
+import TableReservation from '../models/TableReservation.js';
 
 // Helper to check if it's within restaurant hours (7 AM - 10 PM)
 const isRestaurantOpen = () => {
@@ -34,16 +35,11 @@ export const createOrder = async (req, res, next) => {
         res.status(400);
         throw new Error('Room service is only available for guests with active room bookings');
       }
-      // Room service is 24/7 for active guests - no time check needed as per user request
     } else {
-      // In-Restaurant / Visitor
       if (!isOpen && !activeBooking) {
         res.status(400);
         throw new Error('The restaurant is currently closed. Hours: 7 AM - 10 PM');
       }
-      // If they are an active guest, user didn't specify if they can eat *in restaurant* after 10 PM, 
-      // but usually restaurant has hours. However, point 7 says "hotel can provide food for anytime for users who are booked".
-      // I'll allow active guests to order anytime regardless of type for maximum flexibility.
     }
 
     // 3. Calculate total and validate items
@@ -76,7 +72,7 @@ export const createOrder = async (req, res, next) => {
       totalAmount,
       paymentMethod,
       specialInstructions,
-      paymentStatus: paymentMethod === 'Online' ? 'Pending' : 'Pending', // Online might start as pending until gateway returns
+      paymentStatus: 'Pending',
     });
 
     res.status(201).json({ success: true, data: order });
@@ -136,12 +132,11 @@ export const updateOrderStatus = async (req, res, next) => {
 // @access  Private/User
 export const bookTable = async (req, res, next) => {
   try {
-    const { tableNumber, reservationTime, guestsCount } = req.body;
+    const { tableNumber, reservationTime, guestsCount, specialRequests } = req.body;
 
     const resDate = new Date(reservationTime);
     const hours = resDate.getHours();
 
-    // Check if within 7 AM - 10 PM
     if (hours < 7 || hours >= 22) {
       res.status(400);
       throw new Error('Table bookings are only allowed between 7 AM and 10 PM');
@@ -158,15 +153,83 @@ export const bookTable = async (req, res, next) => {
       throw new Error('Table is already reserved or occupied');
     }
 
-    // Mark table as reserved (Simple logic for now)
+    // 1. Create a reservation record
+    const reservation = await TableReservation.create({
+      user: req.user._id,
+      table: table._id,
+      tableNumber: table.tableNumber,
+      reservationTime: resDate,
+      guestsCount,
+      specialRequests,
+    });
+
+    // 2. Mark table as reserved
     table.status = 'Reserved';
     await table.save();
 
-    res.status(200).json({
+    res.status(201).json({
       success: true,
-      message: `Table ${tableNumber} reserved for ${reservationTime}`,
-      data: table,
+      message: `Table ${tableNumber} successfully reserved for ${resDate.toLocaleString()}`,
+      data: reservation,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get my reservations
+// @route   GET /api/dining/my-reservations
+// @access  Private/User
+export const getMyReservations = async (req, res, next) => {
+  try {
+    const reservations = await TableReservation.find({ user: req.user._id }).sort({ reservationTime: 1 });
+    res.status(200).json({ success: true, count: reservations.length, data: reservations });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get all reservations
+// @route   GET /api/dining/reservations
+// @access  Private/Admin
+export const getAllReservations = async (req, res, next) => {
+  try {
+    const reservations = await TableReservation.find({})
+      .populate('user', 'firstName lastName email')
+      .populate('table')
+      .sort({ reservationTime: 1 });
+    res.status(200).json({ success: true, count: reservations.length, data: reservations });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update reservation status
+// @route   PUT /api/dining/reservation/:id
+// @access  Private/Admin
+export const updateReservationStatus = async (req, res, next) => {
+  try {
+    const { status } = req.body;
+    const reservation = await TableReservation.findById(req.params.id);
+
+    if (!reservation) {
+      res.status(404);
+      throw new Error('Reservation not found');
+    }
+
+    reservation.status = status;
+    await reservation.save();
+
+    // If cancelled or completed, make table available again
+    if (status === 'Cancelled' || status === 'Completed') {
+      const table = await DiningTable.findById(reservation.table);
+      if (table) {
+        table.status = 'Available';
+        await table.save();
+      }
+    }
+
+    res.status(200).json({ success: true, data: reservation });
   } catch (error) {
     next(error);
   }
@@ -183,3 +246,4 @@ export const getTables = async (req, res, next) => {
     next(error);
   }
 };
+

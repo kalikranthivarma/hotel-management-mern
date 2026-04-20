@@ -4,7 +4,7 @@ import {
   deleteMenuItem,
   getMenuItems,
   updateMenuItem,
-} from "../api/diningApi";
+} from "../api/menuApi";
 import Loader from "../components/Loader";
 import api from "../api/axios";
 

@@ -67,8 +67,9 @@ const authorize = (...roles) => (req, res, next) => {
 // These are arrays that Express route handlers accept natively.
 // Use them exactly as you would a single middleware function.
 
-// Only logged-in guests (or staff acting as guests) can access
-const protectUser = [protect, authorize('guest', 'admin', 'superAdmin')];
+// Only logged-in guests can access user booking and dining routes.
+// Admin or superAdmin accounts should not use guest reservation/order endpoints.
+const protectUser = [protect, authorize('guest')];
 
 // Only logged-in staff (admin or superAdmin) can access
 const protectAdmin = [protect, authorize('admin', 'superAdmin')];

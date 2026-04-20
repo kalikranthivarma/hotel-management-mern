@@ -6,9 +6,9 @@ import {
   bookDiningTable,
   createDiningOrder,
   getDiningTables,
-  getMenuItems,
   getMyDiningOrders,
 } from "../api/diningApi";
+import { getMenuItems } from "../api/menuApi";
 import api from "../api/axios";
 
 const categories = [
@@ -67,6 +67,7 @@ const formatCurrency = (amount) =>
 
 export default function Dining() {
   const { user } = useSelector((state) => state.auth);
+  const isAdmin = user?.role === 'admin' || user?.role === 'superAdmin';
 
   const [menuItems, setMenuItems] = useState([]);
   const [tables, setTables] = useState([]);
@@ -130,7 +131,7 @@ export default function Dining() {
   }, [selectedCategory]);
 
   useEffect(() => {
-    if (!user) {
+    if (!user || isAdmin) {
       setTables([]);
       setOrders([]);
       return;
@@ -154,7 +155,7 @@ export default function Dining() {
     };
 
     loadProtectedData();
-  }, [user]);
+  }, [user, isAdmin]);
 
   const updateCart = (menuItem, delta) => {
     setCart((prev) => {
@@ -488,7 +489,11 @@ export default function Dining() {
               </div>
 
               {user ? (
-                loadingProtectedData ? (
+                isAdmin ? (
+                  <div className="mt-6 rounded-[24px] border border-dashed border-luxe-border px-5 py-10 text-center text-luxe-muted">
+                    Admin users cannot use the guest dining flow. Please use the admin dining dashboard or manage menu items instead.
+                  </div>
+                ) : loadingProtectedData ? (
                   <Loader />
                 ) : tables.length > 0 ? (
                   <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -535,7 +540,11 @@ export default function Dining() {
               </h2>
 
               {user ? (
-                loadingProtectedData ? (
+                isAdmin ? (
+                  <div className="mt-6 rounded-[24px] border border-dashed border-luxe-border px-5 py-10 text-center text-luxe-muted">
+                    Admin users do not have a guest dining order history here.
+                  </div>
+                ) : loadingProtectedData ? (
                   <Loader />
                 ) : orders.length > 0 ? (
                   <div className="mt-6 space-y-4">
@@ -644,7 +653,11 @@ export default function Dining() {
                 </button>
               </div>
 
-              {activeTab === "order" ? (
+              {user && isAdmin ? (
+                <div className="mt-6 rounded-[24px] border border-dashed border-luxe-border px-5 py-10 text-center text-luxe-muted">
+                  Admin users cannot place dining orders or reserve tables. Please use the admin dining dashboard.
+                </div>
+              ) : activeTab === "order" ? (
                 <form className="mt-6" onSubmit={handlePlaceOrder}>
                   <div className="space-y-3">
                     {cart.length > 0 ? (

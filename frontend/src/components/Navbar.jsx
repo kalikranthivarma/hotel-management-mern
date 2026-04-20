@@ -1,223 +1,3 @@
-// import { useEffect, useRef, useState } from "react";
-// import { Link, useLocation, useNavigate } from "react-router-dom";
-// import { useDispatch, useSelector } from "react-redux";
-// import { logoutUser } from "../redux/authSlice";
-
-// const Navbar = () => {
-//   const location = useLocation();
-//   const navigate = useNavigate();
-//   const dispatch = useDispatch();
-
-//   const [menuOpen, setMenuOpen] = useState(false);
-//   const [profileOpen, setProfileOpen] = useState(false);
-//   const [scrolled, setScrolled] = useState(false);
-//   const profileRef = useRef(null);
-
-//   const { user } = useSelector((state) => state.auth);
-//   const role = user?.role || "guest_visit";
-
-//   useEffect(() => {
-//     setMenuOpen(false);
-//     setProfileOpen(false);
-//   }, [location.pathname]);
-
-//   useEffect(() => {
-//     const onScroll = () => setScrolled(window.scrollY > 10);
-//     window.addEventListener("scroll", onScroll);
-//     return () => window.removeEventListener("scroll", onScroll);
-//   }, []);
-
-//   useEffect(() => {
-//     const handleClickOutside = (event) => {
-//       if (profileRef.current && !profileRef.current.contains(event.target)) {
-//         setProfileOpen(false);
-//       }
-//     };
-
-//     document.addEventListener("mousedown", handleClickOutside);
-//     return () => document.removeEventListener("mousedown", handleClickOutside);
-//   }, []);
-
-//   const handleLogout = () => {
-//     dispatch(logoutUser());
-//     setMenuOpen(false);
-//     setProfileOpen(false);
-//     navigate("/login");
-//   };
-
-//   const getNavLinks = () => {
-//     if (role === "admin" || role === "superAdmin") {
-//       return [
-//         { to: "/", label: "Home" },
-//         { to: "/dashboard", label: "Dashboard" },
-//         { to: "/admin/manage-rooms", label: "Manage Rooms" },
-//         { to: "/admin/bookings", label: "All Bookings" },
-//         { to: "/admin/dining-orders", label: "Dining Orders" },
-//         { to: "/admin/menu", label: "Manage Menu" },
-//       ];
-//     }
-
-//     const links = [
-//       { to: "/#hotels", label: "Hotels" },
-//       { to: "/rooms", label: "Rooms" },
-//       { to: "/dining", label: "Dining" },
-//     ];
-
-//     if (user) {
-//       links.push({ to: "/bookings", label: "My Bookings" });
-//     }
-
-//     return links;
-//   };
-
-//   const navLinks = getNavLinks();
-
-//   return (
-//     <>
-//       <header
-//         className={`fixed left-0 right-0 top-0 z-50 transition-all duration-500 ${
-//           scrolled ? "bg-[#0e0c0a]/85 shadow-lg backdrop-blur-md" : "bg-black/60 backdrop-blur-md"
-//         }`}
-//       >
-//         <div className="mx-auto max-w-7xl px-6 lg:px-10">
-//           <div className="flex h-16 items-center justify-between lg:h-20">
-//             <Link to="/" className="flex items-center gap-3">
-//               <span className="text-2xl font-light tracking-[0.15em] text-white drop-shadow-sm">KNSU</span>
-//               <span className="text-xs uppercase tracking-[0.3em] text-[#B8956A]">STAYS</span>
-//             </Link>
-
-//             <nav className="hidden items-center gap-10 lg:flex">
-//               {navLinks.map((link) =>
-//                 link.to.startsWith("/#") ? (
-//                   <a
-//                     key={link.label}
-//                     href={link.to}
-//                     className="relative text-[0.85rem] uppercase tracking-[0.15em] text-white/90 drop-shadow-sm after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-0 after:bg-[#B8956A] after:transition-all hover:text-white hover:after:w-full"
-//                   >
-//                     {link.label}
-//                   </a>
-//                 ) : (
-//                   <Link
-//                     key={link.label}
-//                     to={link.to}
-//                     className="relative text-[0.85rem] uppercase tracking-[0.15em] text-white/90 drop-shadow-sm after:absolute after:-bottom-1 after:left-0 after:h-[1px] after:w-0 after:bg-[#B8956A] after:transition-all hover:text-white hover:after:w-full"
-//                   >
-//                     {link.label}
-//                   </Link>
-//                 ),
-//               )}
-//             </nav>
-
-//             <div className="hidden items-center gap-6 lg:flex">
-//               {user ? (
-//                 <div className="relative" ref={profileRef}>
-//                   <button
-//                     onClick={() => setProfileOpen((value) => !value)}
-//                     className="flex items-center gap-3 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm text-white/90 transition hover:bg-white/10"
-//                   >
-//                     <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#B8956A] text-xs font-semibold uppercase text-white">
-//                       {user.firstName?.[0] || "U"}
-//                     </span>
-//                     <span>Hi, {user.firstName}</span>
-//                     <span className={`text-xs transition ${profileOpen ? "rotate-180" : ""}`}>▼</span>
-//                   </button>
-
-//                   {profileOpen && (
-//                     <div className="absolute right-0 mt-3 w-52 overflow-hidden rounded-2xl border border-white/10 bg-[#171411] shadow-2xl backdrop-blur-md">
-//                       <Link
-//                         to="/dashboard"
-//                         className="block px-4 py-3 text-sm text-white/90 transition hover:bg-white/8"
-//                         onClick={() => setProfileOpen(false)}
-//                       >
-//                         Profile
-//                       </Link>
-//                       <button
-//                         onClick={handleLogout}
-//                         className="block w-full px-4 py-3 text-left text-sm text-red-300 transition hover:bg-white/8"
-//                       >
-//                         Logout
-//                       </button>
-//                     </div>
-//                   )}
-//                 </div>
-//               ) : (
-//                 <>
-//                   <Link
-//                     to="/login"
-//                     className="text-[0.85rem] tracking-[0.12em] text-white/90 drop-shadow-sm hover:text-white"
-//                   >
-//                     LOGIN / JOIN
-//                   </Link>
-
-//                   <Link
-//                     to="/register"
-//                     className="rounded-full bg-[#5B3FA6] px-6 py-2 text-sm tracking-wide text-white transition hover:bg-[#4a3288]"
-//                   >
-//                     BOOK NOW
-//                   </Link>
-//                 </>
-//               )}
-//             </div>
-
-//             <button
-//               className="flex flex-col gap-1.5 lg:hidden"
-//               onClick={() => setMenuOpen((v) => !v)}
-//               aria-label="Toggle menu"
-//             >
-//               <span className="h-[2px] w-5 bg-white" />
-//               <span className="h-[2px] w-5 bg-white" />
-//               <span className="h-[2px] w-5 bg-white" />
-//             </button>
-//           </div>
-//         </div>
-
-//         {menuOpen && (
-//           <div className="space-y-5 bg-[#0e0c0a] px-6 py-6 text-white lg:hidden">
-//             {user && (
-//               <Link
-//                 to="/dashboard"
-//                 className="block rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm"
-//               >
-//                 Profile
-//               </Link>
-//             )}
-
-//             {navLinks.map((link) =>
-//               link.to.startsWith("/#") ? (
-//                 <a key={link.label} href={link.to} className="block text-sm">
-//                   {link.label}
-//                 </a>
-//               ) : (
-//                 <Link key={link.label} to={link.to} className="block text-sm">
-//                   {link.label}
-//                 </Link>
-//               ),
-//             )}
-
-//             {user ? (
-//               <button onClick={handleLogout} className="text-red-400">
-//                 Logout
-//               </button>
-//             ) : (
-//               <>
-//                 <Link to="/login" className="block text-sm">
-//                   LOGIN / JOIN
-//                 </Link>
-//                 <Link to="/register" className="block rounded-full bg-[#5B3FA6] py-2 text-center">
-//                   BOOK NOW
-//                 </Link>
-//               </>
-//             )}
-//           </div>
-//         )}
-//       </header>
-
-//       <div className="h-16 lg:h-20" />
-//     </>
-//   );
-// };
-
-// export default Navbar;
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -302,11 +82,11 @@ const Navbar = () => {
     const baseClass = mobile
       ? `flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 ${
           active
-            ? "bg-[#5B3FA6]/15 text-[#8B6FD4]"
+            ? "bg-luxe-bronze/15 text-luxe-bronze"
             : "text-white/70 hover:bg-white/5 hover:text-white"
         }`
       : `relative text-[0.8rem] font-medium uppercase tracking-[0.12em] transition-all duration-200 ${
-          active ? "text-[#B8956A]" : "text-white/80 hover:text-white"
+          active ? "text-luxe-bronze" : "text-white/80 hover:text-white"
         }`;
 
     const underline = !mobile && (
@@ -369,7 +149,7 @@ const Navbar = () => {
                         to={link.to}
                         className={`rounded-lg px-3.5 py-1.5 text-[0.78rem] font-medium tracking-wide transition-all duration-200 ${
                           active
-                            ? "bg-[#5B3FA6] text-white shadow-[0_2px_8px_rgba(91,63,166,0.5)]"
+                            ? "bg-luxe-bronze text-white shadow-[0_2px_8px_rgba(184,149,106,0.5)]"
                             : "text-white/60 hover:bg-white/8 hover:text-white"
                         }`}
                       >
@@ -393,12 +173,12 @@ const Navbar = () => {
                     onClick={() => setProfileOpen((v) => !v)}
                     className="flex items-center gap-2.5 rounded-full border border-white/12 bg-white/5 py-1.5 pl-1.5 pr-4 text-sm text-white/90 transition-all duration-200 hover:border-white/20 hover:bg-white/10"
                   >
-                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#7B5FC4] to-[#5B3FA6] text-[0.65rem] font-bold text-white">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-luxe-bronze to-luxe-charcoal text-[0.65rem] font-bold text-white">
                       {initials}
                     </span>
                     <span className="text-[0.82rem] font-medium">{user.firstName}</span>
                     {isAdmin && (
-                      <span className="rounded-md bg-[#5B3FA6]/30 px-1.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-[#A88ED4]">
+                      <span className="rounded-md bg-luxe-bronze/30 px-1.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-white">
                         {role === "superAdmin" ? "Super" : "Admin"}
                       </span>
                     )}
@@ -468,7 +248,7 @@ const Navbar = () => {
                   </Link>
                   <Link
                     to="/register"
-                    className="rounded-full bg-[#5B3FA6] px-5 py-2 text-[0.8rem] font-semibold tracking-wide text-white shadow-[0_4px_16px_rgba(91,63,166,0.4)] transition hover:bg-[#4a3288] hover:shadow-[0_6px_20px_rgba(91,63,166,0.5)]"
+                    className="rounded-full bg-luxe-bronze px-5 py-2 text-[0.8rem] font-semibold tracking-wide text-white shadow-[0_4px_16px_rgba(184,149,106,0.4)] transition hover:bg-luxe-bronze-light hover:shadow-[0_6px_20px_rgba(184,149,106,0.5)]"
                   >
                     Book Now
                   </Link>
@@ -527,7 +307,7 @@ const Navbar = () => {
         {user && (
           <div className="border-b border-white/8 px-5 py-4">
             <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#7B5FC4] to-[#5B3FA6] text-sm font-bold text-white">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-luxe-bronze to-luxe-charcoal text-sm font-bold text-white">
                 {initials}
               </span>
               <div>
@@ -591,7 +371,7 @@ const Navbar = () => {
               </Link>
               <Link
                 to="/register"
-                className="rounded-xl bg-[#5B3FA6] py-3 text-center text-sm font-semibold text-white shadow-[0_4px_16px_rgba(91,63,166,0.35)] transition hover:bg-[#4a3288]"
+                className="rounded-xl bg-luxe-bronze py-3 text-center text-sm font-semibold text-white shadow-[0_4px_16px_rgba(184,149,106,0.35)] transition hover:bg-luxe-bronze-light"
               >
                 Book Now
               </Link>

@@ -82,7 +82,7 @@ const ManageRooms = () => {
     const payload = {
       roomNumber: formData.roomNumber.trim(),
       title: formData.title.trim(),
-      type: formData.type,
+      type: String(formData.type || "").toLowerCase(),
       bedType: formData.bedType,
       view: formData.view,
       floor: Number(formData.floor),
@@ -91,6 +91,7 @@ const ManageRooms = () => {
       maxGuests: Number(formData.maxGuests),
       description: formData.description.trim(),
       images: formData.imageUrl.trim() ? [formData.imageUrl.trim()] : [],
+      amenities: editingRoom?.amenities || [],
     };
 
     try {
@@ -127,6 +128,7 @@ const ManageRooms = () => {
         <table className="min-w-full text-left">
           <thead className="border-b border-luxe-border bg-luxe-smoke text-sm uppercase tracking-[0.2em] text-luxe-muted">
             <tr>
+              <th className="px-6 py-4 text-center">Room #</th>
               <th className="px-6 py-4">Image</th>
               <th className="px-6 py-4">Title</th>
               <th className="px-6 py-4">Type</th>
@@ -137,21 +139,22 @@ const ManageRooms = () => {
           </thead>
           <tbody>
             {rooms.map((room) => (
-              <tr key={room._id} className="border-b border-luxe-border last:border-b-0">
+              <tr key={room._id} className="border-b border-luxe-border last:border-b-0 hover:bg-luxe-smoke/30 transition">
+                <td className="px-6 py-4 text-center font-bold text-luxe-bronze">{room.roomNumber}</td>
                 <td className="px-6 py-4">
                   <img
                     src={room.images?.[0] || "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=50"}
                     alt={room.title}
-                    className="h-14 w-14 rounded-2xl object-cover"
+                    className="h-14 w-14 rounded-2xl object-cover shadow-sm"
                   />
                 </td>
                 <td className="px-6 py-4 font-semibold text-luxe-charcoal">{room.title}</td>
-                <td className="px-6 py-4 text-luxe-muted uppercase text-xs tracking-wider">{room.type}</td>
-                <td className="px-6 py-4 text-luxe-charcoal font-medium">Rs. {room.pricePerNight}</td>
+                <td className="px-6 py-4 text-luxe-muted uppercase text-[10px] tracking-widest font-bold">{room.type}</td>
+                <td className="px-6 py-4 text-luxe-charcoal font-medium">₹ {room.pricePerNight}</td>
                 <td className="px-6 py-4 text-luxe-muted">{room.maxGuests} Guests</td>
                 <td className="px-6 py-4">
                   <div className="flex gap-3">
-                    <button className="rounded-full border border-luxe-border px-4 py-2 text-sm font-semibold hover:bg-luxe-smoke transition" onClick={() => handleOpenModal(room)}>
+                    <button className="rounded-full border border-luxe-border px-4 py-2 text-sm font-semibold hover:bg-luxe-charcoal hover:text-white transition" onClick={() => handleOpenModal(room)}>
                       Edit
                     </button>
                     <button className="rounded-full border border-red-100 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 transition" onClick={() => handleDelete(room._id)}>

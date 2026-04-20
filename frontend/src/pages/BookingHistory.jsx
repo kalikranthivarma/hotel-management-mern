@@ -55,7 +55,7 @@ const BookingHistory = () => {
                 <span className="rounded-full bg-luxe-smoke px-4 py-2 text-xs font-bold uppercase tracking-[0.25em] text-luxe-charcoal">
                   {booking.status}
                 </span>
-                <span className="text-sm font-semibold text-luxe-bronze">Rs. {booking.totalAmount}</span>
+                <span className="text-sm font-semibold text-luxe-bronze">Rs. {booking.totalPrice}</span>
               </div>
 
               <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr_220px]">
@@ -74,11 +74,11 @@ const BookingHistory = () => {
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
                   <div>
                     <span className="text-xs uppercase tracking-[0.25em] text-luxe-muted">Check-in</span>
-                    <p className="mt-2 font-semibold">{new Date(booking.checkInDate).toLocaleDateString()}</p>
+                    <p className="mt-2 font-semibold">{booking.checkIn ? new Date(booking.checkIn).toLocaleDateString() : 'N/A'}</p>
                   </div>
                   <div>
                     <span className="text-xs uppercase tracking-[0.25em] text-luxe-muted">Check-out</span>
-                    <p className="mt-2 font-semibold">{new Date(booking.checkOutDate).toLocaleDateString()}</p>
+                    <p className="mt-2 font-semibold">{booking.checkOut ? new Date(booking.checkOut).toLocaleDateString() : 'N/A'}</p>
                   </div>
                 </div>
 

@@ -73,23 +73,23 @@ const AdminBookings = () => {
               <div>
                 <span className="text-xs uppercase tracking-[0.25em] text-luxe-muted">Stay Dates</span>
                 <p className="mt-2 font-semibold">
-                  {new Date(booking.checkInDate).toLocaleDateString()} to{" "}
-                  {new Date(booking.checkOutDate).toLocaleDateString()}
+                  {booking.checkIn ? new Date(booking.checkIn).toLocaleDateString() : 'N/A'} to{" "}
+                  {booking.checkOut ? new Date(booking.checkOut).toLocaleDateString() : 'N/A'}
                 </p>
               </div>
 
               <div className="flex items-start justify-end gap-3">
-                {booking.status === "Pending" && (
+                {booking.status === "pending" && (
                   <>
                     <button
                       className="rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
-                      onClick={() => handleStatusUpdate(booking._id, "Confirmed")}
+                      onClick={() => handleStatusUpdate(booking._id, "confirmed")}
                     >
                       Confirm
                     </button>
                     <button
                       className="rounded-2xl border border-red-200 px-4 py-3 text-sm font-semibold text-red-700 transition hover:bg-red-50"
-                      onClick={() => handleStatusUpdate(booking._id, "Cancelled")}
+                      onClick={() => handleStatusUpdate(booking._id, "cancelled")}
                     >
                       Cancel
                     </button>

@@ -1,0 +1,242 @@
+/* Dashboard Styles — Modern Class Aesthetic */
+
+.dashboard-page {
+  background-color: var(--ivory);
+  min-height: 100vh;
+  padding: 120px 0 100px;
+}
+
+
+.dashboard-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Header */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 60px;
+  padding-bottom: 30px;
+  border-bottom: 1px solid rgba(166, 124, 82, 0.2);
+}
+
+.dashboard-header .eyebrow {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--bronze);
+  margin-bottom: 10px;
+}
+
+
+.welcome-text {
+  font-size: 42px;
+  font-weight: 300;
+  font-family: 'Tenor Sans', sans-serif;
+  color: #1A1A1A;
+}
+
+.welcome-text .name {
+  color: #A67C52;
+}
+
+/* Buttons */
+.dash-btn {
+  display: inline-block;
+  padding: 14px 28px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.dash-btn--primary {
+  background: #1A1A1A;
+  color: white;
+}
+
+.dash-btn--primary:hover {
+  background: #A67C52;
+}
+
+/* Common Section */
+.dashboard-section {
+  margin-bottom: 50px;
+}
+
+.section-title {
+  font-size: 20px;
+  font-weight: 400;
+  font-family: 'Tenor Sans', sans-serif;
+  margin-bottom: 25px;
+  color: #1A1A1A;
+}
+
+/* Admin Grid & Stats */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 25px;
+}
+
+.stat-card {
+  background: white;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.03);
+  border: 1px solid #eee;
+}
+
+.stat-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #999;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.stat-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1A1A1A;
+}
+
+.stat-value.bronze {
+  color: #A67C52;
+}
+
+/* Action Cards */
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 25px;
+}
+
+.action-card {
+  background: white;
+  padding: 25px;
+  border-radius: 8px;
+  border: 1px solid #eee;
+  display: flex;
+  gap: 20px;
+  text-decoration: none;
+  transition: all 0.3s;
+}
+
+.action-card:hover:not(.disabled) {
+  transform: translateY(-5px);
+  border-color: #A67C52;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+}
+
+.action-card.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.action-card .icon {
+  font-size: 32px;
+  background: #FEF9F3;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.action-card h3 {
+  font-size: 18px;
+  margin-bottom: 5px;
+  color: #1A1A1A;
+}
+
+.action-card p {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.4;
+}
+
+/* Guest Info Grid */
+.info-grid {
+  background: white;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1px;
+  background: #eee;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.info-item {
+  background: white;
+  padding: 25px;
+}
+
+.info-item .label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #999;
+  margin-bottom: 8px;
+}
+
+.info-item .value {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1A1A1A;
+}
+
+.status-active {
+  color: #2e7d32;
+}
+
+/* Quick Links Row */
+.links-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.link-card {
+  background: linear-gradient(135deg, #1A1A1A, #333);
+  color: white;
+  padding: 30px;
+  border-radius: 8px;
+  text-align: center;
+  text-decoration: none;
+  transition: all 0.3s;
+}
+
+.link-card:hover {
+  background: #A67C52;
+  transform: translateY(-5px);
+}
+
+.link-card .icon {
+  font-size: 30px;
+  display: block;
+  margin-bottom: 15px;
+}
+
+.link-card h3 {
+  font-size: 16px;
+  font-weight: 400;
+  font-family: 'Tenor Sans', sans-serif;
+}
+
+@media (max-width: 900px) {
+  .stats-row, .actions-grid, .links-row, .info-grid {
+    grid-template-columns: 1fr;
+  }
+}

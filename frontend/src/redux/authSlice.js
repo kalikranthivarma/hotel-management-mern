@@ -2,6 +2,28 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const storageKey = "hotelAuth";
 
+const normalizeUser = (payload) => {
+  if (!payload) return null;
+
+  const validRoles = ["guest", "admin", "superAdmin"];
+  const hasStaffFields = Boolean(payload.employeeId || payload.department);
+
+  // If backend explicitly sent a valid role, trust it
+  if (payload.role && validRoles.includes(payload.role)) {
+    // Extra safety: if role is admin/superAdmin but no staff fields exist, demote to guest
+    if ((payload.role === "admin" || payload.role === "superAdmin") && !hasStaffFields) {
+      return { ...payload, role: "guest" };
+    }
+    return payload;
+  }
+
+  // No role from backend: infer from staff fields
+  return {
+    ...payload,
+    role: hasStaffFields ? "admin" : "guest",
+  };
+};
+
 const getStoredAuth = () => {
   const raw = localStorage.getItem(storageKey);
 
@@ -13,7 +35,11 @@ const getStoredAuth = () => {
   }
 
   try {
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return {
+      token: parsed?.token || "",
+      user: normalizeUser(parsed?.user),
+    };
   } catch {
     localStorage.removeItem(storageKey);
     return {
@@ -45,7 +71,7 @@ const authSlice = createSlice({   //create redux slice
   reducers: {
     setCredentials: (state, action) => {    //runs when user log in
       state.token = action.payload?.token || "";    //saves token
-      state.user = action.payload?.user || null;   //saves user
+      state.user = normalizeUser(action.payload?.user || action.payload?.admin);   //saves user
       persistAuth(state);
     },
     logoutUser: (state) => {

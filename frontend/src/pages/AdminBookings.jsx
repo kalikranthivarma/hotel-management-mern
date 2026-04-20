@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { getAllBookings, updateBookingStatus } from "../api/bookingApi";
 import Loader from "../components/Loader";
-import "../styles/BookingHistory.css"; // Reuse similar styles
 
 const AdminBookings = () => {
   const [bookings, setBookings] = useState([]);
@@ -27,7 +26,7 @@ const AdminBookings = () => {
   const handleStatusUpdate = async (id, newStatus) => {
     try {
       await updateBookingStatus(id, { status: newStatus });
-      fetchBookings(); // Refresh
+      fetchBookings();
     } catch (err) {
       alert("Failed to update status.");
     }
@@ -36,66 +35,70 @@ const AdminBookings = () => {
   if (loading) return <Loader />;
 
   return (
-    <div className="booking-history-page admin-bookings">
-      <div className="history-container">
-        <header className="history-header">
-          <h1 className="title">Global Booking Management</h1>
-          <p className="subtitle">Oversee all reservation requests across KNSU Stays.</p>
-        </header>
+    <div className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
+      <header className="rounded-[34px] bg-luxe-charcoal px-6 py-8 text-white shadow-[0_18px_60px_rgba(28,28,28,0.14)]">
+        <h1 className="font-serif text-5xl leading-none">Global Booking Management</h1>
+        <p className="mt-4 max-w-2xl text-lg leading-8 text-white/70">
+          Oversee all reservation requests across KNSU Stays.
+        </p>
+      </header>
 
-        {error && <div className="error-box">{error}</div>}
+      {error && <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
 
-        <div className="bookings-list">
-          {bookings.map((booking) => (
-            <article key={booking._id} className="booking-item">
-              <div className="booking-status-tag" data-status={booking.status}>
+      <div className="mt-6 space-y-5">
+        {bookings.map((booking) => (
+          <article key={booking._id} className="rounded-[30px] border border-luxe-border bg-white p-6 shadow-[0_18px_50px_rgba(28,28,28,0.06)]">
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <span className="rounded-full bg-luxe-smoke px-4 py-2 text-xs font-bold uppercase tracking-[0.25em] text-luxe-charcoal">
                 {booking.status}
+              </span>
+              <span className="text-sm font-semibold text-luxe-bronze">Booking #{booking._id.slice(-6)}</span>
+            </div>
+
+            <div className="grid gap-5 lg:grid-cols-[1fr_1fr_1fr_auto]">
+              <div>
+                <span className="text-xs uppercase tracking-[0.25em] text-luxe-muted">Guest</span>
+                <h3 className="mt-2 text-xl font-semibold">
+                  {booking.user?.firstName} {booking.user?.lastName}
+                </h3>
+                <p className="mt-1 break-all text-sm text-luxe-muted">{booking.user?.email}</p>
               </div>
-              
-              <div className="booking-info-grid">
-                <div className="info-section user-details">
-                  <span className="label">GUEST</span>
-                  <h3>{booking.user?.firstName} {booking.user?.lastName}</h3>
-                  <p className="user-email">{booking.user?.email}</p>
-                </div>
 
-                <div className="info-section room-details">
-                  <span className="label">ROOM</span>
-                  <h3>{booking.room?.title}</h3>
-                  <p className="room-type">{booking.room?.type}</p>
-                </div>
-
-                <div className="info-section dates">
-                   <div className="date-block">
-                    <span className="label">STAY DATES</span>
-                    <span className="val">
-                      {new Date(booking.checkInDate).toLocaleDateString()} — {new Date(booking.checkOutDate).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="info-section actions">
-                  {booking.status === "Pending" && (
-                    <div className="admin-actions-btns">
-                      <button 
-                        className="confirm-btn" 
-                        onClick={() => handleStatusUpdate(booking._id, "Confirmed")}
-                      >
-                        Confirm
-                      </button>
-                      <button 
-                        className="cancel-btn" 
-                        onClick={() => handleStatusUpdate(booking._id, "Cancelled")}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  )}
-                </div>
+              <div>
+                <span className="text-xs uppercase tracking-[0.25em] text-luxe-muted">Room</span>
+                <h3 className="mt-2 text-xl font-semibold">{booking.room?.title}</h3>
+                <p className="mt-1 text-sm text-luxe-muted">{booking.room?.type}</p>
               </div>
-            </article>
-          ))}
-        </div>
+
+              <div>
+                <span className="text-xs uppercase tracking-[0.25em] text-luxe-muted">Stay Dates</span>
+                <p className="mt-2 font-semibold">
+                  {booking.checkIn ? new Date(booking.checkIn).toLocaleDateString() : 'N/A'} to{" "}
+                  {booking.checkOut ? new Date(booking.checkOut).toLocaleDateString() : 'N/A'}
+                </p>
+              </div>
+
+              <div className="flex items-start justify-end gap-3">
+                {booking.status === "pending" && (
+                  <>
+                    <button
+                      className="rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
+                      onClick={() => handleStatusUpdate(booking._id, "confirmed")}
+                    >
+                      Confirm
+                    </button>
+                    <button
+                      className="rounded-2xl border border-red-200 px-4 py-3 text-sm font-semibold text-red-700 transition hover:bg-red-50"
+                      onClick={() => handleStatusUpdate(booking._id, "cancelled")}
+                    >
+                      Cancel
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </article>
+        ))}
       </div>
     </div>
   );

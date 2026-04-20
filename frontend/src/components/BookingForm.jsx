@@ -1,12 +1,16 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { createBooking } from "../api/bookingApi";
 
+const inputClass =
+  "mt-2 w-full rounded-2xl border border-luxe-border bg-luxe-smoke px-4 py-3 outline-none transition focus:border-luxe-bronze focus:bg-white focus:ring-4 focus:ring-luxe-bronze/10";
+
 const BookingForm = ({ roomId, pricePerNight }) => {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
-  
+  const isAdmin = user?.role === "admin" || user?.role === "superAdmin";
+
   const [dates, setDates] = useState({
     checkInDate: "",
     checkOutDate: "",
@@ -21,7 +25,7 @@ const BookingForm = ({ roomId, pricePerNight }) => {
       const start = new Date(dates.checkInDate);
       const end = new Date(dates.checkOutDate);
       const nights = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-      
+
       if (nights > 0) {
         setTotalPrice(nights * pricePerNight);
         setError("");
@@ -40,6 +44,11 @@ const BookingForm = ({ roomId, pricePerNight }) => {
     e.preventDefault();
     if (!user) {
       navigate("/login");
+      return;
+    }
+
+    if (isAdmin) {
+      setError("Staff accounts cannot create bookings. Please use a guest account to book a room.");
       return;
     }
 
@@ -65,15 +74,15 @@ const BookingForm = ({ roomId, pricePerNight }) => {
   };
 
   return (
-    <div className="booking-card">
-      <div className="booking-card__header">
-        <span className="price">₹{pricePerNight}</span>
-        <span className="unit">/ night</span>
+    <div className="rounded-[30px] border border-luxe-border bg-white p-6 shadow-[0_20px_60px_rgba(28,28,28,0.08)]">
+      <div className="mb-6 rounded-[24px] bg-luxe-charcoal px-5 py-4 text-white">
+        <span className="block text-3xl font-semibold">Rs. {pricePerNight}</span>
+        <span className="text-sm uppercase tracking-[0.25em] text-white/70">per night</span>
       </div>
 
-      <form className="booking-form" onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="checkInDate">CHECK-IN</label>
+      <form className="space-y-5" onSubmit={handleSubmit}>
+        <label className="block text-sm font-semibold uppercase tracking-[0.2em] text-luxe-muted">
+          Check-in
           <input
             type="date"
             id="checkInDate"
@@ -82,11 +91,12 @@ const BookingForm = ({ roomId, pricePerNight }) => {
             min={new Date().toISOString().split("T")[0]}
             value={dates.checkInDate}
             onChange={handleChange}
+            className={inputClass}
           />
-        </div>
+        </label>
 
-        <div className="form-group">
-          <label htmlFor="checkOutDate">CHECK-OUT</label>
+        <label className="block text-sm font-semibold uppercase tracking-[0.2em] text-luxe-muted">
+          Check-out
           <input
             type="date"
             id="checkOutDate"
@@ -95,30 +105,41 @@ const BookingForm = ({ roomId, pricePerNight }) => {
             min={dates.checkInDate || new Date().toISOString().split("T")[0]}
             value={dates.checkOutDate}
             onChange={handleChange}
+            className={inputClass}
           />
-        </div>
+        </label>
 
         {totalPrice > 0 && (
-          <div className="booking-summary">
-            <div className="summary-row">
-              <span>Total Nights</span>
+          <div className="rounded-[24px] bg-luxe-smoke p-4">
+            <div className="flex items-center justify-between text-sm text-luxe-muted">
+              <span>Total nights</span>
               <span>{totalPrice / pricePerNight}</span>
             </div>
-            <div className="summary-row total">
-              <span>Total Amount</span>
-              <span>₹{totalPrice}</span>
+            <div className="mt-3 flex items-center justify-between border-t border-luxe-border pt-3 font-semibold text-luxe-charcoal">
+              <span>Total amount</span>
+              <span>Rs. {totalPrice}</span>
             </div>
           </div>
         )}
 
-        {error && <p className="booking-error">{error}</p>}
-        {success && <p className="booking-success">{success}</p>}
+        {error && <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
+        {success && (
+          <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            {success}
+          </p>
+        )}
 
-        <button type="submit" className="booking-btn" disabled={loading}>
-          {loading ? "Processing..." : user ? "Reserve Now" : "Login to Book"}
+        <button
+          type="submit"
+          className="w-full rounded-2xl bg-luxe-bronze px-5 py-3.5 font-semibold text-white transition hover:bg-luxe-charcoal disabled:cursor-wait disabled:opacity-70"
+          disabled={loading || isAdmin}
+        >
+          {loading ? "Processing..." : isAdmin ? "Staff Cannot Book" : user ? "Reserve Now" : "Login to Book"}
         </button>
-        
-        <p className="booking-note">You won't be charged yet.</p>
+
+        <p className="text-center text-sm text-luxe-muted">
+          {isAdmin ? "Switch to a guest account to make a reservation." : "You will not be charged yet."}
+        </p>
       </form>
     </div>
   );

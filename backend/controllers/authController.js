@@ -204,6 +204,7 @@ const loginUser = async (req, res, next) => {
         lastName: user.lastName,
         email: user.email,
         phone: user.phone,
+        role: user.role,
         loyaltyPoints: user.loyaltyPoints,
       },
     });
@@ -307,6 +308,7 @@ const registerAdminStep1 = async (req, res, next) => {
         firstName,
         lastName,
         email: emailLower,
+        role: 'admin',
         verified: false,
         otp,
         otpExpires,
@@ -314,6 +316,7 @@ const registerAdminStep1 = async (req, res, next) => {
     } else {
       admin.firstName = firstName;
       admin.lastName = lastName;
+      admin.role = admin.role === 'superAdmin' ? 'superAdmin' : 'admin';
       admin.otp = otp;
       admin.otpExpires = otpExpires;
       await admin.save({ validateBeforeSave: false });
@@ -357,6 +360,7 @@ const verifyAdminOTP = async (req, res, next) => {
     }
 
     admin.verified = true;
+    admin.role = admin.role === 'superAdmin' ? 'superAdmin' : 'admin';
     admin.otp = undefined;
     admin.otpExpires = undefined;
     await admin.save({ validateBeforeSave: false });
@@ -402,6 +406,7 @@ const registerAdminStep3 = async (req, res, next) => {
     admin.phone = phone;
     admin.employeeId = employeeId;
     admin.department = department;
+    admin.role = admin.role === 'superAdmin' ? 'superAdmin' : 'admin';
     admin.password = password;
     await admin.save();
 
@@ -411,13 +416,15 @@ const registerAdminStep3 = async (req, res, next) => {
       success: true,
       message: 'Staff registration completed successfully!',
       token,
-      admin: {
+      user: {
         id: admin._id,
         firstName: admin.firstName,
         lastName: admin.lastName,
         email: admin.email,
+        role: admin.role,
         department: admin.department,
         employeeId: admin.employeeId,
+        role: admin.role,
       },
     });
   } catch (error) {
@@ -446,19 +453,26 @@ const loginAdmin = async (req, res, next) => {
       throw new Error('Please verify your email before logging in');
     }
 
+    if (admin.role !== 'admin' && admin.role !== 'superAdmin') {
+      admin.role = 'admin';
+      await admin.save({ validateBeforeSave: false });
+    }
+
     const token = generateToken(admin._id, 'admin');
 
     res.status(200).json({
       success: true,
       message: 'Welcome, Staff Member!',
       token,
-      admin: {
+      user: {
         id: admin._id,
         firstName: admin.firstName,
         lastName: admin.lastName,
         email: admin.email,
+        role: admin.role,
         department: admin.department,
         employeeId: admin.employeeId,
+        role: admin.role,
       },
     });
   } catch (error) {

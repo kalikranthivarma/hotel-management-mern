@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-
 import hero1 from "../assets/hero1.png";
 import hero2 from "../assets/hero2.png";
 import hero3 from "../assets/hero3.png";
@@ -35,7 +34,7 @@ const hotels = [
     checkin: "Check-in: 2:00 PM | Check-out: 11:00 AM",
     dining: "Two mountain-view restaurants",
     banquet: "280 sq.m. of event space",
-    address: "Shimla, Himachal Pradesh",
+    address: "12 Mall Road, Shimla, Himachal Pradesh, 171001",
   },
   {
     id: 3,
@@ -46,7 +45,7 @@ const hotels = [
     checkin: "Check-in: 3:00 PM | Check-out: 12:00 Noon",
     dining: "Four beachside restaurants",
     banquet: "450 sq.m. of open-air event space",
-    address: "North Goa",
+    address: "Candolim Beach Road, North Goa, 403515",
   },
 ];
 
@@ -79,10 +78,10 @@ function HeroCarousel() {
   const timerRef = useRef(null);
 
   const startTimer = () => {
-    if (timerRef.current) clearInterval(timerRef.current);
+    clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
       setActive((p) => (p + 1) % heroSlides.length);
-    }, 5500);
+    }, 5000);
   };
 
   useEffect(() => {
@@ -283,10 +282,10 @@ function DealsSection() {
             </p>
           </div>
           <div className="flex gap-3">
-            <button className="h-12 w-12 rounded-full border border-white/20 bg-white/10 text-2xl transition hover:bg-white/20" onClick={() => setDealIdx((p) => (p - 1 + deals.length) % deals.length)}>
+            <button className="h-12 w-12 rounded-full border border-white/20 bg-white/10 text-2xl" onClick={() => setDealIdx((p) => (p - 1 + deals.length) % deals.length)}>
               {"<"}
             </button>
-            <button className="h-12 w-12 rounded-full border border-white/20 bg-white/10 text-2xl transition hover:bg-white/20" onClick={() => setDealIdx((p) => (p + 1) % deals.length)}>
+            <button className="h-12 w-12 rounded-full border border-white/20 bg-white/10 text-2xl" onClick={() => setDealIdx((p) => (p + 1) % deals.length)}>
               {">"}
             </button>
           </div>
@@ -302,10 +301,10 @@ function DealsSection() {
                 <p className="mt-5 text-xs font-bold uppercase tracking-[0.25em] text-luxe-bronze">Validity</p>
                 <p className="mt-2 font-semibold">{deal.validity}</p>
                 <div className="mt-6 flex gap-3">
-                  <Link to="/dining" className="rounded-full border border-luxe-border px-4 py-3 text-sm font-semibold hover:bg-luxe-smoke">
+                  <Link to="/dining" className="rounded-full border border-luxe-border px-4 py-3 text-sm font-semibold">
                     Know More
                   </Link>
-                  <Link to="/login" className="rounded-full bg-luxe-bronze px-4 py-3 text-sm font-semibold text-white transition hover:bg-luxe-charcoal">
+                  <Link to="/login" className="rounded-full bg-luxe-bronze px-4 py-3 text-sm font-semibold text-white">
                     Login / Join
                   </Link>
                 </div>
@@ -356,10 +355,10 @@ function CTABanner() {
           booking across all KNSU Stays properties.
         </p>
         <div className="mt-8 flex flex-wrap gap-4">
-          <Link to="/register" className="rounded-full bg-luxe-bronze px-6 py-3 text-sm font-semibold text-white transition hover:bg-white hover:text-luxe-charcoal">
+          <Link to="/register" className="rounded-full bg-luxe-bronze px-6 py-3 text-sm font-semibold text-white">
             Create Account
           </Link>
-          <Link to="/login" className="rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
+          <Link to="/login" className="rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white">
             Sign In
           </Link>
         </div>
@@ -377,32 +376,32 @@ function HomeFooter() {
           <p className="mt-3 text-luxe-muted">Where Elegance Meets Excellence</p>
         </div>
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="space-y-3 text-sm text-luxe-muted flex flex-col">
+          <div className="space-y-3 text-sm text-luxe-muted">
             <p className="font-semibold uppercase tracking-[0.2em] text-luxe-charcoal">Explore</p>
-            <a href="#hotels" className="hover:text-luxe-bronze">Hotels</a>
-            <a href="#deals" className="hover:text-luxe-bronze">Deals</a>
-            <Link to="/rooms" className="hover:text-luxe-bronze">Rooms</Link>
+            <a href="#hotels">Hotels</a>
+            <a href="#deals">Deals</a>
+            <Link to="/rooms">Rooms</Link>
           </div>
-          <div className="space-y-3 text-sm text-luxe-muted flex flex-col">
+          <div className="space-y-3 text-sm text-luxe-muted">
             <p className="font-semibold uppercase tracking-[0.2em] text-luxe-charcoal">Account</p>
-            <Link to="/register" className="hover:text-luxe-bronze">Register</Link>
-            <Link to="/login" className="hover:text-luxe-bronze">Login</Link>
-            <Link to="/dashboard" className="hover:text-luxe-bronze">Dashboard</Link>
+            <Link to="/register">Register</Link>
+            <Link to="/login">Login</Link>
+            <Link to="/dashboard">Dashboard</Link>
           </div>
-          <div className="space-y-3 text-sm text-luxe-muted flex flex-col">
+          <div className="space-y-3 text-sm text-luxe-muted">
             <p className="font-semibold uppercase tracking-[0.2em] text-luxe-charcoal">Contact</p>
-            <a href="mailto:stay@knsustays.com" className="hover:text-luxe-bronze">stay@knsustays.com</a>
-            <a href="tel:+918001234567" className="hover:text-luxe-bronze">+91 800-123-4567</a>
+            <a href="mailto:stay@knsustays.com">stay@knsustays.com</a>
+            <a href="tel:+918001234567">+91 800-123-4567</a>
           </div>
-          <div className="space-y-3 text-sm text-luxe-muted flex flex-col">
+          <div className="space-y-3 text-sm text-luxe-muted">
             <p className="font-semibold uppercase tracking-[0.2em] text-luxe-charcoal">Staff Portal</p>
-            <Link to="/admin/login" className="hover:text-luxe-bronze">Staff Login</Link>
-            <Link to="/admin/register" className="hover:text-luxe-bronze">Staff Registration</Link>
+            <Link to="/admin/login">Staff Login</Link>
+            <Link to="/admin/register">Staff Registration</Link>
           </div>
         </div>
       </div>
       <div className="border-t border-luxe-border px-4 py-5 text-center text-sm text-luxe-muted">
-        <p>© 2026 KNSU Stays. All rights reserved.</p>
+        <p>(c) 2026 KNSU Stays. All rights reserved.</p>
       </div>
     </footer>
   );

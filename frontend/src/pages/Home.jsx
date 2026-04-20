@@ -1,6 +1,6 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import { useSelector } from 'react-redux';
 
 import hero1 from "../assets/hero1.png";
 import hero2 from "../assets/hero2.png";
@@ -105,10 +105,10 @@ function HeroCarousel() {
             <p className="mt-4 text-lg">{slide.subtitle}</p>
 
             <div className="mt-6 flex flex-wrap gap-4 justify-center">
-              <Link to="/rooms" className="px-6 py-3 bg-[#5B3FA6] hover:bg-[#4a3288] transition rounded-full">
+              <Link to="/rooms" className="px-6 py-3 bg-luxe-bronze hover:bg-luxe-charcoal transition rounded-full text-white font-semibold">
                 Explore Hotels
               </Link>
-              <Link to="/register" className="px-6 py-3 border rounded-full">
+              <Link to="/register" className="px-6 py-3 border border-white/40 rounded-full hover:bg-white/10 transition">
                 Join Now
               </Link>
             </div>
@@ -125,6 +125,11 @@ function HeroCarousel() {
 function HotelsSection() {
   const [country, setCountry] = useState("");
   const [city, setCity] = useState("");
+  const { user } = useSelector((state) => state.auth);
+
+  const isLoggedIn = !!user;
+  const isAdmin = user?.role === 'admin' || user?.role === 'superAdmin';
+  const bookLink = isLoggedIn && !isAdmin ? "/rooms" : "/login";
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-16 lg:px-8" id="hotels">
@@ -169,21 +174,23 @@ function HotelsSection() {
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
                 <div className="rounded-2xl bg-luxe-smoke px-4 py-3 text-sm">{h.rooms}</div>
                 <div className="rounded-2xl bg-luxe-smoke px-4 py-3 text-sm">{h.checkin}</div>
-                <Link to="/dining" className="rounded-2xl bg-luxe-smoke px-4 py-3 text-sm transition hover:bg-[#5B3FA6] hover:text-white">{h.dining}</Link>
+                <Link to="/dining" className="rounded-2xl bg-luxe-smoke px-4 py-3 text-sm transition hover:bg-luxe-bronze hover:text-white">{h.dining}</Link>
                 <div className="rounded-2xl bg-luxe-smoke px-4 py-3 text-sm">{h.banquet}</div>
               </div>
               <div className="mt-6 rounded-2xl border border-luxe-border px-4 py-4 text-sm leading-7 text-luxe-muted">
-                <a href={`https://maps.google.com/?q=${encodeURIComponent(h.address)}`} target="_blank" rel="noreferrer" className="font-medium hover:text-[#5B3FA6]">
+                <a href={`https://maps.google.com/?q=${encodeURIComponent(h.address)}`} target="_blank" rel="noreferrer" className="font-medium hover:text-luxe-bronze">
                   {h.address} - View Map
                 </a>
               </div>
               <div className="mt-6 flex flex-wrap gap-4">
-                <Link to="/rooms" className="rounded-full border border-[#5B3FA6] px-5 py-3 text-sm font-semibold text-[#5B3FA6] transition hover:bg-[#5B3FA6] hover:text-white">
+                <Link to="/rooms" className="rounded-full border border-luxe-bronze px-5 py-3 text-sm font-semibold text-luxe-bronze transition hover:bg-luxe-bronze hover:text-white">
                   View Hotel
                 </Link>
-                <Link to="/login" className="rounded-full bg-[#5B3FA6] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#4a3288]">
-                  Book Now
-                </Link>
+                {!isAdmin && (
+                  <Link to={bookLink} className="rounded-full bg-luxe-bronze px-5 py-3 text-sm font-semibold text-white transition hover:bg-luxe-charcoal">
+                    Book Now
+                  </Link>
+                )}
               </div>
             </div>
           </article>
@@ -208,9 +215,9 @@ function DealsSection() {
             <div className="bg-white/10 rounded-xl overflow-hidden">
               <img src={d.image} className="h-52 w-full object-cover" />
               <div className="p-4 text-white">
-                <h3>{d.title}</h3>
-                <p>{d.desc}</p>
-                <p className="text-[#a88fd4] mt-2">{d.validity}</p>
+                <h3 className="text-xl font-semibold">{d.title}</h3>
+                <p className="mt-2 text-white/70">{d.desc}</p>
+                <p className="text-luxe-bronze-light mt-2">{d.validity}</p>
               </div>
             </div>
           ))}
@@ -244,14 +251,14 @@ function CTABanner() {
           <div className="mt-8 flex flex-wrap gap-4">
             <Link
               to="/register"
-              className="rounded-full bg-[#c6a77d] px-6 py-3 text-sm font-semibold text-white"
+              className="rounded-full bg-luxe-bronze px-6 py-3 text-sm font-semibold text-white transition hover:bg-white hover:text-luxe-charcoal"
             >
               Create Account
             </Link>
 
             <Link
               to="/login"
-              className="rounded-full border border-white/30 px-6 py-3 text-sm font-semibold text-white"
+              className="rounded-full border border-white/30 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white hover:text-luxe-charcoal"
             >
               Sign In
             </Link>
@@ -270,7 +277,7 @@ function Footer() {
   const cols = [
     { title: "Explore",  links: [["Hotels", "#hotels"], ["Experiences", "#experiences"], ["Dining", "#"], ["Wellness", "#"], ["Offers", "#offers"]] },
     { title: "Account",  links: [["Register", "/register"], ["Login", "/login"], ["Dashboard", "/dashboard"], ["My Bookings", "/dashboard"], ["Membership", "/register"]] },
-    { title: "Contact",  links: [["stay@vivanta.com", "mailto:stay@vivanta.com"], ["+91 800-123-4567", "tel:+918001234567"], ["Careers", "#"], ["Press", "#"]] },
+    { title: "Contact",  links: [["stay@knsu.com", "mailto:stay@knsu.com"], ["+91 800-123-4567", "tel:+918001234567"], ["Careers", "#"], ["Press", "#"]] },
     { title: "Staff",    links: [["Staff Login", "/admin/login"], ["Staff Register", "/admin/register"], ["Back Office", "#"], ["Support", "#"]] },
   ];
 
@@ -282,10 +289,10 @@ function Footer() {
   ];
 
   return (
-    <footer className="bg-[#160842] text-white">
+    <footer className="bg-luxe-charcoal text-white">
 
       {/* ── Top accent line ── */}
-      <div className="h-px w-full bg-gradient-to-r from-transparent via-purple-400/50 to-transparent" />
+      <div className="h-px w-full bg-gradient-to-r from-transparent via-luxe-bronze/50 to-transparent" />
 
       <div className="mx-auto max-w-7xl px-6 sm:px-10 lg:px-16">
 
@@ -294,23 +301,23 @@ function Footer() {
                         sm:grid-cols-2
                         md:grid-cols-3
                         lg:grid-cols-[1.8fr_1fr_1fr_1fr_1fr]
-                        border-b border-purple-300/[0.12]">
+                        border-b border-luxe-bronze/[0.12]">
 
           {/* Brand column — full width on mobile */}
           <div className="col-span-2 sm:col-span-2 md:col-span-3 lg:col-span-1">
 
             {/* Logo */}
             <div className="mb-6">
-              <p className="font-['Tenor_Sans',serif] text-2xl tracking-[0.14em] text-white">
+              <p className="font-serif text-2xl tracking-[0.14em] text-white">
                 KNSU STAYS
               </p>
               <p className="mt-0.5 text-[0.62rem] tracking-[0.3em] uppercase text-white/35">
-                By Taj Hotels
+                Modern Boutique Collection
               </p>
             </div>
 
             {/* Divider */}
-            <div className="mb-5 h-px w-10 bg-purple-400/40" />
+            <div className="mb-5 h-px w-10 bg-luxe-bronze/40" />
 
             {/* Tagline */}
             <p className="mb-7 max-w-xs text-[0.88rem] leading-relaxed text-white/40">
@@ -329,8 +336,8 @@ function Footer() {
                     rounded-full border border-white/15
                     text-[0.72rem] text-white/40
                     transition-all duration-200
-                    hover:border-purple-400/70 hover:text-purple-300
-                    hover:bg-purple-500/15 hover:scale-110
+                    hover:border-luxe-bronze/70 hover:text-luxe-bronze-light
+                    hover:bg-white/5 hover:scale-110
                   "
                 >
                   {label}
@@ -343,7 +350,7 @@ function Footer() {
           {cols.map((col) => (
             <div key={col.title} className="flex flex-col gap-3.5">
               {/* Column heading */}
-              <p className="mb-1 text-[0.62rem] font-bold tracking-[0.28em] uppercase text-purple-300/80">
+              <p className="mb-1 text-[0.62rem] font-bold tracking-[0.28em] uppercase text-luxe-bronze-light/80">
                 {col.title}
               </p>
 
@@ -357,7 +364,7 @@ function Footer() {
                       transition-colors duration-200
                       hover:text-white
                       relative after:absolute after:-bottom-0.5 after:left-0
-                      after:h-px after:w-0 after:bg-purple-400/60
+                      after:h-px after:w-0 after:bg-luxe-bronze/60
                       after:transition-all after:duration-300
                       hover:after:w-full
                     "
@@ -373,7 +380,7 @@ function Footer() {
                       transition-colors duration-200
                       hover:text-white
                       relative after:absolute after:-bottom-0.5 after:left-0
-                      after:h-px after:w-0 after:bg-purple-400/60
+                      after:h-px after:w-0 after:bg-luxe-bronze/60
                       after:transition-all after:duration-300
                       hover:after:w-full
                     "

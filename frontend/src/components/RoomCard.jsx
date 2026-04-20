@@ -1,11 +1,12 @@
 import { Link } from "react-router-dom";
+import { getImageUrl } from "../utils/getImageUrl";
 
 const RoomCard = ({ room }) => {
   const { _id, title, type, pricePerNight, images, description, amenities, maxGuests } = room;
 
   const displayImage =
     images && images.length > 0
-      ? images[0]
+      ? getImageUrl(images[0])
       : "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800&q=80";
 
   return (

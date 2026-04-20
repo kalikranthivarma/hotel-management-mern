@@ -93,6 +93,8 @@ export default function Dining() {
   });
   const [submittingOrder, setSubmittingOrder] = useState(false);
   const [submittingReservation, setSubmittingReservation] = useState(false);
+  const [orderMessage, setOrderMessage] = useState({ text: "", type: "" });
+  const [reserveMessage, setReserveMessage] = useState({ text: "", type: "" });
 
   const totalAmount = useMemo(
     () => cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
@@ -202,25 +204,25 @@ export default function Dining() {
 
   const handlePlaceOrder = async (event) => {
     event.preventDefault();
-    setPageMessage("");
+    setOrderMessage({ text: "", type: "" });
 
     if (!user) {
-      setPageMessage("Please log in to place a dining order.");
+      setOrderMessage({ text: "Please log in to place a dining order.", type: "error" });
       return;
     }
 
     if (cart.length === 0) {
-      setPageMessage("Add at least one menu item before placing an order.");
+      setOrderMessage({ text: "Add at least one menu item before placing an order.", type: "error" });
       return;
     }
 
     if (orderForm.orderType === "Room Service" && !orderForm.roomNumber.trim()) {
-      setPageMessage("Room number is required for room service.");
+      setOrderMessage({ text: "Room number is required for room service.", type: "error" });
       return;
     }
 
     if (orderForm.orderType === "In-Restaurant" && !orderForm.tableNumber.trim()) {
-      setPageMessage("Table number is required for in-restaurant orders.");
+      setOrderMessage({ text: "Table number is required for in-restaurant orders.", type: "error" });
       return;
     }
 
@@ -240,14 +242,14 @@ export default function Dining() {
         specialInstructions: orderForm.specialInstructions,
       });
 
-      setPageMessage("Dining order placed successfully.");
+      setOrderMessage({ text: "Dining order placed successfully.", type: "success" });
       clearCart();
 
       const ordersResponse = await getMyDiningOrders();
       setOrders(Array.isArray(ordersResponse?.data) ? ordersResponse.data : []);
     } catch (error) {
       console.error("Failed to place dining order:", error);
-      setPageMessage(error.response?.data?.message || "Unable to place the order right now.");
+      setOrderMessage({ text: error.response?.data?.message || "Unable to place the order right now.", type: "error" });
     } finally {
       setSubmittingOrder(false);
     }
@@ -255,10 +257,20 @@ export default function Dining() {
 
   const handleReserveTable = async (event) => {
     event.preventDefault();
-    setPageMessage("");
+    setReserveMessage({ text: "", type: "" });
 
     if (!user) {
-      setPageMessage("Please log in to reserve a table.");
+      setReserveMessage({ text: "Please log in to reserve a table.", type: "error" });
+      return;
+    }
+
+    if (!reservationForm.tableNumber) {
+      setReserveMessage({ text: "Please select a table.", type: "error" });
+      return;
+    }
+
+    if (!reservationForm.reservationTime) {
+      setReserveMessage({ text: "Please select a reservation time.", type: "error" });
       return;
     }
 
@@ -271,7 +283,7 @@ export default function Dining() {
         guestsCount: reservationForm.guestsCount,
       });
 
-      setPageMessage(`Table ${reservationForm.tableNumber} reserved successfully.`);
+      setReserveMessage({ text: `Table ${reservationForm.tableNumber} reserved successfully.`, type: "success" });
       setReservationForm({
         tableNumber: "",
         reservationTime: "",
@@ -282,7 +294,7 @@ export default function Dining() {
       setTables(Array.isArray(tablesResponse?.data) ? tablesResponse.data : []);
     } catch (error) {
       console.error("Failed to reserve table:", error);
-      setPageMessage(error.response?.data?.message || "Unable to reserve the table right now.");
+      setReserveMessage({ text: error.response?.data?.message || "Unable to reserve the table right now.", type: "error" });
     } finally {
       setSubmittingReservation(false);
     }
@@ -768,14 +780,13 @@ export default function Dining() {
                     </button>
                   </div>
 
-                  {!user ? (
-                    <p className="mt-4 text-sm text-luxe-muted">
-                      <Link to="/login" className="font-semibold text-luxe-bronze">
-                        Log in
-                      </Link>{" "}
-                      to place a dining order.
-                    </p>
-                  ) : null}
+                  {orderMessage.text && (
+                    <div className={`mt-4 rounded-xl px-4 py-2 text-sm font-medium ${
+                      orderMessage.type === "success" ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
+                    }`}>
+                      {orderMessage.text}
+                    </div>
+                  )}
                 </form>
               ) : (
                 <form className="mt-6" onSubmit={handleReserveTable}>
@@ -842,14 +853,13 @@ export default function Dining() {
                     {submittingReservation ? "Reserving..." : "Reserve table"}
                   </button>
 
-                  {!user ? (
-                    <p className="mt-4 text-sm text-luxe-muted">
-                      <Link to="/login" className="font-semibold text-luxe-bronze">
-                        Log in
-                      </Link>{" "}
-                      to reserve a table.
-                    </p>
-                  ) : null}
+                  {reserveMessage.text && (
+                    <div className={`mt-4 rounded-xl px-4 py-2 text-sm font-medium ${
+                      reserveMessage.type === "success" ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
+                    }`}>
+                      {reserveMessage.text}
+                    </div>
+                  )}
                 </form>
               )}
             </div>

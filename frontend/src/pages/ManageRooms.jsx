@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { createRoom, deleteRoom, getAllRooms, updateRoom } from "../api/roomApi";
 import Loader from "../components/Loader";
+import api from "../api/axios";
+import { getImageUrl } from "../utils/getImageUrl";
+
+const inputClass =
+  "mt-2 w-full rounded-2xl border border-luxe-border bg-luxe-smoke px-4 py-3 outline-none transition focus:border-luxe-bronze focus:bg-white focus:ring-4 focus:ring-luxe-bronze/10";
 
 const emptyFormData = {
   roomNumber: "",
@@ -13,11 +18,8 @@ const emptyFormData = {
   pricePerNight: "",
   maxGuests: "",
   description: "",
-  imageUrl: "",
+  imageFile: null,
 };
-
-const inputClass =
-  "mt-2 w-full rounded-2xl border border-luxe-border bg-luxe-smoke px-4 py-3 outline-none transition focus:border-luxe-bronze focus:bg-white focus:ring-4 focus:ring-luxe-bronze/10";
 
 const ManageRooms = () => {
   const [rooms, setRooms] = useState([]);
@@ -67,7 +69,7 @@ const ManageRooms = () => {
         pricePerNight: room.pricePerNight ?? "",
         maxGuests: room.maxGuests ?? "",
         description: room.description || "",
-        imageUrl: room.images?.[0] || "",
+        imageFile: null,
       });
     } else {
       setEditingRoom(null);
@@ -79,19 +81,20 @@ const ManageRooms = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const payload = {
-      roomNumber: formData.roomNumber.trim(),
-      title: formData.title.trim(),
-      type: formData.type,
-      bedType: formData.bedType,
-      view: formData.view,
-      floor: Number(formData.floor),
-      size: Number(formData.size),
-      pricePerNight: Number(formData.pricePerNight),
-      maxGuests: Number(formData.maxGuests),
-      description: formData.description.trim(),
-      images: formData.imageUrl.trim() ? [formData.imageUrl.trim()] : [],
-    };
+    const payload = new FormData();
+    payload.append("roomNumber", formData.roomNumber.trim());
+    payload.append("title", formData.title.trim());
+    payload.append("type", formData.type);
+    payload.append("bedType", formData.bedType);
+    payload.append("view", formData.view);
+    payload.append("floor", String(Number(formData.floor)));
+    payload.append("size", String(Number(formData.size)));
+    payload.append("pricePerNight", String(Number(formData.pricePerNight)));
+    payload.append("maxGuests", String(Number(formData.maxGuests)));
+    payload.append("description", formData.description.trim());
+    if (formData.imageFile) {
+      payload.append("image", formData.imageFile);
+    }
 
     try {
       if (editingRoom) {
@@ -140,7 +143,7 @@ const ManageRooms = () => {
               <tr key={room._id} className="border-b border-luxe-border last:border-b-0">
                 <td className="px-6 py-4">
                   <img
-                    src={room.images?.[0] || "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=50"}
+                    src={getImageUrl(room.images?.[0])}
                     alt={room.title}
                     className="h-14 w-14 rounded-2xl object-cover"
                   />
@@ -234,8 +237,8 @@ const ManageRooms = () => {
                   <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} required className={`${inputClass} min-h-32 resize-y`} />
                 </label>
                 <label className="block text-sm font-semibold text-luxe-charcoal md:col-span-2">
-                  Image URL
-                  <input type="text" value={formData.imageUrl} onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })} placeholder="https://..." className={inputClass} />
+                  Room Image
+                  <input type="file" accept="image/*" onChange={(e) => setFormData({ ...formData, imageFile: e.target.files?.[0] || null })} className={inputClass} />
                 </label>
               </div>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">

@@ -1,4 +1,28 @@
+import multer from 'multer';
+import path from 'path';
 import Room from '../models/Room.js';
+import { uploadToGridFS, deleteFromGridFS, streamImageFromGridFS, extractFilename } from '../utils/imageUtils.js';
+
+// Use memory storage — files are held in buffer, then streamed to GridFS
+const storage = multer.memoryStorage();
+
+export const upload = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    const filetypes = /jpeg|jpg|png|webp/;
+    const mimetype = filetypes.test(file.mimetype);
+    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+    if (mimetype && extname) return cb(null, true);
+    cb(new Error('Only image files are allowed!'));
+  },
+});
+
+// @desc    Stream room image from GridFS
+// @route   GET /api/rooms/image/:filename
+// @access  Public
+export const getRoomImage = async (req, res, next) => {
+  await streamImageFromGridFS(req.params.filename, res, next);
+};
 
 //  PUBLIC CONTROLLERS
 
@@ -54,9 +78,9 @@ const getRoomById = async (req, res, next) => {
   }
 };
 
-//  ADMIN-ONLY CONTROLLERS 
+//  ADMIN-ONLY CONTROLLERS
 
-// POST /api/rooms Create a new room (Admin only)
+// POST /api/rooms  Create a new room (Admin only)
 const createRoom = async (req, res, next) => {
   try {
     const {
@@ -71,7 +95,6 @@ const createRoom = async (req, res, next) => {
       pricePerNight,
       maxGuests,
       amenities,
-      images,
       isFeatured,
     } = req.body;
 
@@ -86,6 +109,13 @@ const createRoom = async (req, res, next) => {
       throw new Error(`Room number ${roomNumber} already exists`);
     }
 
+    // Handle file upload if an image was provided
+    let images = [];
+    if (req.file) {
+      const filename = await uploadToGridFS(req.file.buffer, req.file.originalname, req.file.mimetype, 'room');
+      images = [`/api/rooms/image/${filename}`];
+    }
+
     const room = await Room.create({
       roomNumber,
       title,
@@ -97,9 +127,9 @@ const createRoom = async (req, res, next) => {
       size,
       pricePerNight,
       maxGuests,
-      amenities: amenities || [],
-      images: images || [],
-      isFeatured: isFeatured || false,
+      amenities: amenities ? (Array.isArray(amenities) ? amenities : amenities.split(',').map(a => a.trim())) : [],
+      images,
+      isFeatured: isFeatured === 'true' || isFeatured === true,
     });
 
     res.status(201).json({ success: true, message: 'Room created successfully', room });
@@ -108,7 +138,7 @@ const createRoom = async (req, res, next) => {
   }
 };
 
-// PUT /api/rooms/:id Update a room (Admin only)
+// PUT /api/rooms/:id  Update a room (Admin only)
 const updateRoom = async (req, res, next) => {
   try {
     const room = await Room.findById(req.params.id);
@@ -118,7 +148,25 @@ const updateRoom = async (req, res, next) => {
       throw new Error('Room not found');
     }
 
-    const updatedRoom = await Room.findByIdAndUpdate(req.params.id, req.body, {
+    const updateData = { ...req.body };
+
+    // Handle new image upload
+    if (req.file) {
+      // Delete old GridFS images for this room
+      for (const img of room.images) {
+        if (img.startsWith('/api/rooms/image/')) {
+          await deleteFromGridFS(extractFilename(img));
+        }
+      }
+      const filename = await uploadToGridFS(req.file.buffer, req.file.originalname, req.file.mimetype, 'room');
+      updateData.images = [`/api/rooms/image/${filename}`];
+    }
+
+    if (updateData.amenities && !Array.isArray(updateData.amenities)) {
+      updateData.amenities = updateData.amenities.split(',').map(a => a.trim());
+    }
+
+    const updatedRoom = await Room.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
       runValidators: true,
     });
@@ -129,7 +177,7 @@ const updateRoom = async (req, res, next) => {
   }
 };
 
-// PATCH /api/rooms/:id/availability Toggle room availability (Admin only)
+// PATCH /api/rooms/:id/availability  Toggle room availability (Admin only)
 const toggleRoomAvailability = async (req, res, next) => {
   try {
     const room = await Room.findById(req.params.id);
@@ -152,7 +200,7 @@ const toggleRoomAvailability = async (req, res, next) => {
   }
 };
 
-// DELETE /api/rooms/:id Soft-delete a room (Admin only)
+// DELETE /api/rooms/:id  Soft-delete a room (Admin only)
 const deleteRoom = async (req, res, next) => {
   try {
     const room = await Room.findById(req.params.id);
@@ -180,4 +228,3 @@ export {
   toggleRoomAvailability,
   updateRoom,
 };
-

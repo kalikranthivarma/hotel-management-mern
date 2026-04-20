@@ -419,7 +419,6 @@ export default function Home() {
       <HotelsSection />
       <DealsSection />
       <CTABanner />
-      <Footer />
-    </div>
+      <Footer />    </div>
   );
 }

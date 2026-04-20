@@ -5,8 +5,28 @@ export const getDiningTables = async () => {
   return response.data;
 };
 
+export const createDiningTable = async (tableData) => {
+  const response = await api.post("/dining/tables", tableData);
+  return response.data;
+};
+
+export const updateDiningTable = async (id, tableData) => {
+  const response = await api.put(`/dining/tables/${id}`, tableData);
+  return response.data;
+};
+
+export const deleteDiningTable = async (id) => {
+  const response = await api.delete(`/dining/tables/${id}`);
+  return response.data;
+};
+
 export const createDiningOrder = async (orderData) => {
   const response = await api.post("/dining/order", orderData);
+  return response.data;
+};
+
+export const cancelDiningOrder = async (id) => {
+  const response = await api.put(`/dining/order/${id}/cancel`);
   return response.data;
 };
 

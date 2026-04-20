@@ -247,3 +247,141 @@ export const getTables = async (req, res, next) => {
   }
 };
 
+// @desc    Create new dining table
+// @route   POST /api/dining/tables
+// @access  Private/Admin
+export const createTable = async (req, res, next) => {
+  try {
+    const { tableNumber, capacity, location } = req.body;
+
+    const existingTable = await DiningTable.findOne({ tableNumber });
+    if (existingTable) {
+      res.status(400);
+      throw new Error('Table number already exists');
+    }
+
+    const table = await DiningTable.create({
+      tableNumber,
+      capacity,
+      location: location || 'Indoor',
+      status: 'Available'
+    });
+
+    res.status(201).json({ success: true, data: table });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update dining table
+// @route   PUT /api/dining/tables/:id
+// @access  Private/Admin
+export const updateTable = async (req, res, next) => {
+  try {
+    const { tableNumber, capacity, location, status } = req.body;
+
+    const table = await DiningTable.findById(req.params.id);
+    if (!table) {
+      res.status(404);
+      throw new Error('Table not found');
+    }
+
+    // Check if tableNumber is being changed and if it conflicts
+    if (tableNumber && tableNumber !== table.tableNumber) {
+      const existingTable = await DiningTable.findOne({ tableNumber });
+      if (existingTable) {
+        res.status(400);
+        throw new Error('Table number already exists');
+      }
+    }
+
+    const updatedTable = await DiningTable.findByIdAndUpdate(
+      req.params.id,
+      { tableNumber, capacity, location, status },
+      { new: true, runValidators: true }
+    );
+
+    res.status(200).json({ success: true, data: updatedTable });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Delete dining table
+// @route   DELETE /api/dining/tables/:id
+// @access  Private/Admin
+export const deleteTable = async (req, res, next) => {
+  try {
+    const table = await DiningTable.findById(req.params.id);
+    if (!table) {
+      res.status(404);
+      throw new Error('Table not found');
+    }
+
+    // Check if table has active reservations
+    const activeReservations = await TableReservation.find({
+      table: table._id,
+      status: { $in: ['Pending', 'Confirmed'] },
+      reservationTime: { $gte: new Date() }
+    });
+
+    if (activeReservations.length > 0) {
+      res.status(400);
+      throw new Error('Cannot delete table with active reservations');
+    }
+
+    await DiningTable.findByIdAndDelete(req.params.id);
+    res.status(200).json({ success: true, message: 'Table deleted successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Cancel dining order
+// @route   PUT /api/dining/order/:id/cancel
+// @access  Private/User
+export const cancelOrder = async (req, res, next) => {
+  try {
+    const order = await DiningOrder.findById(req.params.id);
+    if (!order) {
+      res.status(404);
+      throw new Error('Order not found');
+    }
+
+    // Check if order belongs to user
+    if (order.user.toString() !== req.user._id.toString()) {
+      res.status(403);
+      throw new Error('Not authorized to cancel this order');
+    }
+
+    // Check if order can be cancelled
+    const cancellableStatuses = ['Pending', 'Preparing'];
+    if (!cancellableStatuses.includes(order.status)) {
+      res.status(400);
+      throw new Error('Order cannot be cancelled at this stage');
+    }
+
+    // Check time limit (30 minutes for cancellation)
+    const orderTime = new Date(order.createdAt);
+    const now = new Date();
+    const timeDiff = (now - orderTime) / (1000 * 60); // minutes
+
+    if (timeDiff > 30) {
+      res.status(400);
+      throw new Error('Orders can only be cancelled within 30 minutes of placement');
+    }
+
+    // Update order status
+    order.status = 'Cancelled';
+    await order.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Order cancelled successfully',
+      data: order
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

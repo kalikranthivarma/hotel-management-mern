@@ -328,12 +328,12 @@ const Login = () => {
                   Create one
                 </Link>
               </p>
-              <p className="text-sm text-luxe-muted">
+              {/* <p className="text-sm text-luxe-muted">
                 Link expired?{" "}
                 <Link to="/resend-verification" className="text-luxe-bronze font-bold hover:text-luxe-charcoal transition-colors underline underline-offset-4 decoration-luxe-bronze/30">
                   Resend verification link
                 </Link>
-              </p>
+              </p> */}
             </div>
 
           </div>

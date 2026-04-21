@@ -4,7 +4,7 @@ import {
   deleteMenuItem,
   getMenuItems,
   updateMenuItem,
-} from "../api/menuApi";
+} from "../api/diningApi";
 import Loader from "../components/Loader";
 import api from "../api/axios";
 
@@ -43,7 +43,6 @@ const getImageUrl = (imagePath) => {
 
 const AdminMenuManagement = () => {
   const [menuItems, setMenuItems] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
@@ -136,47 +135,36 @@ const AdminMenuManagement = () => {
     }
   };
 
-  const filteredMenuItems = menuItems.filter((item) => {
-    return (
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.description?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  });
+  const toggleDietaryInfo = (value) => {
+    setFormData((prev) => ({
+      ...prev,
+      dietaryInfo: prev.dietaryInfo.includes(value)
+        ? prev.dietaryInfo.filter((item) => item !== value)
+        : [...prev.dietaryInfo, value],
+    }));
+  };
 
   if (loading) return <Loader />;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
-      <header className="mb-6 flex flex-col gap-6 rounded-[34px] bg-white px-6 py-8 shadow-[0_18px_50px_rgba(28,28,28,0.06)] lg:flex-row lg:items-end lg:justify-between">
+      <header className="mb-6 flex flex-col gap-4 rounded-[34px] bg-white px-6 py-8 shadow-[0_18px_50px_rgba(28,28,28,0.06)] lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h1 className="font-serif text-5xl leading-none">Menu Management</h1>
           <p className="mt-4 text-lg leading-8 text-luxe-muted">
             Add, update, or remove dishes shown on the dining menu.
           </p>
         </div>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center lg:mb-1">
-          <div className="relative w-full sm:w-64">
-             <input
-               type="text"
-               placeholder="Search menu..."
-               value={searchTerm}
-               onChange={(e) => setSearchTerm(e.target.value)}
-               className="w-full rounded-2xl border border-luxe-border bg-luxe-smoke py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-luxe-bronze focus:bg-white"
-             />
-             <svg className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-luxe-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-          </div>
-          <button
-            className="rounded-full bg-luxe-bronze px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-luxe-charcoal shadow-lg shadow-luxe-bronze/20"
-            onClick={() => handleOpenModal()}
-          >
-            Add Menu Item
-          </button>
-        </div>
+        <button
+          className="rounded-full bg-luxe-bronze px-5 py-3 text-sm font-semibold text-white transition hover:bg-luxe-charcoal"
+          onClick={() => handleOpenModal()}
+        >
+          Add Menu Item
+        </button>
       </header>
 
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-        {filteredMenuItems.map((item) => (
+        {menuItems.map((item) => (
           <article
             key={item._id}
             className="overflow-hidden rounded-[30px] border border-luxe-border bg-white shadow-[0_18px_50px_rgba(28,28,28,0.06)]"

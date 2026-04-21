@@ -12,9 +12,9 @@ const initStep3 = {
 };
 
 const inputCls =
-  "w-full rounded-xl border border-luxe-border bg-white px-4 py-3 text-sm text-luxe-charcoal placeholder:text-gray-300 outline-none transition-all duration-200 focus:border-luxe-bronze focus:ring-2 focus:ring-luxe-bronze/10 hover:border-luxe-bronze/40";
+  "w-full rounded-xl border border-[#E8E0D8] bg-white px-4 py-3 text-sm text-[#160842] placeholder:text-gray-300 outline-none transition-all duration-200 focus:border-[#5B3FA6] focus:ring-2 focus:ring-[#5B3FA6]/10 hover:border-[#5B3FA6]/40";
 const labelCls =
-  "mb-1.5 block text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-luxe-charcoal/60";
+  "mb-1.5 block text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-[#160842]/60";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -133,21 +133,21 @@ const Register = () => {
           alt="Luxury hotel"
           className="absolute inset-0 h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-[#1C1C1C]/92 via-luxe-bronze/40 to-[#1C1C1C]/85" />
-        <div className="absolute left-10 top-10 h-14 w-14 border-l-2 border-t-2 border-white/10" />
-        <div className="absolute right-10 top-10 h-14 w-14 border-r-2 border-t-2 border-white/10" />
-        <div className="absolute bottom-10 left-10 h-14 w-14 border-b-2 border-l-2 border-white/10" />
-        <div className="absolute bottom-10 right-10 h-14 w-14 border-b-2 border-r-2 border-white/10" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#160842]/92 via-[#5B3FA6]/65 to-[#160842]/85" />
+        <div className="absolute left-10 top-10 h-14 w-14 border-l-2 border-t-2 border-white/20" />
+        <div className="absolute right-10 top-10 h-14 w-14 border-r-2 border-t-2 border-white/20" />
+        <div className="absolute bottom-10 left-10 h-14 w-14 border-b-2 border-l-2 border-white/20" />
+        <div className="absolute bottom-10 right-10 h-14 w-14 border-b-2 border-r-2 border-white/20" />
 
         <div className="relative z-10 flex min-h-screen flex-col p-10 text-white">
           <Link to="/" className="flex items-center gap-3">
             <span className="text-2xl font-light tracking-[0.15em]">KNSU</span>
-            <span className="text-xs uppercase tracking-[0.3em] text-luxe-bronze-light font-bold">STAYS</span>
+            <span className="text-xs uppercase tracking-[0.3em] text-purple-300">STAYS</span>
           </Link>
 
           <div className="my-auto max-w-sm">
-            <div className="mb-8 h-px w-12 bg-luxe-bronze/60" />
-            <p className="mb-5 text-[0.68rem] uppercase tracking-[0.35em] text-white/60 font-bold">
+            <div className="mb-8 h-px w-12 bg-purple-400/60" />
+            <p className="mb-5 text-[0.68rem] uppercase tracking-[0.35em] text-purple-300">
               Guest Registration
             </p>
             <h2 className="mb-6 font-serif text-4xl leading-[1.1] xl:text-[2.6rem]">
@@ -155,18 +155,18 @@ const Register = () => {
               <br />
               Journey With
               <br />
-              <span className="text-luxe-bronze">KNSU Stays</span>
+              <span className="text-purple-300">KNSU Stays</span>
             </h2>
-            <p className="text-sm leading-relaxed text-white/40">
+            <p className="text-sm leading-relaxed text-white/55">
               Register in three guided steps: request OTP, verify email, then complete your guest
               profile.
             </p>
-            <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
-              <p className="text-[0.62rem] font-bold uppercase tracking-[0.22em] text-luxe-bronze-light">
+            <div className="mt-8 rounded-2xl border border-white/10 bg-white/8 p-5 backdrop-blur-sm">
+              <p className="text-[0.62rem] font-bold uppercase tracking-[0.22em] text-purple-300">
                 Step {step} of 3
               </p>
               <p className="mt-2 text-lg font-semibold">{stepLabel[step - 1]}</p>
-              <p className="mt-2 text-sm text-white/40">
+              <p className="mt-2 text-sm text-white/60">
                 {step === 1 && "Enter your name and email to receive a 6-digit OTP."}
                 {step === 2 && `Enter the OTP sent to ${step1Data.email}.`}
                 {step === 3 && "Finish your account with phone, address, and password."}
@@ -181,12 +181,12 @@ const Register = () => {
       </div>
 
       <div className="flex min-h-screen flex-1 flex-col overflow-y-auto">
-        <div className="flex items-center justify-between border-b border-luxe-border bg-white px-6 py-5 lg:hidden">
+        <div className="flex items-center justify-between border-b border-[#E8E0D8] bg-white px-6 py-5 lg:hidden">
           <Link to="/" className="flex items-center gap-2">
-            <span className="text-lg font-light tracking-[0.15em] text-luxe-charcoal">KNSU</span>
-            <span className="text-[0.6rem] uppercase tracking-[0.3em] text-luxe-bronze font-bold">STAYS</span>
+            <span className="text-lg font-light tracking-[0.15em] text-[#160842]">KNSU</span>
+            <span className="text-[0.6rem] uppercase tracking-[0.3em] text-[#5B3FA6]">STAYS</span>
           </Link>
-          <span className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-luxe-bronze">
+          <span className="text-[0.65rem] font-medium uppercase tracking-[0.2em] text-[#5B3FA6]/70">
             Step {step} of 3
           </span>
         </div>
@@ -194,15 +194,15 @@ const Register = () => {
         <div className="flex-1 px-6 py-10 sm:px-10 lg:px-12 xl:px-16">
           <div className="mx-auto w-full max-w-2xl lg:mx-0">
             <div className="mb-8">
-              <p className="mb-3 text-[0.65rem] font-bold uppercase tracking-[0.3em] text-luxe-bronze">
+              <p className="mb-3 text-[0.65rem] font-bold uppercase tracking-[0.3em] text-[#5B3FA6]">
                 New Account
               </p>
-              <h1 className="mb-2 font-serif text-3xl leading-tight text-luxe-charcoal sm:text-4xl">
+              <h1 className="mb-2 font-serif text-3xl leading-tight text-[#160842] sm:text-4xl">
                 {step === 1 && "Get started"}
                 {step === 2 && "Verify your email"}
                 {step === 3 && "Complete registration"}
               </h1>
-              <p className="text-sm leading-relaxed text-luxe-muted">
+              <p className="text-sm leading-relaxed text-gray-400">
                 {step === 1 && "Enter your basic details and we will send a verification OTP."}
                 {step === 2 && "Check your inbox and enter the 6-digit code to continue."}
                 {step === 3 &&
@@ -229,7 +229,6 @@ const Register = () => {
                     <input
                       type="text"
                       name="firstName"
-                      autoComplete="given-name"
                       value={step1Data.firstName}
                       onChange={handleStep1Change}
                       placeholder="Enter first name"
@@ -241,7 +240,6 @@ const Register = () => {
                     <input
                       type="text"
                       name="lastName"
-                      autoComplete="family-name"
                       value={step1Data.lastName}
                       onChange={handleStep1Change}
                       placeholder="Enter last name"
@@ -254,7 +252,6 @@ const Register = () => {
                   <input
                     type="email"
                     name="email"
-                    autoComplete="email"
                     value={step1Data.email}
                     onChange={handleStep1Change}
                     placeholder="name@example.com"
@@ -264,25 +261,18 @@ const Register = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full rounded-full bg-luxe-bronze px-8 py-4 text-[0.85rem] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-luxe-charcoal hover:shadow-xl disabled:opacity-60"
+                  className="w-full rounded-full bg-[#5B3FA6] px-8 py-4 text-[0.85rem] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-[#4a3288] disabled:opacity-60"
                 >
-                  {isSubmitting ? (
-                    <span className="flex items-center justify-center gap-2">
-                       <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                       Processing...
-                    </span>
-                  ) : (
-                    step === 3 ? "Create account" : step === 2 ? "Verify OTP" : "Send OTP"
-                  )}
+                  {isSubmitting ? "Sending OTP..." : "Send OTP"}
                 </button>
               </form>
             )}
 
             {step === 2 && (
               <form onSubmit={handleStep2Submit} className="space-y-5">
-                <div className="rounded-2xl border border-luxe-bronze/15 bg-luxe-bronze/5 px-5 py-4 text-sm text-luxe-charcoal/65">
+                <div className="rounded-2xl border border-[#5B3FA6]/15 bg-[#5B3FA6]/5 px-5 py-4 text-sm text-[#160842]/65">
                   A 6-digit OTP was sent to{" "}
-                  <strong className="text-luxe-bronze">{step1Data.email}</strong>.
+                  <strong className="text-[#5B3FA6]">{step1Data.email}</strong>.
                 </div>
                 <div>
                   <label className={labelCls}>Enter OTP</label>
@@ -302,16 +292,9 @@ const Register = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full rounded-full bg-luxe-bronze px-8 py-4 text-[0.85rem] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-luxe-charcoal hover:shadow-xl disabled:opacity-60"
+                  className="w-full rounded-full bg-[#5B3FA6] px-8 py-4 text-[0.85rem] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-[#4a3288] disabled:opacity-60"
                 >
-                  {isSubmitting ? (
-                    <span className="flex items-center justify-center gap-2">
-                       <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                       Verifying...
-                    </span>
-                  ) : (
-                    "Verify OTP"
-                  )}
+                  {isSubmitting ? "Verifying..." : "Verify OTP"}
                 </button>
                 <button
                   type="button"
@@ -321,7 +304,7 @@ const Register = () => {
                     setError("");
                     setSuccess("");
                   }}
-                  className="w-full text-sm font-bold text-luxe-bronze hover:text-luxe-charcoal transition-colors"
+                  className="w-full text-sm font-medium text-[#5B3FA6]"
                 >
                   Go back
                 </button>
@@ -336,7 +319,6 @@ const Register = () => {
                     <input
                       type="text"
                       name="phone"
-                      autoComplete="tel"
                       value={step3Data.phone}
                       onChange={handleStep3Change}
                       placeholder="Enter phone number"
@@ -348,7 +330,6 @@ const Register = () => {
                     <input
                       type="text"
                       name="idProof"
-                      autoComplete="off"
                       value={step3Data.idProof}
                       onChange={handleStep3Change}
                       placeholder="Aadhaar, passport..."
@@ -361,7 +342,6 @@ const Register = () => {
                   <input
                     type="text"
                     name="address"
-                    autoComplete="street-address"
                     value={step3Data.address}
                     onChange={handleStep3Change}
                     placeholder="Enter address"
@@ -375,7 +355,6 @@ const Register = () => {
                       <input
                         type={showPassword ? "text" : "password"}
                         name="password"
-                        autoComplete="new-password"
                         value={step3Data.password}
                         onChange={handleStep3Change}
                         placeholder="Create password"
@@ -384,7 +363,7 @@ const Register = () => {
                       <button
                         type="button"
                         onClick={() => setShowPassword((v) => !v)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-[0.62rem] tracking-wider text-gray-300 hover:text-luxe-bronze"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-[0.62rem] tracking-wider text-gray-300 hover:text-[#5B3FA6]"
                       >
                         {showPassword ? "HIDE" : "SHOW"}
                       </button>
@@ -396,7 +375,6 @@ const Register = () => {
                       <input
                         type={showConfirm ? "text" : "password"}
                         name="confirmPassword"
-                        autoComplete="new-password"
                         value={step3Data.confirmPassword}
                         onChange={handleStep3Change}
                         placeholder="Confirm password"
@@ -405,7 +383,7 @@ const Register = () => {
                       <button
                         type="button"
                         onClick={() => setShowConfirm((v) => !v)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-[0.62rem] tracking-wider text-gray-300 hover:text-luxe-bronze"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-[0.62rem] tracking-wider text-gray-300 hover:text-[#5B3FA6]"
                       >
                         {showConfirm ? "HIDE" : "SHOW"}
                       </button>
@@ -415,16 +393,9 @@ const Register = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full rounded-full bg-luxe-bronze px-8 py-4 text-[0.85rem] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-luxe-charcoal hover:shadow-xl disabled:opacity-60"
+                  className="w-full rounded-full bg-[#5B3FA6] px-8 py-4 text-[0.85rem] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-[#4a3288] disabled:opacity-60"
                 >
-                  {isSubmitting ? (
-                    <span className="flex items-center justify-center gap-2">
-                       <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                       Creating account...
-                    </span>
-                  ) : (
-                    "Create account"
-                  )}
+                  {isSubmitting ? "Creating account..." : "Create account"}
                 </button>
               </form>
             )}
@@ -435,10 +406,10 @@ const Register = () => {
               <div className="h-px flex-1 bg-[#E8E0D8]" />
             </div>
 
-            <div className="space-y-3 text-center text-sm text-luxe-muted">
+            <div className="space-y-3 text-center text-sm text-gray-400">
               <p>
                 Already have an account?{" "}
-                <Link to="/login" className="font-bold text-luxe-bronze hover:text-luxe-charcoal underline underline-offset-4 decoration-luxe-bronze/30">
+                <Link to="/login" className="font-medium text-[#5B3FA6] hover:text-[#4a3288]">
                   Login
                 </Link>
               </p>
@@ -446,7 +417,7 @@ const Register = () => {
                 Are you hotel staff?{" "}
                 <Link
                   to="/admin/register"
-                  className="font-bold text-luxe-bronze hover:text-luxe-charcoal underline underline-offset-4 decoration-luxe-bronze/30"
+                  className="font-medium text-[#5B3FA6] hover:text-[#4a3288]"
                 >
                   Staff Registration →
                 </Link>

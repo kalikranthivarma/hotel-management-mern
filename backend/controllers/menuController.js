@@ -1,28 +1,31 @@
+
 import multer from 'multer';
 import path from 'path';
 import MenuItem from '../models/MenuItem.js';
-import { uploadToGridFS, deleteFromGridFS, streamImageFromGridFS, extractFilename } from '../utils/imageUtils.js';
 
-// Use memory storage — files are held in buffer, then streamed to GridFS
-const storage = multer.memoryStorage();
+// Multer Storage Configuration
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/menu');
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
+});
 
-export const upload = multer({
+const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
     const filetypes = /jpeg|jpg|png|webp/;
     const mimetype = filetypes.test(file.mimetype);
     const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-    if (mimetype && extname) return cb(null, true);
+
+    if (mimetype && extname) {
+      return cb(null, true);
+    }
     cb(new Error('Only image files are allowed!'));
   },
 });
-
-// @desc    Stream image from GridFS
-// @route   GET /api/menu/image/:filename
-// @access  Public
-export const getMenuImage = async (req, res, next) => {
-  await streamImageFromGridFS(req.params.filename, res, next);
-};
 
 // @desc    Get all menu items
 // @route   GET /api/menu
@@ -48,10 +51,10 @@ export const getMenuItems = async (req, res, next) => {
 export const addMenuItem = async (req, res, next) => {
   try {
     const { name, description, price, category, dietaryInfo, isSignatureDish } = req.body;
-
-    let imageFilename = '';
+    
+    let imagePath = '';
     if (req.file) {
-      imageFilename = await uploadToGridFS(req.file.buffer, req.file.originalname, req.file.mimetype, 'menu');
+      imagePath = `/uploads/menu/${req.file.filename}`;
     }
 
     const menuItem = await MenuItem.create({
@@ -61,7 +64,7 @@ export const addMenuItem = async (req, res, next) => {
       category,
       dietaryInfo: dietaryInfo ? dietaryInfo.split(',') : ['Non-Veg'],
       isSignatureDish: isSignatureDish === 'true',
-      image: imageFilename ? `/api/menu/image/${imageFilename}` : '',
+      image: imagePath,
     });
 
     res.status(201).json({ success: true, data: menuItem });
@@ -83,14 +86,9 @@ export const updateMenuItem = async (req, res, next) => {
     }
 
     const updateData = { ...req.body };
-
+    
     if (req.file) {
-      // Delete old image from GridFS before uploading new one
-      if (menuItem.image) {
-        await deleteFromGridFS(extractFilename(menuItem.image));
-      }
-      const newFilename = await uploadToGridFS(req.file.buffer, req.file.originalname, req.file.mimetype, 'menu');
-      updateData.image = `/api/menu/image/${newFilename}`;
+      updateData.image = `/uploads/menu/${req.file.filename}`;
     }
 
     if (req.body.dietaryInfo) {
@@ -120,14 +118,11 @@ export const deleteMenuItem = async (req, res, next) => {
       throw new Error('Menu item not found');
     }
 
-    // Delete image from GridFS too
-    if (menuItem.image) {
-      await deleteFromGridFS(extractFilename(menuItem.image));
-    }
-
     await menuItem.deleteOne();
     res.status(200).json({ success: true, message: 'Menu item removed' });
   } catch (error) {
     next(error);
   }
 };
+
+export { upload };

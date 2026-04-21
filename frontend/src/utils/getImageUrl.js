@@ -2,7 +2,7 @@ import api from "../api/axios";
 
 export const getImageUrl = (imagePath) => {
   if (!imagePath) {
-    // Elegant fallback image
+    // Fallback if no image is provided
     return "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800&q=80";
   }
 

@@ -1,20 +1,10 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
-import Admin from '../models/Admin.js';
-
-const normalizeRole = (role) => {
-  if (role === 'user') {
-    return 'guest';
-  }
-  return role;
-};
 
 // ─── CORE MIDDLEWARE ──────────────────────────────────────────────────────────
 
 // Authenticate any logged-in user regardless of role.
 // Populates req.user for all downstream controllers.
-// FIX: Admin accounts are in the Admin model, not the User model.
-// The JWT payload contains the role so we route to the correct collection.
 const protect = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
@@ -27,23 +17,11 @@ const protect = async (req, res, next) => {
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    let account;
-    if (decoded.role === 'admin' || decoded.role === 'superAdmin') {
-      // Admin tokens — look up in the Admin collection
-      account = await Admin.findById(decoded.id).select('-password');
-    } else {
-      // Guest/user tokens — look up in the User collection
-      account = await User.findById(decoded.id).select('-password');
-    }
-
-    if (!account) {
+    req.user = await User.findById(decoded.id).select('-password');
+    if (!req.user) {
       res.status(401);
-      return next(new Error('Account not found'));
+      return next(new Error('User not found'));
     }
-
-    req.user = account;
-    // Support legacy guest tokens/user documents that used "user" or lacked a role.
-    req.user.role = normalizeRole(req.user.role) || normalizeRole(decoded.role) || 'guest';
 
     next();
   } catch {
@@ -67,9 +45,8 @@ const authorize = (...roles) => (req, res, next) => {
 // These are arrays that Express route handlers accept natively.
 // Use them exactly as you would a single middleware function.
 
-// Only logged-in guests can access user booking and dining routes.
-// Admin or superAdmin accounts should not use guest reservation/order endpoints.
-const protectUser = [protect, authorize('guest')];
+// Only logged-in guests (or staff acting as guests) can access
+const protectUser = [protect, authorize('guest', 'admin', 'superAdmin')];
 
 // Only logged-in staff (admin or superAdmin) can access
 const protectAdmin = [protect, authorize('admin', 'superAdmin')];

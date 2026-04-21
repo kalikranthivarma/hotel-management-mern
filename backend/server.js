@@ -3,7 +3,8 @@ import dotenv from 'dotenv';
 import express from 'express';
 import connectDB from './config/db.js';
 import { errorHandler, notFound } from './middleware/errorMiddleware.js';
-
+import path from 'path';
+import { fileURLToPath } from 'url';
 import authRoutes from './routes/authRoutes.js';
 import bookingRoutes from './routes/bookingRoutes.js';
 import roomRoutes from './routes/roomRoutes.js';
@@ -12,6 +13,8 @@ import diningRoutes from './routes/diningRoutes.js';
 
 dotenv.config();
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -39,7 +42,8 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/dining', diningRoutes);
 
-// Images are now stored in MongoDB GridFS and served via /api/menu/image/:filename
+// Static folder for images
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use(notFound);
 app.use(errorHandler);

@@ -151,7 +151,7 @@ const registerUserStep3 = async (req, res, next) => {
     user.password = password;
     await user.save(); // Password will be hashed by pre-save hook 
 
-    const token = generateToken(user._id, user.role || 'guest');
+    const token = generateToken(user._id, 'user');
 
     res.status(201).json({
       success: true,
@@ -164,7 +164,6 @@ const registerUserStep3 = async (req, res, next) => {
         email: user.email,
         phone: user.phone,
         loyaltyPoints: user.loyaltyPoints,
-        role: user.role || 'guest',
       },
     });
   } catch (error) {
@@ -213,7 +212,6 @@ const loginUser = async (req, res, next) => {
         phone: user.phone,
         role: user.role,
         loyaltyPoints: user.loyaltyPoints,
-        role: user.role || 'guest',
       },
     });
   } catch (error) {

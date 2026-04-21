@@ -1,11 +1,6 @@
 import { useEffect, useState } from "react";
 import { createRoom, deleteRoom, getAllRooms, updateRoom } from "../api/roomApi";
 import Loader from "../components/Loader";
-import api from "../api/axios";
-import { getImageUrl } from "../utils/getImageUrl";
-
-const inputClass =
-  "mt-2 w-full rounded-2xl border border-luxe-border bg-luxe-smoke px-4 py-3 outline-none transition focus:border-luxe-bronze focus:bg-white focus:ring-4 focus:ring-luxe-bronze/10";
 
 const emptyFormData = {
   roomNumber: "",
@@ -18,12 +13,14 @@ const emptyFormData = {
   pricePerNight: "",
   maxGuests: "",
   description: "",
-  imageFile: null,
+  imageUrl: "",
 };
+
+const inputClass =
+  "mt-2 w-full rounded-2xl border border-luxe-border bg-luxe-smoke px-4 py-3 outline-none transition focus:border-luxe-bronze focus:bg-white focus:ring-4 focus:ring-luxe-bronze/10";
 
 const ManageRooms = () => {
   const [rooms, setRooms] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingRoom, setEditingRoom] = useState(null);
@@ -70,7 +67,7 @@ const ManageRooms = () => {
         pricePerNight: room.pricePerNight ?? "",
         maxGuests: room.maxGuests ?? "",
         description: room.description || "",
-        imageFile: null,
+        imageUrl: room.images?.[0] || "",
       });
     } else {
       setEditingRoom(null);
@@ -82,20 +79,19 @@ const ManageRooms = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const payload = new FormData();
-    payload.append("roomNumber", formData.roomNumber.trim());
-    payload.append("title", formData.title.trim());
-    payload.append("type", formData.type);
-    payload.append("bedType", formData.bedType);
-    payload.append("view", formData.view);
-    payload.append("floor", String(Number(formData.floor)));
-    payload.append("size", String(Number(formData.size)));
-    payload.append("pricePerNight", String(Number(formData.pricePerNight)));
-    payload.append("maxGuests", String(Number(formData.maxGuests)));
-    payload.append("description", formData.description.trim());
-    if (formData.imageFile) {
-      payload.append("image", formData.imageFile);
-    }
+    const payload = {
+      roomNumber: formData.roomNumber.trim(),
+      title: formData.title.trim(),
+      type: formData.type,
+      bedType: formData.bedType,
+      view: formData.view,
+      floor: Number(formData.floor),
+      size: Number(formData.size),
+      pricePerNight: Number(formData.pricePerNight),
+      maxGuests: Number(formData.maxGuests),
+      description: formData.description.trim(),
+      images: formData.imageUrl.trim() ? [formData.imageUrl.trim()] : [],
+    };
 
     try {
       if (editingRoom) {
@@ -113,39 +109,18 @@ const ManageRooms = () => {
     }
   };
 
-  const filteredRooms = (rooms || []).filter((room) => {
-    const searchStr = searchTerm.toLowerCase();
-    return (
-      room.title.toLowerCase().includes(searchStr) ||
-      room.type.toLowerCase().includes(searchStr) ||
-      room.roomNumber?.toString().includes(searchStr)
-    );
-  });
-
   if (loading) return <Loader />;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
-      <header className="mb-6 flex flex-col gap-6 rounded-[34px] bg-white px-6 py-8 shadow-[0_18px_50px_rgba(28,28,28,0.06)] lg:flex-row lg:items-end lg:justify-between">
+      <header className="mb-6 flex flex-col gap-4 rounded-[34px] bg-white px-6 py-8 shadow-[0_18px_50px_rgba(28,28,28,0.06)] lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h1 className="font-serif text-5xl leading-none">Property Management</h1>
           <p className="mt-4 text-lg leading-8 text-luxe-muted">Add or modify room listings for KNSU Stays.</p>
         </div>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center lg:mb-1">
-          <div className="relative w-full sm:w-64">
-             <input
-               type="text"
-               placeholder="Search rooms..."
-               value={searchTerm}
-               onChange={(e) => setSearchTerm(e.target.value)}
-               className="w-full rounded-2xl border border-luxe-border bg-luxe-smoke py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-luxe-bronze focus:bg-white"
-             />
-             <svg className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-luxe-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-          </div>
-          <button className="rounded-full bg-luxe-bronze px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-luxe-charcoal shadow-lg shadow-luxe-bronze/20" onClick={() => handleOpenModal()}>
-            Add New Room
-          </button>
-        </div>
+        <button className="rounded-full bg-luxe-bronze px-5 py-3 text-sm font-semibold text-white transition hover:bg-luxe-charcoal" onClick={() => handleOpenModal()}>
+          Add New Room
+        </button>
       </header>
 
       <div className="overflow-x-auto rounded-[30px] border border-luxe-border bg-white shadow-[0_18px_50px_rgba(28,28,28,0.06)]">
@@ -161,39 +136,31 @@ const ManageRooms = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredRooms.length > 0 ? (
-              filteredRooms.map((room) => (
-                <tr key={room._id} className="border-b border-luxe-border last:border-b-0">
-                  <td className="px-6 py-4">
-                    <img
-                      src={getImageUrl(room.images?.[0])}
-                      alt={room.title}
-                      className="h-14 w-14 rounded-2xl object-cover"
-                    />
-                  </td>
-                  <td className="px-6 py-4 font-semibold">{room.title}</td>
-                  <td className="px-6 py-4">{room.type}</td>
-                  <td className="px-6 py-4">Rs. {room.pricePerNight}</td>
-                  <td className="px-6 py-4">{room.maxGuests} Guests</td>
-                  <td className="px-6 py-4">
-                    <div className="flex gap-3">
-                      <button className="rounded-full border border-luxe-border px-4 py-2 text-sm font-semibold hover:bg-luxe-smoke" onClick={() => handleOpenModal(room)}>
-                        Edit
-                      </button>
-                      <button className="rounded-full border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50" onClick={() => handleDelete(room._id)}>
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="6" className="px-6 py-14 text-center text-luxe-muted italic">
-                   No rooms matched your search.
+            {rooms.map((room) => (
+              <tr key={room._id} className="border-b border-luxe-border last:border-b-0">
+                <td className="px-6 py-4">
+                  <img
+                    src={room.images?.[0] || "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=50"}
+                    alt={room.title}
+                    className="h-14 w-14 rounded-2xl object-cover"
+                  />
+                </td>
+                <td className="px-6 py-4 font-semibold">{room.title}</td>
+                <td className="px-6 py-4">{room.type}</td>
+                <td className="px-6 py-4">Rs. {room.pricePerNight}</td>
+                <td className="px-6 py-4">{room.maxGuests} Guests</td>
+                <td className="px-6 py-4">
+                  <div className="flex gap-3">
+                    <button className="rounded-full border border-luxe-border px-4 py-2 text-sm font-semibold hover:bg-luxe-smoke" onClick={() => handleOpenModal(room)}>
+                      Edit
+                    </button>
+                    <button className="rounded-full border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50" onClick={() => handleDelete(room._id)}>
+                      Delete
+                    </button>
+                  </div>
                 </td>
               </tr>
-            )}
+            ))}
           </tbody>
         </table>
       </div>
@@ -267,8 +234,8 @@ const ManageRooms = () => {
                   <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} required className={`${inputClass} min-h-32 resize-y`} />
                 </label>
                 <label className="block text-sm font-semibold text-luxe-charcoal md:col-span-2">
-                  Room Image
-                  <input type="file" accept="image/*" onChange={(e) => setFormData({ ...formData, imageFile: e.target.files?.[0] || null })} className={inputClass} />
+                  Image URL
+                  <input type="text" value={formData.imageUrl} onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })} placeholder="https://..." className={inputClass} />
                 </label>
               </div>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">

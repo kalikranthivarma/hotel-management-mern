@@ -60,7 +60,6 @@ const ForgotPassword = () => {
           <input
             type="email"
             name="email"
-            autoComplete="email"
             placeholder="name@example.com"
             value={email}
             onChange={(event) => {

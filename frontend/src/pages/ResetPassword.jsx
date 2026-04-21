@@ -83,7 +83,6 @@ const ResetPassword = () => {
           <input
             type="password"
             name="password"
-            autoComplete="new-password"
             placeholder="Enter new password"
             value={formData.password}
             onChange={handleChange}
@@ -96,7 +95,6 @@ const ResetPassword = () => {
           <input
             type="password"
             name="confirmPassword"
-            autoComplete="new-password"
             placeholder="Confirm new password"
             value={formData.confirmPassword}
             onChange={handleChange}

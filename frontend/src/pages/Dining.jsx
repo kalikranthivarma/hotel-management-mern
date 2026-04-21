@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useSelector } from "react-redux"; 
 import Loader from "../components/Loader";
 import {
   bookDiningTable,
@@ -81,6 +81,7 @@ export default function Dining() {
 
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
   const [dietaryFilters, setDietaryFilters] = useState([]);
   const [cart, setCart] = useState([]);
   const [activeTab, setActiveTab] = useState("menu");
@@ -106,22 +107,51 @@ export default function Dining() {
   const totalAmount = useMemo(
     () => cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
     [cart],
-  );
+  );  //runs only when cart changes
 
   const availableTables = useMemo(
     () => tables.filter((table) => table.status === "Available"),
     [tables],
   );
 
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(t);
+  }, [searchQuery]);
+
   const filteredMenuItems = useMemo(() => {
+    const search = debouncedSearch.toLowerCase();
+
     return menuItems.filter((item) => {
-      const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           item.description?.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesDietary = dietaryFilters.length === 0 ||
-                            dietaryFilters.every(filter => item.dietaryInfo?.includes(filter));
-      return matchesSearch && matchesDietary;
+      if (
+        search &&
+        !item.name.toLowerCase().includes(search) &&
+        !item.description?.toLowerCase().includes(search)
+      ) {
+        return false;
+      }
+
+      if (
+        dietaryFilters.length &&
+        !dietaryFilters.every((filter) =>
+          item.dietaryInfo?.includes(filter)
+        )
+      ) {
+        return false;
+      }
+
+      return true;
     });
-  }, [menuItems, searchQuery, dietaryFilters]);
+  }, [menuItems, debouncedSearch, dietaryFilters]);
+
+  const cartMap = useMemo(() => {
+    const map = new Map();
+    cart.forEach((item) => map.set(item._id, item));
+    return map;
+  }, [cart]);
 
   useEffect(() => {
     const loadMenu = async () => {
@@ -175,7 +205,7 @@ export default function Dining() {
     loadProtectedData();
   }, [user, isAdmin]);
 
-  const updateCart = (menuItem, delta) => {
+  const updateCart = useCallback((menuItem, delta) => {
     setCart((prev) => {
       const existing = prev.find((item) => item._id === menuItem._id);
 
@@ -191,7 +221,7 @@ export default function Dining() {
         )
         .filter((item) => item.quantity > 0);
     });
-  };
+  }, []);
 
   const clearCart = () => {
     setCart([]);
@@ -203,7 +233,7 @@ export default function Dining() {
     }));
   };
 
-  const handleOrderInputChange = (event) => {
+  const handleOrderInputChange = (event) => {  //Function triggered when any order form input changes
     const { name, value } = event.target;
     setOrderForm((prev) => ({
       ...prev,
@@ -358,11 +388,11 @@ export default function Dining() {
     );
   };
 
-  const toggleDietaryFilter = (filter) => {
+  const toggleDietaryFilter = useCallback((filter) => {
     setDietaryFilters(prev =>
       prev.includes(filter) ? prev.filter(f => f !== filter) : [...prev, filter]
     );
-  };
+  }, []);
 
   return (
     <div className="pb-14">
@@ -503,7 +533,7 @@ export default function Dining() {
             ) : filteredMenuItems.length > 0 ? (
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {filteredMenuItems.map((item) => {
-                  const cartItem = cart.find((entry) => entry._id === item._id);
+                  const cartItem = cartMap.get(item._id);
 
                   return (
                     <div

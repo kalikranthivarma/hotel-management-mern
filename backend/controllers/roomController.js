@@ -29,7 +29,7 @@ export const getRoomImage = async (req, res, next) => {
 // GET /api/rooms  Get all active rooms with optional filters
 const getAllRooms = async (req, res, next) => {
   try {
-    const { type, minPrice, maxPrice, maxGuests, view, bedType, isAvailable } = req.query;
+    const { type, minPrice, maxPrice, maxGuests, view, bedType, isAvailable, checkIn, checkOut } = req.query;
 
     const filter = { isActive: true };
 
@@ -45,6 +45,30 @@ const getAllRooms = async (req, res, next) => {
     }
 
     const rooms = await Room.find(filter).sort({ isFeatured: -1, pricePerNight: 1 });
+
+    // If dates are provided, check which rooms have overlapping bookings
+    if (checkIn && checkOut) {
+      const Booking = (await import('../models/Booking.js')).default;
+      const checkInDate = new Date(checkIn);
+      const checkOutDate = new Date(checkOut);
+
+      // Find all bookings that overlap with the requested dates
+      // Overlap condition: booking.checkIn < requestedCheckOut AND booking.checkOut > requestedCheckIn
+      const overlappingBookings = await Booking.find({
+        status: { $in: ['confirmed', 'pending'] },
+        checkIn: { $lt: checkOutDate },
+        checkOut: { $gt: checkInDate },
+      }).select('room status checkIn checkOut');
+
+      const bookedRoomIds = new Set(overlappingBookings.map((b) => b.room.toString()));
+
+      const roomsWithAvailability = rooms.map((room) => ({
+        ...room.toObject(),
+        isBookedForDates: bookedRoomIds.has(room._id.toString()),
+      }));
+
+      return res.status(200).json({ success: true, count: roomsWithAvailability.length, rooms: roomsWithAvailability });
+    }
 
     res.status(200).json({ success: true, count: rooms.length, rooms });
   } catch (error) {

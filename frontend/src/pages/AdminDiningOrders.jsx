@@ -35,6 +35,7 @@ const formatCurrency = (amount) =>
 
 const AdminDiningOrders = () => {
   const [orders, setOrders] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [updatingId, setUpdatingId] = useState("");
@@ -70,15 +71,35 @@ const AdminDiningOrders = () => {
     }
   };
 
+  const filteredOrders = orders.filter((order) => {
+    const searchStr = searchTerm.toLowerCase();
+    const guestName = `${order.user?.firstName} ${order.user?.lastName}`.toLowerCase();
+    const guestEmail = order.user?.email?.toLowerCase() || "";
+    const locationStr = (order.roomNumber ? `room ${order.roomNumber}` : order.tableNumber ? `table ${order.tableNumber}` : "").toLowerCase();
+    return guestName.includes(searchStr) || guestEmail.includes(searchStr) || locationStr.includes(searchStr) || order.orderType.toLowerCase().includes(searchStr) || order.status.toLowerCase().includes(searchStr);
+  });
+
   if (loading) return <Loader />;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
-      <header className="rounded-[34px] bg-luxe-charcoal px-6 py-8 text-white shadow-[0_18px_60px_rgba(28,28,28,0.14)]">
-        <h1 className="font-serif text-5xl leading-none">Dining Orders</h1>
-        <p className="mt-4 max-w-2xl text-lg leading-8 text-white/70">
-          Review incoming food orders and update kitchen or service status from one place.
-        </p>
+      <header className="flex flex-col justify-between gap-6 rounded-[34px] bg-luxe-charcoal px-6 py-8 text-white shadow-[0_18px_60px_rgba(28,28,28,0.14)] lg:flex-row lg:items-end">
+        <div>
+          <h1 className="font-serif text-5xl leading-none">Dining Orders</h1>
+          <p className="mt-4 max-w-2xl text-lg leading-8 text-white/70">
+            Review incoming food orders and update kitchen or service status from one place.
+          </p>
+        </div>
+        <div className="relative w-full lg:max-w-xs">
+           <input
+             type="text"
+             placeholder="Search orders..."
+             value={searchTerm}
+             onChange={(e) => setSearchTerm(e.target.value)}
+             className="w-full rounded-2xl border border-white/10 bg-white/5 py-3 pl-11 pr-4 text-sm text-white outline-none transition focus:border-luxe-bronze focus:bg-white/10 focus:ring-4 focus:ring-luxe-bronze/20"
+           />
+           <svg className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+        </div>
       </header>
 
       {error ? (
@@ -87,9 +108,9 @@ const AdminDiningOrders = () => {
         </div>
       ) : null}
 
-      {orders.length > 0 ? (
+      {filteredOrders.length > 0 ? (
         <div className="mt-6 space-y-5">
-          {orders.map((order) => (
+          {filteredOrders.map((order) => (
             <article
               key={order._id}
               className="rounded-[30px] border border-luxe-border bg-white p-6 shadow-[0_18px_50px_rgba(28,28,28,0.06)]"

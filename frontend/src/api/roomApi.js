@@ -15,14 +15,20 @@ export const getRoomById = async (id) => {
   return response.data;
 };
 
-// Admin actions
+// Admin actions — now supports FormData for image uploads
 export const createRoom = async (roomData) => {
-  const response = await api.post("/rooms", roomData);
+  const isFormData = roomData instanceof FormData;
+  const response = await api.post("/rooms", roomData, {
+    headers: isFormData ? { "Content-Type": "multipart/form-data" } : {},
+  });
   return response.data;
 };
 
 export const updateRoom = async (id, roomData) => {
-  const response = await api.put(`/rooms/${id}`, roomData);
+  const isFormData = roomData instanceof FormData;
+  const response = await api.put(`/rooms/${id}`, roomData, {
+    headers: isFormData ? { "Content-Type": "multipart/form-data" } : {},
+  });
   return response.data;
 };
 

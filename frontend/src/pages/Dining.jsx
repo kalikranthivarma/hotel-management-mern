@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux"; 
 import Loader from "../components/Loader";
+import { Grid } from "react-window";
+import { AutoSizer } from "react-virtualized-auto-sizer";
 import {
   bookDiningTable,
   cancelDiningOrder,
@@ -45,6 +47,13 @@ const statusStyles = {
   Served: "bg-emerald-100 text-emerald-700",
   Completed: "bg-emerald-100 text-emerald-700",
   Cancelled: "bg-rose-100 text-rose-700",
+};
+
+const getColumnCount = (width) => {
+  if (width < 640) return 1;   // mobile
+  if (width < 1024) return 2;  // sm
+  if (width < 1280) return 3;  // lg
+  return 4;                    // xl
 };
 
 const getImageUrl = (imagePath) => {

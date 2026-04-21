@@ -4,6 +4,7 @@ import { useParams, Link } from "react-router-dom";
 import { getRoomById } from "../api/roomApi";
 import BookingForm from "../components/BookingForm";
 import Loader from "../components/Loader";
+import { getImageUrl } from "../utils/getImageUrl";
 
 const RoomDetails = () => {
   const { id } = useParams();
@@ -31,7 +32,7 @@ const RoomDetails = () => {
 
   const images =
     room.images && room.images.length > 0
-      ? room.images
+      ? room.images.map(getImageUrl)
       : ["https://images.unsplash.com/photo-1590490360182-c33d57733427?w=1200&q=80"];
   const isAdmin = role === "admin" || role === "superAdmin";
 

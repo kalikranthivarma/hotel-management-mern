@@ -12,9 +12,9 @@ const initStep3 = {
 };
 
 const inputCls =
-  "w-full rounded-xl border border-[#E8E0D8] bg-white px-4 py-3 text-sm text-[#160842] placeholder:text-gray-300 outline-none transition-all duration-200 focus:border-[#5B3FA6] focus:ring-2 focus:ring-[#5B3FA6]/10 hover:border-[#5B3FA6]/40";
+  "w-full rounded-xl border border-luxe-border bg-white px-4 py-3 text-sm text-luxe-charcoal placeholder:text-gray-300 outline-none transition-all duration-200 focus:border-luxe-bronze focus:ring-2 focus:ring-luxe-bronze/10 hover:border-luxe-bronze/40";
 const labelCls =
-  "mb-1.5 block text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-[#160842]/60";
+  "mb-1.5 block text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-luxe-charcoal/60";
 
 const AdminRegister = () => {
   const navigate = useNavigate();
@@ -137,21 +137,21 @@ const AdminRegister = () => {
           alt="Luxury hotel lobby"
           className="absolute inset-0 h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-[#120a32]/94 via-[#3b216e]/75 to-[#120a32]/88" />
-        <div className="absolute left-10 top-10 h-14 w-14 border-l-2 border-t-2 border-white/20" />
-        <div className="absolute right-10 top-10 h-14 w-14 border-r-2 border-t-2 border-white/20" />
-        <div className="absolute bottom-10 left-10 h-14 w-14 border-b-2 border-l-2 border-white/20" />
-        <div className="absolute bottom-10 right-10 h-14 w-14 border-b-2 border-r-2 border-white/20" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1C1C1C]/94 via-luxe-bronze/40 to-[#1C1C1C]/88" />
+        <div className="absolute left-10 top-10 h-14 w-14 border-l-2 border-t-2 border-white/10" />
+        <div className="absolute right-10 top-10 h-14 w-14 border-r-2 border-t-2 border-white/10" />
+        <div className="absolute bottom-10 left-10 h-14 w-14 border-b-2 border-l-2 border-white/10" />
+        <div className="absolute bottom-10 right-10 h-14 w-14 border-b-2 border-r-2 border-white/10" />
 
         <div className="relative z-10 flex min-h-screen flex-col p-10 text-white">
           <Link to="/" className="flex items-center gap-3">
             <span className="text-2xl font-light tracking-[0.15em]">KNSU</span>
-            <span className="text-xs uppercase tracking-[0.3em] text-purple-300">STAYS</span>
+            <span className="text-xs uppercase tracking-[0.3em] text-luxe-bronze-light font-bold">STAYS</span>
           </Link>
 
           <div className="my-auto max-w-sm">
-            <div className="mb-8 h-px w-12 bg-purple-400/60" />
-            <p className="mb-5 text-[0.68rem] uppercase tracking-[0.35em] text-purple-300">
+            <div className="mb-8 h-px w-12 bg-luxe-bronze/60" />
+            <p className="mb-5 text-[0.68rem] uppercase tracking-[0.35em] text-white/60 font-bold">
               Staff Onboarding
             </p>
             <h2 className="mb-6 font-serif text-4xl leading-[1.1] xl:text-[2.6rem]">
@@ -159,17 +159,17 @@ const AdminRegister = () => {
               <br />
               For The
               <br />
-              <span className="text-purple-300">KNSU Team</span>
+              <span className="text-luxe-bronze">KNSU Team</span>
             </h2>
-            <p className="text-sm leading-relaxed text-white/55">
+            <p className="text-sm leading-relaxed text-white/40">
               Complete corporate onboarding in three guided steps with email OTP verification.
             </p>
-            <div className="mt-8 rounded-2xl border border-white/10 bg-white/8 p-5 backdrop-blur-sm">
-              <p className="text-[0.62rem] font-bold uppercase tracking-[0.22em] text-purple-300">
+            <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
+              <p className="text-[0.62rem] font-bold uppercase tracking-[0.22em] text-luxe-bronze-light">
                 Step {step} of 3
               </p>
               <p className="mt-2 text-lg font-semibold">{stepLabel[step - 1]}</p>
-              <p className="mt-2 text-sm text-white/60">
+              <p className="mt-2 text-sm text-white/40">
                 {step === 1 && "Enter your name and corporate email to receive a 6-digit OTP."}
                 {step === 2 && `Enter the OTP sent to ${step1Data.email}.`}
                 {step === 3 && "Finish your staff profile with employee credentials."}
@@ -184,12 +184,12 @@ const AdminRegister = () => {
       </div>
 
       <div className="flex min-h-screen flex-1 flex-col overflow-y-auto">
-        <div className="flex items-center justify-between border-b border-[#E8E0D8] bg-white px-6 py-5 lg:hidden">
+        <div className="flex items-center justify-between border-b border-luxe-border bg-white px-6 py-5 lg:hidden">
           <Link to="/" className="flex items-center gap-2">
-            <span className="text-lg font-light tracking-[0.15em] text-[#160842]">KNSU</span>
-            <span className="text-[0.6rem] uppercase tracking-[0.3em] text-[#5B3FA6]">STAYS</span>
+            <span className="text-lg font-light tracking-[0.15em] text-luxe-charcoal">KNSU</span>
+            <span className="text-[0.6rem] uppercase tracking-[0.3em] text-luxe-bronze font-bold">STAYS</span>
           </Link>
-          <span className="text-[0.65rem] font-medium uppercase tracking-[0.2em] text-[#5B3FA6]/70">
+          <span className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-luxe-bronze">
             Step {step} of 3
           </span>
         </div>
@@ -197,15 +197,15 @@ const AdminRegister = () => {
         <div className="flex-1 px-6 py-10 sm:px-10 lg:px-12 xl:px-16">
           <div className="mx-auto w-full max-w-2xl lg:mx-0">
             <div className="mb-8">
-              <p className="mb-3 text-[0.65rem] font-bold uppercase tracking-[0.3em] text-[#5B3FA6]">
+              <p className="mb-3 text-[0.65rem] font-bold uppercase tracking-[0.3em] text-luxe-bronze">
                 Staff Registration
               </p>
-              <h1 className="mb-2 font-serif text-3xl leading-tight text-[#160842] sm:text-4xl">
+              <h1 className="mb-2 font-serif text-3xl leading-tight text-luxe-charcoal sm:text-4xl">
                 {step === 1 && "Start onboarding"}
                 {step === 2 && "Verify corporate email"}
                 {step === 3 && "Complete staff profile"}
               </h1>
-              <p className="text-sm leading-relaxed text-gray-400">
+              <p className="text-sm leading-relaxed text-luxe-muted">
                 Use your official employee details. Each step maps directly to the incoming backend
                 flow.
               </p>
@@ -265,18 +265,25 @@ const AdminRegister = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full rounded-full bg-[#5B3FA6] px-8 py-4 text-[0.85rem] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-[#4a3288] disabled:opacity-60"
+                  className="w-full rounded-full bg-luxe-bronze px-8 py-4 text-[0.85rem] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-luxe-charcoal hover:shadow-xl disabled:opacity-60"
                 >
-                  {isSubmitting ? "Sending OTP..." : "Send OTP"}
+                   {isSubmitting ? (
+                    <span className="flex items-center justify-center gap-2">
+                       <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                       Processing...
+                    </span>
+                  ) : (
+                    step === 3 ? "Register Staff Profile" : step === 2 ? "Verify OTP" : "Send OTP"
+                  )}
                 </button>
               </form>
             )}
 
             {step === 2 && (
               <form onSubmit={handleStep2Submit} className="space-y-5">
-                <div className="rounded-2xl border border-[#5B3FA6]/15 bg-[#5B3FA6]/5 px-5 py-4 text-sm text-[#160842]/65">
+                <div className="rounded-2xl border border-luxe-bronze/15 bg-luxe-bronze/5 px-5 py-4 text-sm text-luxe-charcoal/65">
                   A 6-digit OTP was sent to{" "}
-                  <strong className="text-[#5B3FA6]">{step1Data.email}</strong>.
+                  <strong className="text-luxe-bronze">{step1Data.email}</strong>.
                 </div>
                 <div>
                   <label className={labelCls}>Enter OTP</label>
@@ -296,9 +303,16 @@ const AdminRegister = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full rounded-full bg-[#5B3FA6] px-8 py-4 text-[0.85rem] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-[#4a3288] disabled:opacity-60"
+                  className="w-full rounded-full bg-luxe-bronze px-8 py-4 text-[0.85rem] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-luxe-charcoal hover:shadow-xl disabled:opacity-60"
                 >
-                  {isSubmitting ? "Verifying..." : "Verify OTP"}
+                  {isSubmitting ? (
+                    <span className="flex items-center justify-center gap-2">
+                       <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                       Verifying...
+                    </span>
+                  ) : (
+                    "Verify OTP"
+                  )}
                 </button>
                 <button
                   type="button"
@@ -308,7 +322,7 @@ const AdminRegister = () => {
                     setError("");
                     setSuccess("");
                   }}
-                  className="w-full text-sm font-medium text-[#5B3FA6]"
+                  className="w-full text-sm font-bold text-luxe-bronze hover:text-luxe-charcoal transition-colors"
                 >
                   Go back
                 </button>
@@ -391,9 +405,16 @@ const AdminRegister = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full rounded-full bg-[#5B3FA6] px-8 py-4 text-[0.85rem] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-[#4a3288] disabled:opacity-60"
+                  className="w-full rounded-full bg-luxe-bronze px-8 py-4 text-[0.85rem] font-bold uppercase tracking-[0.12em] text-white transition hover:bg-luxe-charcoal hover:shadow-xl disabled:opacity-60"
                 >
-                  {isSubmitting ? "Registering Staff Profile..." : "Register Staff Profile"}
+                  {isSubmitting ? (
+                    <span className="flex items-center justify-center gap-2">
+                       <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                       Registering Staff Profile...
+                    </span>
+                  ) : (
+                    "Register Staff Profile"
+                  )}
                 </button>
               </form>
             )}
@@ -404,16 +425,16 @@ const AdminRegister = () => {
               <div className="h-px flex-1 bg-[#E8E0D8]" />
             </div>
 
-            <div className="space-y-3 text-center text-sm text-gray-400">
+            <div className="space-y-3 text-center text-sm text-luxe-muted">
               <p>
                 Already registered?{" "}
-                <Link to="/admin/login" className="font-medium text-[#5B3FA6] hover:text-[#4a3288]">
+                <Link to="/admin/login" className="font-bold text-luxe-bronze hover:text-luxe-charcoal underline underline-offset-4 decoration-luxe-bronze/30">
                   Staff Login
                 </Link>
               </p>
               <p>
                 Guest registration?{" "}
-                <Link to="/register" className="font-medium text-[#5B3FA6] hover:text-[#4a3288]">
+                <Link to="/register" className="font-bold text-luxe-bronze hover:text-luxe-charcoal underline underline-offset-4 decoration-luxe-bronze/30">
                   Member Enrollment →
                 </Link>
               </p>

@@ -1,8 +1,7 @@
 import multer from 'multer';
 import path from 'path';
-import mongoose from 'mongoose';
 import MenuItem from '../models/MenuItem.js';
-import { getBucket } from '../config/gridfs.js';
+import { uploadToGridFS, deleteFromGridFS, streamImageFromGridFS, extractFilename } from '../utils/imageUtils.js';
 
 // Use memory storage — files are held in buffer, then streamed to GridFS
 const storage = multer.memoryStorage();
@@ -18,44 +17,11 @@ export const upload = multer({
   },
 });
 
-// Helper: upload buffer to GridFS and return the filename
-const uploadToGridFS = (buffer, originalname, mimetype) => {
-  return new Promise((resolve, reject) => {
-    const bucket = getBucket();
-    const filename = `${Date.now()}-${originalname}`;
-    const uploadStream = bucket.openUploadStream(filename, { contentType: mimetype });
-    uploadStream.end(buffer);
-    uploadStream.on('finish', () => resolve(filename));
-    uploadStream.on('error', reject);
-  });
-};
-
-// Helper: delete a file from GridFS by filename
-const deleteFromGridFS = async (filename) => {
-  if (!filename) return;
-  const bucket = getBucket();
-  const files = await bucket.find({ filename }).toArray();
-  if (files.length > 0) {
-    await bucket.delete(files[0]._id);
-  }
-};
-
 // @desc    Stream image from GridFS
 // @route   GET /api/menu/image/:filename
 // @access  Public
 export const getMenuImage = async (req, res, next) => {
-  try {
-    const bucket = getBucket();
-    const files = await bucket.find({ filename: req.params.filename }).toArray();
-    if (!files || files.length === 0) {
-      res.status(404);
-      throw new Error('Image not found');
-    }
-    res.set('Content-Type', files[0].contentType || 'image/jpeg');
-    bucket.openDownloadStreamByName(req.params.filename).pipe(res);
-  } catch (error) {
-    next(error);
-  }
+  await streamImageFromGridFS(req.params.filename, res, next);
 };
 
 // @desc    Get all menu items
@@ -85,7 +51,7 @@ export const addMenuItem = async (req, res, next) => {
 
     let imageFilename = '';
     if (req.file) {
-      imageFilename = await uploadToGridFS(req.file.buffer, req.file.originalname, req.file.mimetype);
+      imageFilename = await uploadToGridFS(req.file.buffer, req.file.originalname, req.file.mimetype, 'menu');
     }
 
     const menuItem = await MenuItem.create({
@@ -121,10 +87,9 @@ export const updateMenuItem = async (req, res, next) => {
     if (req.file) {
       // Delete old image from GridFS before uploading new one
       if (menuItem.image) {
-        const oldFilename = menuItem.image.split('/').pop();
-        await deleteFromGridFS(oldFilename);
+        await deleteFromGridFS(extractFilename(menuItem.image));
       }
-      const newFilename = await uploadToGridFS(req.file.buffer, req.file.originalname, req.file.mimetype);
+      const newFilename = await uploadToGridFS(req.file.buffer, req.file.originalname, req.file.mimetype, 'menu');
       updateData.image = `/api/menu/image/${newFilename}`;
     }
 
@@ -157,8 +122,7 @@ export const deleteMenuItem = async (req, res, next) => {
 
     // Delete image from GridFS too
     if (menuItem.image) {
-      const oldFilename = menuItem.image.split('/').pop();
-      await deleteFromGridFS(oldFilename);
+      await deleteFromGridFS(extractFilename(menuItem.image));
     }
 
     await menuItem.deleteOne();

@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <defs>
+    <style>
+      .building { fill: #D4B68A; }
+      .windows { fill: #2D3748; }
+      .door { fill: #4A5568; }
+    </style>
+  </defs>
+
+  <!-- Building base -->
+  <rect x="4" y="12" width="24" height="18" class="building" rx="2"/>
+
+  <!-- Windows -->
+  <rect x="6" y="14" width="3" height="3" class="windows"/>
+  <rect x="10" y="14" width="3" height="3" class="windows"/>
+  <rect x="19" y="14" width="3" height="3" class="windows"/>
+  <rect x="23" y="14" width="3" height="3" class="windows"/>
+
+  <rect x="6" y="18" width="3" height="3" class="windows"/>
+  <rect x="10" y="18" width="3" height="3" class="windows"/>
+  <rect x="19" y="18" width="3" height="3" class="windows"/>
+  <rect x="23" y="18" width="3" height="3" class="windows"/>
+
+  <rect x="6" y="22" width="3" height="3" class="windows"/>
+  <rect x="10" y="22" width="3" height="3" class="windows"/>
+  <rect x="19" y="22" width="3" height="3" class="windows"/>
+  <rect x="23" y="22" width="3" height="3" class="windows"/>
+
+  <!-- Door -->
+  <rect x="13" y="22" width="6" height="8" class="door"/>
+  <circle cx="15" cy="25" r="0.5" fill="#D4B68A"/>
+  <circle cx="17" cy="25" r="0.5" fill="#D4B68A"/>
+
+  <!-- Roof -->
+  <polygon points="2,12 16,6 30,12" class="building"/>
+</svg></content>
+<parameter name="filePath">c:\Users\Dell\Downloads\hotel-management-mern-main\hotel-management-mern\frontend\public\knsu-icon.svg

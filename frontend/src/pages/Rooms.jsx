@@ -6,6 +6,10 @@ import Loader from "../components/Loader";
 const inputClass =
   "mt-2 w-full rounded-2xl border border-luxe-border bg-white px-4 py-3 outline-none transition focus:border-luxe-bronze focus:ring-4 focus:ring-luxe-bronze/10";
 
+// Get today and tomorrow in YYYY-MM-DD format for default/min values
+const today = new Date().toISOString().split("T")[0];
+const tomorrow = new Date(Date.now() + 86400000).toISOString().split("T")[0];
+
 const Rooms = () => {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,15 +18,23 @@ const Rooms = () => {
     minPrice: "",
     maxPrice: "",
   });
+  const [dates, setDates] = useState({ checkIn: "", checkOut: "" });
+  const [datesActive, setDatesActive] = useState(false);
 
   useEffect(() => {
     fetchRooms();
-  }, [filters]);
+  }, [filters, datesActive, dates]);
 
   const fetchRooms = async () => {
     try {
       setLoading(true);
-      const data = await getAllRooms(filters);
+      const params = { ...filters };
+      // Only send dates if both are set and dates mode is active
+      if (datesActive && dates.checkIn && dates.checkOut) {
+        params.checkIn = dates.checkIn;
+        params.checkOut = dates.checkOut;
+      }
+      const data = await getAllRooms(params);
       setRooms(Array.isArray(data?.rooms) ? data.rooms : []);
     } catch (error) {
       console.error("Failed to fetch rooms:", error);
@@ -36,6 +48,24 @@ const Rooms = () => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
   };
 
+  const handleDateChange = (e) => {
+    const { name, value } = e.target;
+    setDates((prev) => {
+      const updated = { ...prev, [name]: value };
+      // Auto-enable date filtering as soon as both dates are filled
+      if (updated.checkIn && updated.checkOut) setDatesActive(true);
+      return updated;
+    });
+  };
+
+  const handleReset = () => {
+    setFilters({ type: "", minPrice: "", maxPrice: "" });
+    setDates({ checkIn: "", checkOut: "" });
+    setDatesActive(false);
+  };
+
+  const availableCount = datesActive ? rooms.filter((r) => !r.isBookedForDates).length : null;
+
   return (
     <div className="pb-14">
       <section className="relative overflow-hidden border-b border-luxe-border bg-luxe-charcoal px-4 py-16 text-white lg:px-8">
@@ -44,8 +74,7 @@ const Rooms = () => {
           <p className="text-xs font-bold uppercase tracking-[0.35em] text-luxe-bronze-light">Our Collection</p>
           <h1 className="mt-4 max-w-3xl font-serif text-5xl leading-none sm:text-6xl">Elegant stays, timeless comfort</h1>
           <p className="mt-5 max-w-2xl text-lg leading-8 text-white/70">
-            Discover our curated selection of premium rooms and suites, designed to provide the
-            ideal hospitality experience.
+            Discover our curated selection of premium rooms and suites, designed to provide the ideal hospitality experience.
           </p>
         </div>
       </section>
@@ -54,6 +83,54 @@ const Rooms = () => {
         <aside className="h-fit rounded-[30px] border border-luxe-border bg-white p-6 shadow-[0_18px_50px_rgba(28,28,28,0.06)]">
           <h2 className="font-serif text-2xl">Filter By</h2>
 
+          {/* ── Availability Date Picker ── */}
+          <div className="mt-6 rounded-2xl border border-luxe-border bg-luxe-smoke p-4">
+            <p className="text-xs font-bold uppercase tracking-[0.25em] text-luxe-bronze">Check Availability</p>
+            <p className="mt-1 text-xs text-luxe-muted">Select dates to see which rooms are free</p>
+
+            <div className="mt-3">
+              <label className="text-sm font-semibold text-luxe-charcoal">Check-in</label>
+              <input
+                type="date"
+                name="checkIn"
+                min={today}
+                value={dates.checkIn}
+                onChange={handleDateChange}
+                className={inputClass}
+              />
+            </div>
+
+            <div className="mt-3">
+              <label className="text-sm font-semibold text-luxe-charcoal">Check-out</label>
+              <input
+                type="date"
+                name="checkOut"
+                min={dates.checkIn || tomorrow}
+                value={dates.checkOut}
+                onChange={handleDateChange}
+                className={inputClass}
+              />
+            </div>
+
+            {datesActive && (
+              <>
+                {availableCount !== null && (
+                  <p className="mt-3 text-center text-sm font-semibold text-emerald-600">
+                    {availableCount} room{availableCount !== 1 ? "s" : ""} available for your dates
+                  </p>
+                )}
+                <button
+                  type="button"
+                  onClick={() => { setDates({ checkIn: "", checkOut: "" }); setDatesActive(false); }}
+                  className="mt-3 w-full rounded-xl border border-rose-200 bg-rose-50 py-2 text-xs font-semibold text-rose-500 transition hover:bg-rose-100"
+                >
+                  ✕ Clear Dates
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* ── Room Type ── */}
           <div className="mt-6">
             <label htmlFor="type" className="text-sm font-semibold text-luxe-charcoal">
               Room Type
@@ -67,6 +144,7 @@ const Rooms = () => {
             </select>
           </div>
 
+          {/* ── Price Range ── */}
           <div className="mt-6">
             <label className="text-sm font-semibold text-luxe-charcoal">Price Range</label>
             <div className="mt-2 grid grid-cols-2 gap-3">
@@ -77,7 +155,7 @@ const Rooms = () => {
 
           <button
             className="mt-6 w-full rounded-2xl border border-luxe-border px-4 py-3 font-semibold text-luxe-charcoal transition hover:bg-luxe-smoke"
-            onClick={() => setFilters({ type: "", minPrice: "", maxPrice: "" })}
+            onClick={handleReset}
           >
             Reset Filters
           </button>
@@ -89,7 +167,7 @@ const Rooms = () => {
           ) : rooms.length > 0 ? (
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {rooms.map((room) => (
-                <RoomCard key={room._id} room={room} />
+                <RoomCard key={room._id} room={room} datesActive={datesActive} />
               ))}
             </div>
           ) : (

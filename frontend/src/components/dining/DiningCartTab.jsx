@@ -1,3 +1,6 @@
+import { useEffect } from "react";
+import { toast } from "react-toastify";
+
 export default function DiningCartTab({
   cart,
   clearCart,
@@ -14,7 +17,18 @@ export default function DiningCartTab({
   updateCart,
   user,
   tables,
+  setActiveTab,
 }) {
+  useEffect(() => {
+    if (orderMessage.type === "success") {
+      toast.success("Order Placed Successfully!");
+      const timer = setTimeout(() => {
+        setActiveTab("orders");
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [orderMessage, setActiveTab]);
+
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_400px]">
       <div className="space-y-6">
@@ -199,13 +213,24 @@ export default function DiningCartTab({
 
                 {orderMessage.text && (
                   <div
-                    className={`mt-4 rounded-xl px-4 py-2 text-sm font-medium ${
+                    className={`mt-4 rounded-xl p-5 text-sm font-medium ${
                       orderMessage.type === "success"
                         ? "bg-emerald-50 text-emerald-700"
                         : "bg-rose-50 text-rose-700"
                     }`}
                   >
-                    {orderMessage.text}
+                    <div className="flex flex-col gap-3">
+                      <p>{orderMessage.text}</p>
+                      {orderMessage.type === "success" && (
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab("orders")}
+                          className="w-fit rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-emerald-700"
+                        >
+                          View My Orders
+                        </button>
+                      )}
+                    </div>
                   </div>
                 )}
               </form>

@@ -21,6 +21,8 @@ import {
 } from "../api/diningApi";
 import { getMenuItems } from "../api/menuApi";
 import api from "../api/axios";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const DiningCartTab = lazy(
   () => import("../components/dining/DiningCartTab"),
@@ -399,6 +401,9 @@ export default function Dining() {
   }, []);
 
   useEffect(() => {
+    setOrderMessage({ text: "", type: "" });
+    setReserveMessage({ text: "", type: "" });
+
     if (!user || isAdmin) {
       setTables([]);
       setOrders([]);
@@ -898,6 +903,7 @@ export default function Dining() {
               tables={tables}
               totalAmount={totalAmount}
               updateCart={updateCart}
+              setActiveTab={setActiveTab}
               user={user}
             />
           </Suspense>
@@ -915,6 +921,7 @@ export default function Dining() {
               reservationForm={reservationForm}
               reserveMessage={reserveMessage}
               setReservationForm={setReservationForm}
+              setActiveTab={setActiveTab}
               submittingReservation={submittingReservation}
               user={user}
             />
@@ -937,6 +944,7 @@ export default function Dining() {
           </Suspense>
         )}
       </div>
+      <ToastContainer position="bottom-right" theme="dark" />
     </div>
   );
 }

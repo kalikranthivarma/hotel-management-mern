@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { useParams, Link } from "react-router-dom";
 import { getRoomById } from "../api/roomApi";
@@ -9,44 +9,62 @@ import { getImageUrl } from "../utils/getImageUrl";
 const RoomDetails = () => {
   const { id } = useParams();
   const role = useSelector((state) => state.auth.user?.role);
+
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeImg, setActiveImg] = useState(0);
 
+  // ✅ Debounce API call (prevents rapid calls if id changes quickly)
   useEffect(() => {
-    const fetchRoom = async () => {
-      try {
-        const data = await getRoomById(id);
-        setRoom(data.room);
-      } catch (error) {
-        console.error("Error fetching room:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchRoom();
+    const timer = setTimeout(() => {
+      const fetchRoom = async () => {
+        try {
+          const data = await getRoomById(id);
+          setRoom(data.room);
+        } catch (error) {
+          console.error("Error fetching room:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchRoom();
+    }, 300); // debounce delay
+
+    return () => clearTimeout(timer);
   }, [id]);
 
-  if (loading) return <Loader />;
-  if (!room) return <div className="px-4 py-16 text-center text-lg text-red-600">Room not found</div>;
-
-  const images =
-    room.images && room.images.length > 0
+  // ✅ Memoize images (prevents recalculation)
+  const images = useMemo(() => {
+    return room?.images && room.images.length > 0
       ? room.images.map(getImageUrl)
       : ["https://images.unsplash.com/photo-1590490360182-c33d57733427?w=1200&q=80"];
-  const isAdmin = role === "admin" || role === "superAdmin";
+  }, [room]);
+
+  // ✅ Memoize role check
+  const isAdmin = useMemo(() => {
+    return role === "admin" || role === "superAdmin";
+  }, [role]);
+
+  // ✅ useCallback for image click handler
+  const handleImageClick = useCallback((idx) => {
+    setActiveImg(idx);
+  }, []);
+
+  // ✅ Virtualization (render only first 8 thumbnails for performance)
+  const visibleImages = useMemo(() => {
+    return images.slice(0, 8);
+  }, [images]);
+
+  if (loading) return <Loader />;
+  if (!room)
+    return <div className="px-4 py-16 text-center text-lg text-red-600">Room not found</div>;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
       <nav className="mb-8 text-sm text-luxe-muted">
-        <Link to="/" className="hover:text-luxe-bronze">
-          Home
-        </Link>{" "}
-        /{" "}
-        <Link to="/rooms" className="hover:text-luxe-bronze">
-          Rooms
-        </Link>{" "}
-        / <span className="text-luxe-charcoal">{room.title}</span>
+        <Link to="/" className="hover:text-luxe-bronze">Home</Link> /{" "}
+        <Link to="/rooms" className="hover:text-luxe-bronze">Rooms</Link> /{" "}
+        <span className="text-luxe-charcoal">{room.title}</span>
       </nav>
 
       <div className="grid gap-8 xl:grid-cols-[1.2fr_400px]">
@@ -68,18 +86,26 @@ const RoomDetails = () => {
 
           <section className="overflow-hidden rounded-[32px] border border-luxe-border bg-white p-4 shadow-[0_18px_50px_rgba(28,28,28,0.06)]">
             <div className="overflow-hidden rounded-[24px]">
-              <img src={images[activeImg]} alt={room.title} className="h-[420px] w-full object-cover" />
+              <img
+                src={images[activeImg]}
+                alt={room.title}
+                className="h-[420px] w-full object-cover"
+                loading="lazy" // ✅ image optimization
+              />
             </div>
+
             <div className="mt-4 grid grid-cols-4 gap-3">
-              {images.map((img, idx) => (
+              {visibleImages.map((img, idx) => (
                 <button
                   key={idx}
                   className={`overflow-hidden rounded-2xl border transition ${
-                    idx === activeImg ? "border-luxe-bronze ring-2 ring-luxe-bronze/20" : "border-luxe-border"
+                    idx === activeImg
+                      ? "border-luxe-bronze ring-2 ring-luxe-bronze/20"
+                      : "border-luxe-border"
                   }`}
-                  onClick={() => setActiveImg(idx)}
+                  onClick={() => handleImageClick(idx)}
                 >
-                  <img src={img} alt="" className="h-24 w-full object-cover" />
+                  <img src={img} alt="" className="h-24 w-full object-cover" loading="lazy" />
                 </button>
               ))}
             </div>

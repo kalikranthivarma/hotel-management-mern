@@ -72,7 +72,7 @@ const Login = () => {
       const nextRoute =
         normalizedUser?.role === "admin" || normalizedUser?.role === "superAdmin"
           ? "/admin/manage-rooms"
-          : "/rooms";
+          : "/";
 
       navigate(nextRoute, { replace: true });
     } catch (submitError) {

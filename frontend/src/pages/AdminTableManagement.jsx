@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   createDiningTable,
-  updateDiningTable,
   deleteDiningTable,
   getDiningTables,
+  updateDiningTable,
 } from "../api/diningApi";
 import Loader from "../components/Loader";
 
@@ -16,27 +16,78 @@ const statusStyles = {
   Occupied: "bg-rose-100 text-rose-700",
 };
 
-const locationOptions = ["Indoor", "Outdoor", "Rooftop", "Balcony", "Private Room"];
+const locationOptions = [
+  "Indoor",
+  "Outdoor",
+  "Rooftop",
+  "Balcony",
+  "Private Room",
+];
+
+const emptyFormData = {
+  tableNumber: "",
+  capacity: 2,
+  location: "Indoor",
+  status: "Available",
+};
+
+const getStatusClass = (status) =>
+  statusStyles[status] || "bg-gray-100 text-gray-700";
+
+const TableCard = React.memo(({ table, onDelete, onEdit }) => {
+  return (
+    <div className="rounded-[24px] border border-luxe-border bg-white p-5 shadow-sm">
+      <div className="flex items-start justify-between">
+        <div>
+          <h3 className="font-serif text-xl">Table {table.tableNumber}</h3>
+          <p className="mt-1 text-sm text-luxe-muted">{table.location}</p>
+        </div>
+        <span
+          className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusClass(
+            table.status,
+          )}`}
+        >
+          {table.status}
+        </span>
+      </div>
+
+      <div className="mt-4">
+        <p className="text-sm text-luxe-muted">
+          Capacity:{" "}
+          <span className="font-semibold text-luxe-charcoal">
+            {table.capacity} guests
+          </span>
+        </p>
+      </div>
+
+      <div className="mt-5 flex gap-2">
+        <button
+          onClick={() => onEdit(table)}
+          className="flex-1 rounded-xl border border-luxe-border px-4 py-2 text-sm font-semibold text-luxe-charcoal transition hover:bg-luxe-smoke"
+        >
+          Edit
+        </button>
+        <button
+          onClick={() => onDelete(table._id)}
+          className="rounded-xl border border-rose-200 px-4 py-2 text-sm font-semibold text-rose-600 transition hover:bg-rose-50"
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  );
+});
 
 const AdminTableManagement = () => {
   const [tables, setTables] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingTable, setEditingTable] = useState(null);
-  const [formData, setFormData] = useState({
-    tableNumber: "",
-    capacity: 2,
-    location: "Indoor",
-    status: "Available",
-  });
+  const [formData, setFormData] = useState(emptyFormData);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    fetchTables();
-  }, []);
-
-  const fetchTables = async () => {
+  const fetchTables = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getDiningTables();
@@ -47,49 +98,51 @@ const AdminTableManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const resetForm = () => {
-    setFormData({
-      tableNumber: "",
-      capacity: 2,
-      location: "Indoor",
-      status: "Available",
-    });
+  useEffect(() => {
+    fetchTables();
+  }, [fetchTables]);
+
+  const resetForm = useCallback(() => {
+    setFormData(emptyFormData);
     setEditingTable(null);
     setError("");
-  };
+  }, []);
 
-  const openModal = (table = null) => {
-    if (table) {
-      setEditingTable(table);
-      setFormData({
-        tableNumber: table.tableNumber,
-        capacity: table.capacity,
-        location: table.location,
-        status: table.status,
-      });
-    } else {
-      resetForm();
-    }
-    setShowModal(true);
-  };
+  const openModal = useCallback(
+    (table = null) => {
+      if (table) {
+        setEditingTable(table);
+        setFormData({
+          tableNumber: table.tableNumber,
+          capacity: table.capacity,
+          location: table.location,
+          status: table.status,
+        });
+      } else {
+        resetForm();
+      }
+      setShowModal(true);
+    },
+    [resetForm],
+  );
 
-  const closeModal = () => {
+  const closeModal = useCallback(() => {
     setShowModal(false);
     resetForm();
-  };
+  }, [resetForm]);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
+  const handleInputChange = useCallback((event) => {
+    const { name, value } = event.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "capacity" ? parseInt(value) : value,
+      [name]: name === "capacity" ? parseInt(value, 10) : value,
     }));
-  };
+  }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setError("");
 
     if (!formData.tableNumber.trim()) {
@@ -106,12 +159,25 @@ const AdminTableManagement = () => {
       setSubmitting(true);
 
       if (editingTable) {
-        await updateDiningTable(editingTable._id, formData);
+        const updatedResponse = await updateDiningTable(editingTable._id, formData);
+        const updatedTable = updatedResponse?.data;
+
+        if (updatedTable?._id) {
+          setTables((prev) =>
+            prev.map((table) =>
+              table._id === updatedTable._id ? updatedTable : table,
+            ),
+          );
+        }
       } else {
-        await createDiningTable(formData);
+        const createdResponse = await createDiningTable(formData);
+        const newTable = createdResponse?.data;
+
+        if (newTable?._id) {
+          setTables((prev) => [...prev, newTable]);
+        }
       }
 
-      await fetchTables();
       closeModal();
     } catch (err) {
       console.error("Failed to save table:", err);
@@ -121,19 +187,31 @@ const AdminTableManagement = () => {
     }
   };
 
-  const handleDelete = async (tableId) => {
-    if (!window.confirm("Are you sure you want to delete this table? This action cannot be undone.")) {
+  const handleDelete = useCallback(async (tableId) => {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this table? This action cannot be undone.",
+      )
+    ) {
       return;
     }
 
     try {
       await deleteDiningTable(tableId);
-      await fetchTables();
+      setTables((prev) => prev.filter((table) => table._id !== tableId));
     } catch (err) {
       console.error("Failed to delete table:", err);
       alert(err.response?.data?.message || "Failed to delete table");
     }
-  };
+  }, []);
+
+  const handleEdit = useCallback((table) => {
+    openModal(table);
+  }, [openModal]);
+
+  const handleDeleteMemo = useCallback((id) => {
+    handleDelete(id);
+  }, [handleDelete]);
 
   if (loading) {
     return <Loader />;
@@ -151,7 +229,8 @@ const AdminTableManagement = () => {
             Table Management
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-white/70 sm:text-lg sm:leading-8">
-            Manage your restaurant's dining tables - add, edit, or remove tables to optimize seating capacity.
+            Manage your restaurant&apos;s dining tables - add, edit, or remove
+            tables to optimize seating capacity.
           </p>
         </div>
       </section>
@@ -173,52 +252,21 @@ const AdminTableManagement = () => {
         {tables.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {tables.map((table) => (
-              <div
+              <TableCard
                 key={table._id}
-                className="rounded-[24px] border border-luxe-border bg-white p-5 shadow-sm"
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="font-serif text-xl">Table {table.tableNumber}</h3>
-                    <p className="mt-1 text-sm text-luxe-muted">{table.location}</p>
-                  </div>
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                      statusStyles[table.status] || "bg-gray-100 text-gray-700"
-                    }`}
-                  >
-                    {table.status}
-                  </span>
-                </div>
-
-                <div className="mt-4">
-                  <p className="text-sm text-luxe-muted">
-                    Capacity: <span className="font-semibold text-luxe-charcoal">{table.capacity} guests</span>
-                  </p>
-                </div>
-
-                <div className="mt-5 flex gap-2">
-                  <button
-                    onClick={() => openModal(table)}
-                    className="flex-1 rounded-xl border border-luxe-border px-4 py-2 text-sm font-semibold text-luxe-charcoal transition hover:bg-luxe-smoke"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(table._id)}
-                    className="rounded-xl border border-rose-200 px-4 py-2 text-sm font-semibold text-rose-600 transition hover:bg-rose-50"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
+                table={table}
+                onDelete={handleDeleteMemo}
+                onEdit={handleEdit}
+              />
             ))}
           </div>
         ) : (
           <div className="rounded-[30px] border border-dashed border-luxe-border bg-white px-6 py-14 text-center">
             <div className="text-6xl">🍽️</div>
             <h3 className="mt-4 font-serif text-2xl">No tables found</h3>
-            <p className="mt-2 text-luxe-muted">Add your first dining table to get started</p>
+            <p className="mt-2 text-luxe-muted">
+              Add your first dining table to get started
+            </p>
             <button
               onClick={() => openModal()}
               className="mt-6 rounded-full bg-luxe-bronze px-6 py-3 font-semibold text-white transition hover:bg-luxe-charcoal"
@@ -228,7 +276,6 @@ const AdminTableManagement = () => {
           </div>
         )}
 
-        {/* Modal */}
         {showModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
             <div className="w-full max-w-md rounded-[30px] border border-luxe-border bg-white p-6 shadow-2xl">
@@ -331,7 +378,11 @@ const AdminTableManagement = () => {
                     disabled={submitting}
                     className="flex-1 rounded-2xl bg-luxe-bronze px-5 py-3 font-semibold text-white transition hover:bg-luxe-charcoal disabled:cursor-not-allowed disabled:bg-luxe-muted"
                   >
-                    {submitting ? "Saving..." : editingTable ? "Update Table" : "Add Table"}
+                    {submitting
+                      ? "Saving..."
+                      : editingTable
+                        ? "Update Table"
+                        : "Add Table"}
                   </button>
                 </div>
               </form>

@@ -1,9 +1,16 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
-import { Link } from "react-router-dom";
-import { useSelector } from "react-redux"; 
+import {
+  lazy,
+  memo,
+  Suspense,
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { useSelector } from "react-redux";
 import Loader from "../components/Loader";
-import { Grid } from "react-window";
-import { AutoSizer } from "react-virtualized-auto-sizer";
 import {
   bookDiningTable,
   cancelDiningOrder,
@@ -14,6 +21,16 @@ import {
 } from "../api/diningApi";
 import { getMenuItems } from "../api/menuApi";
 import api from "../api/axios";
+
+const DiningCartTab = lazy(
+  () => import("../components/dining/DiningCartTab"),
+);
+const DiningReserveTab = lazy(
+  () => import("../components/dining/DiningReserveTab"),
+);
+const DiningOrdersTab = lazy(
+  () => import("../components/dining/DiningOrdersTab"),
+);
 
 const categories = [
   "All",
@@ -49,16 +66,37 @@ const statusStyles = {
   Cancelled: "bg-rose-100 text-rose-700",
 };
 
-const getColumnCount = (width) => {
-  if (width < 640) return 1;   // mobile
-  if (width < 1024) return 2;  // sm
-  if (width < 1280) return 3;  // lg
-  return 4;                    // xl
+const protectedTabs = new Set(["cart", "reserve", "orders"]);
+
+const INITIAL_VISIBLE_MENU_ITEMS = 8;
+const MENU_ITEMS_LOAD_STEP = 8;
+const BELOW_THE_FOLD_STYLE = {
+  contentVisibility: "auto",
+  containIntrinsicSize: "1200px",
 };
+
+const currencyFormatter = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: "INR",
+  maximumFractionDigits: 0,
+});
+const fallbackDiningImage =
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+      <rect width="800" height="600" fill="#f4efe7" />
+      <rect x="70" y="70" width="660" height="460" rx="36" fill="#d4b08a" opacity="0.18" />
+      <circle cx="400" cy="250" r="92" fill="#1f2937" opacity="0.12" />
+      <path d="M328 220h144v24H328zm24 42h96v24h-96zm-8 56h112v24H344z" fill="#1f2937" opacity="0.42" />
+      <text x="400" y="430" font-family="Georgia, serif" font-size="34" text-anchor="middle" fill="#5b4633">
+        Dining Menu
+      </text>
+    </svg>
+  `);
 
 const getImageUrl = (imagePath) => {
   if (!imagePath) {
-    return "https://images.unsplash.com/photo-1544025162-d76694265947?w=900&q=80";
+    return fallbackDiningImage;
   }
 
   if (imagePath.startsWith("http")) {
@@ -69,16 +107,121 @@ const getImageUrl = (imagePath) => {
   return `${baseUrl}${imagePath}`;
 };
 
-const formatCurrency = (amount) =>
-  new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(amount || 0);
+const formatCurrency = (amount) => currencyFormatter.format(amount || 0);
+
+const MenuCard = memo(function MenuCard({
+  ariaAttributes,
+  item,
+  quantity,
+  onUpdateCart,
+  style,
+}) {
+  return (
+    <div style={style} {...ariaAttributes}>
+      <div className="group flex h-full flex-col overflow-hidden rounded-[24px] border border-luxe-border bg-white shadow-[0_18px_50px_rgba(28,28,28,0.06)] transition-all hover:shadow-[0_25px_60px_rgba(28,28,28,0.12)]">
+        <div className="relative aspect-[4/3] overflow-hidden">
+          <img
+            src={getImageUrl(item.image)}
+            alt={item.name}
+            className="h-full w-full object-cover transition-transform group-hover:scale-105"
+            decoding="async"
+            loading="lazy"
+          />
+          {item.isSignatureDish && (
+            <span className="absolute left-3 top-3 rounded-full bg-luxe-charcoal/90 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-white">
+              Signature
+            </span>
+          )}
+          {!item.isAvailable && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+              <span className="rounded-full bg-rose-500 px-4 py-2 text-sm font-semibold text-white">
+                Unavailable
+              </span>
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-1 flex-col p-5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-bold uppercase tracking-[0.24em] text-luxe-bronze">
+                {item.category}
+              </p>
+              <h3 className="mt-2 font-serif text-xl leading-tight">
+                {item.name}
+              </h3>
+            </div>
+            <p className="shrink-0 text-lg font-semibold text-luxe-charcoal">
+              {formatCurrency(item.price)}
+            </p>
+          </div>
+
+          <p className="mt-3 line-clamp-2 text-sm leading-6 text-luxe-muted">
+            {item.description ||
+              "Freshly prepared and served with KNSU dining care."}
+          </p>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            {(item.dietaryInfo || []).map((diet) => (
+              <span
+                key={`${item._id}-${diet}`}
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                  badgeStyles[diet] || "bg-luxe-smoke text-luxe-charcoal"
+                }`}
+              >
+                {diet}
+              </span>
+            ))}
+          </div>
+
+          <div className="mt-auto flex items-center justify-between pt-5">
+            <div className="flex items-center rounded-full border border-luxe-border bg-luxe-smoke p-1">
+              <button
+                type="button"
+                onClick={() => onUpdateCart(item, -1)}
+                className="h-8 w-8 rounded-full text-sm text-luxe-charcoal transition hover:bg-white"
+              >
+                -
+              </button>
+              <span className="min-w-8 text-center text-sm font-semibold">
+                {quantity}
+              </span>
+              <button
+                type="button"
+                onClick={() => onUpdateCart(item, 1)}
+                disabled={!item.isAvailable}
+                className="h-8 w-8 rounded-full text-sm text-luxe-charcoal transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                +
+              </button>
+            </div>
+
+            {quantity > 0 ? (
+              <span className="text-sm font-semibold text-luxe-bronze">
+                Added to cart
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => onUpdateCart(item, 1)}
+                disabled={!item.isAvailable}
+                className="rounded-full bg-luxe-bronze px-4 py-2 text-sm font-semibold text-white transition hover:bg-luxe-charcoal disabled:cursor-not-allowed disabled:bg-luxe-muted"
+              >
+                Add
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+});
 
 export default function Dining() {
   const { user } = useSelector((state) => state.auth);
-  const isAdmin = user?.role === 'admin' || user?.role === 'superAdmin';
+  const isAdmin = user?.role === "admin" || user?.role === "superAdmin";
+  const menuCacheRef = useRef({});
+  const hasLoadedProtectedDataRef = useRef(false);
 
   const [menuItems, setMenuItems] = useState([]);
   const [tables, setTables] = useState([]);
@@ -90,7 +233,6 @@ export default function Dining() {
 
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
   const [dietaryFilters, setDietaryFilters] = useState([]);
   const [cart, setCart] = useState([]);
   const [activeTab, setActiveTab] = useState("menu");
@@ -112,27 +254,24 @@ export default function Dining() {
   const [submittingReservation, setSubmittingReservation] = useState(false);
   const [orderMessage, setOrderMessage] = useState({ text: "", type: "" });
   const [reserveMessage, setReserveMessage] = useState({ text: "", type: "" });
+  const [shouldLoadMenu, setShouldLoadMenu] = useState(false);
+  const [visibleMenuItemCount, setVisibleMenuItemCount] = useState(
+    INITIAL_VISIBLE_MENU_ITEMS,
+  );
+  const deferredSearchQuery = useDeferredValue(searchQuery);
 
   const totalAmount = useMemo(
     () => cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
     [cart],
-  );  //runs only when cart changes
+  );
 
   const availableTables = useMemo(
     () => tables.filter((table) => table.status === "Available"),
     [tables],
   );
 
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setDebouncedSearch(searchQuery);
-    }, 300);
-
-    return () => clearTimeout(t);
-  }, [searchQuery]);
-
   const filteredMenuItems = useMemo(() => {
-    const search = debouncedSearch.toLowerCase();
+    const search = deferredSearchQuery.trim().toLowerCase();
 
     return menuItems.filter((item) => {
       if (
@@ -145,16 +284,14 @@ export default function Dining() {
 
       if (
         dietaryFilters.length &&
-        !dietaryFilters.every((filter) =>
-          item.dietaryInfo?.includes(filter)
-        )
+        !dietaryFilters.every((filter) => item.dietaryInfo?.includes(filter))
       ) {
         return false;
       }
 
       return true;
     });
-  }, [menuItems, debouncedSearch, dietaryFilters]);
+  }, [deferredSearchQuery, dietaryFilters, menuItems]);
 
   const cartMap = useMemo(() => {
     const map = new Map();
@@ -162,8 +299,56 @@ export default function Dining() {
     return map;
   }, [cart]);
 
+  const visibleMenuItems = useMemo(
+    () => filteredMenuItems.slice(0, visibleMenuItemCount),
+    [filteredMenuItems, visibleMenuItemCount],
+  );
+  const hasMoreMenuItems = visibleMenuItemCount < filteredMenuItems.length;
+
   useEffect(() => {
+    setVisibleMenuItemCount(INITIAL_VISIBLE_MENU_ITEMS);
+  }, [selectedCategory, deferredSearchQuery, dietaryFilters]);
+
+  useEffect(() => {
+    const scheduleMenuLoad = () => setShouldLoadMenu(true);
+
+    if (typeof window === "undefined") {
+      scheduleMenuLoad();
+      return undefined;
+    }
+
+    const rafId = window.requestAnimationFrame(() => {
+      if ("requestIdleCallback" in window) {
+        const idleId = window.requestIdleCallback(scheduleMenuLoad, {
+          timeout: 400,
+        });
+
+        return () => window.cancelIdleCallback(idleId);
+      }
+
+      const timeoutId = window.setTimeout(scheduleMenuLoad, 180);
+      return () => window.clearTimeout(timeoutId);
+    });
+
+    return () => window.cancelAnimationFrame(rafId);
+  }, []);
+
+  useEffect(() => {
+    if (!shouldLoadMenu) {
+      return;
+    }
+
     const loadMenu = async () => {
+      const cacheKey = selectedCategory;
+      const cachedMenu = menuCacheRef.current[cacheKey];
+
+      if (cachedMenu) {
+        setMenuError("");
+        setMenuItems(cachedMenu);
+        setLoadingMenu(false);
+        return;
+      }
+
       try {
         setLoadingMenu(true);
         setMenuError("");
@@ -171,11 +356,14 @@ export default function Dining() {
         const response = await getMenuItems(
           selectedCategory === "All" ? {} : { category: selectedCategory },
         );
-
-        setMenuItems(Array.isArray(response?.data) ? response.data : []);
+        const nextMenu = Array.isArray(response?.data) ? response.data : [];
+        menuCacheRef.current[cacheKey] = nextMenu;
+        setMenuItems(nextMenu);
       } catch (error) {
         console.error("Failed to fetch menu items:", error);
-        setMenuError(error.response?.data?.message || "Unable to load the menu right now.");
+        setMenuError(
+          error.response?.data?.message || "Unable to load the menu right now.",
+        );
         setMenuItems([]);
       } finally {
         setLoadingMenu(false);
@@ -183,36 +371,48 @@ export default function Dining() {
     };
 
     loadMenu();
-  }, [selectedCategory]);
+  }, [selectedCategory, shouldLoadMenu]);
 
-  useEffect(() => {
-    if (!user || isAdmin) {
-      setTables([]);
-      setOrders([]);
-      return;
-    }
-
-    const loadProtectedData = async () => {
-      try {
-        setLoadingProtectedData(true);
-        const [tablesResponse, ordersResponse, reservationsResponse] = await Promise.all([
+  const loadProtectedData = useCallback(async () => {
+    try {
+      setLoadingProtectedData(true);
+      const [tablesResponse, ordersResponse, reservationsResponse] =
+        await Promise.all([
           getDiningTables(),
           getMyDiningOrders(),
           getMyDiningReservations(),
         ]);
 
-        setTables(Array.isArray(tablesResponse?.data) ? tablesResponse.data : []);
-        setOrders(Array.isArray(ordersResponse?.data) ? ordersResponse.data : []);
-        setReservations(Array.isArray(reservationsResponse?.data) ? reservationsResponse.data : []);
-      } catch (error) {
-        console.error("Failed to fetch dining data:", error);
-      } finally {
-        setLoadingProtectedData(false);
-      }
-    };
+      setTables(Array.isArray(tablesResponse?.data) ? tablesResponse.data : []);
+      setOrders(Array.isArray(ordersResponse?.data) ? ordersResponse.data : []);
+      setReservations(
+        Array.isArray(reservationsResponse?.data)
+          ? reservationsResponse.data
+          : [],
+      );
+      hasLoadedProtectedDataRef.current = true;
+    } catch (error) {
+      console.error("Failed to fetch dining data:", error);
+    } finally {
+      setLoadingProtectedData(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!user || isAdmin) {
+      setTables([]);
+      setOrders([]);
+      setReservations([]);
+      hasLoadedProtectedDataRef.current = false;
+      return;
+    }
+
+    if (!protectedTabs.has(activeTab) || hasLoadedProtectedDataRef.current) {
+      return;
+    }
 
     loadProtectedData();
-  }, [user, isAdmin]);
+  }, [activeTab, isAdmin, loadProtectedData, user]);
 
   const updateCart = useCallback((menuItem, delta) => {
     setCart((prev) => {
@@ -232,7 +432,7 @@ export default function Dining() {
     });
   }, []);
 
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     setCart([]);
     setOrderForm((prev) => ({
       ...prev,
@@ -240,15 +440,19 @@ export default function Dining() {
       tableNumber: "",
       specialInstructions: "",
     }));
-  };
+  }, []);
 
-  const handleOrderInputChange = (event) => {  //Function triggered when any order form input changes
+  const handleOrderInputChange = (event) => {
     const { name, value } = event.target;
     setOrderForm((prev) => ({
       ...prev,
       [name]: value,
-      ...(name === "orderType" && value === "Room Service" ? { tableNumber: "" } : {}),
-      ...(name === "orderType" && value === "In-Restaurant" ? { roomNumber: "" } : {}),
+      ...(name === "orderType" && value === "Room Service"
+        ? { tableNumber: "" }
+        : {}),
+      ...(name === "orderType" && value === "In-Restaurant"
+        ? { roomNumber: "" }
+        : {}),
     }));
   };
 
@@ -262,52 +466,92 @@ export default function Dining() {
 
   const handlePlaceOrder = async (event) => {
     event.preventDefault();
+
+    if (submittingOrder) {
+      return;
+    }
+
     setOrderMessage({ text: "", type: "" });
 
     if (!user) {
-      setOrderMessage({ text: "Please log in to place a dining order.", type: "error" });
+      setOrderMessage({
+        text: "Please log in to place a dining order.",
+        type: "error",
+      });
       return;
     }
 
     if (cart.length === 0) {
-      setOrderMessage({ text: "Add at least one menu item before placing an order.", type: "error" });
+      setOrderMessage({
+        text: "Add at least one menu item before placing an order.",
+        type: "error",
+      });
       return;
     }
 
-    if (orderForm.orderType === "Room Service" && !orderForm.roomNumber.trim()) {
-      setOrderMessage({ text: "Room number is required for room service.", type: "error" });
+    if (
+      orderForm.orderType === "Room Service" &&
+      !orderForm.roomNumber.trim()
+    ) {
+      setOrderMessage({
+        text: "Room number is required for room service.",
+        type: "error",
+      });
       return;
     }
 
-    if (orderForm.orderType === "In-Restaurant" && !orderForm.tableNumber.trim()) {
-      setOrderMessage({ text: "Table number is required for in-restaurant orders.", type: "error" });
+    if (
+      orderForm.orderType === "In-Restaurant" &&
+      !orderForm.tableNumber.trim()
+    ) {
+      setOrderMessage({
+        text: "Table number is required for in-restaurant orders.",
+        type: "error",
+      });
       return;
     }
+
+    const newOrderPayload = {
+      items: cart.map((item) => ({
+        menuItem: item._id,
+        quantity: item.quantity,
+      })),
+      orderType: orderForm.orderType,
+      roomNumber:
+        orderForm.orderType === "Room Service"
+          ? orderForm.roomNumber
+          : undefined,
+      tableNumber:
+        orderForm.orderType === "In-Restaurant"
+          ? orderForm.tableNumber
+          : undefined,
+      paymentMethod: orderForm.paymentMethod,
+      specialInstructions: orderForm.specialInstructions,
+    };
 
     try {
       setSubmittingOrder(true);
 
-      await createDiningOrder({
-        items: cart.map((item) => ({
-          menuItem: item._id,
-          quantity: item.quantity,
-        })),
-        orderType: orderForm.orderType,
-        roomNumber: orderForm.orderType === "Room Service" ? orderForm.roomNumber : undefined,
-        tableNumber:
-          orderForm.orderType === "In-Restaurant" ? orderForm.tableNumber : undefined,
-        paymentMethod: orderForm.paymentMethod,
-        specialInstructions: orderForm.specialInstructions,
+      const response = await createDiningOrder(newOrderPayload);
+      const newOrder = response?.data;
+
+      if (newOrder) {
+        setOrders((prev) => [newOrder, ...prev]);
+      }
+
+      setOrderMessage({
+        text: "Dining order placed successfully.",
+        type: "success",
       });
-
-      setOrderMessage({ text: "Dining order placed successfully.", type: "success" });
       clearCart();
-
-      const ordersResponse = await getMyDiningOrders();
-      setOrders(Array.isArray(ordersResponse?.data) ? ordersResponse.data : []);
     } catch (error) {
       console.error("Failed to place dining order:", error);
-      setOrderMessage({ text: error.response?.data?.message || "Unable to place the order right now.", type: "error" });
+      setOrderMessage({
+        text:
+          error.response?.data?.message ||
+          "Unable to place the order right now.",
+        type: "error",
+      });
     } finally {
       setSubmittingOrder(false);
     }
@@ -318,7 +562,10 @@ export default function Dining() {
     setReserveMessage({ text: "", type: "" });
 
     if (!user) {
-      setReserveMessage({ text: "Please log in to reserve a table.", type: "error" });
+      setReserveMessage({
+        text: "Please log in to reserve a table.",
+        type: "error",
+      });
       return;
     }
 
@@ -328,7 +575,10 @@ export default function Dining() {
     }
 
     if (!reservationForm.reservationTime) {
-      setReserveMessage({ text: "Please select a reservation time.", type: "error" });
+      setReserveMessage({
+        text: "Please select a reservation time.",
+        type: "error",
+      });
       return;
     }
 
@@ -342,7 +592,10 @@ export default function Dining() {
         specialRequests: reservationForm.specialRequests,
       });
 
-      setReserveMessage({ text: `Table ${reservationForm.tableNumber} reserved successfully.`, type: "success" });
+      setReserveMessage({
+        text: `Table ${reservationForm.tableNumber} reserved successfully.`,
+        type: "success",
+      });
       setReservationForm({
         tableNumber: "",
         reservationTime: "",
@@ -355,10 +608,19 @@ export default function Dining() {
         getMyDiningReservations(),
       ]);
       setTables(Array.isArray(tablesResponse?.data) ? tablesResponse.data : []);
-      setReservations(Array.isArray(reservationsResponse?.data) ? reservationsResponse.data : []);
+      setReservations(
+        Array.isArray(reservationsResponse?.data)
+          ? reservationsResponse.data
+          : [],
+      );
     } catch (error) {
       console.error("Failed to reserve table:", error);
-      setReserveMessage({ text: error.response?.data?.message || "Unable to reserve the table right now.", type: "error" });
+      setReserveMessage({
+        text:
+          error.response?.data?.message ||
+          "Unable to reserve the table right now.",
+        type: "error",
+      });
     } finally {
       setSubmittingReservation(false);
     }
@@ -370,24 +632,31 @@ export default function Dining() {
     }
 
     try {
-      await cancelDiningOrder(orderId);
+      const response = await cancelDiningOrder(orderId);
+      const cancelledOrder = response?.data;
+
       setPageMessage("Order cancelled successfully.");
 
-      // Refresh orders
-      const ordersResponse = await getMyDiningOrders();
-      setOrders(Array.isArray(ordersResponse?.data) ? ordersResponse.data : []);
+      if (cancelledOrder?._id) {
+        setOrders((prev) =>
+          prev.map((order) =>
+            order._id === cancelledOrder._id ? cancelledOrder : order,
+          ),
+        );
+      }
     } catch (error) {
       console.error("Failed to cancel order:", error);
-      setPageMessage(error.response?.data?.message || "Unable to cancel the order.");
+      setPageMessage(
+        error.response?.data?.message || "Unable to cancel the order.",
+      );
     }
   };
 
   const canCancelOrder = (order) => {
-    // Only allow cancellation within 30 minutes of order creation
     const orderTime = new Date(order.createdAt);
     const now = new Date();
     const timeDiff = now - orderTime;
-    const thirtyMinutes = 30 * 60 * 1000; // 30 minutes in milliseconds
+    const thirtyMinutes = 30 * 60 * 1000;
 
     return (
       order.status !== "Cancelled" &&
@@ -398,37 +667,40 @@ export default function Dining() {
   };
 
   const toggleDietaryFilter = useCallback((filter) => {
-    setDietaryFilters(prev =>
-      prev.includes(filter) ? prev.filter(f => f !== filter) : [...prev, filter]
+    setDietaryFilters((prev) =>
+      prev.includes(filter)
+        ? prev.filter((existingFilter) => existingFilter !== filter)
+        : [...prev, filter],
     );
   }, []);
 
   return (
     <div className="pb-14">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden border-b border-luxe-border bg-luxe-charcoal px-4 py-16 text-white lg:px-8">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(212,176,138,0.28),transparent_38%)]" />
+      <section className="overflow-hidden border-b border-luxe-border bg-[linear-gradient(135deg,#171412_0%,#22211f_58%,#1c1c1c_100%)] px-4 py-14 text-white lg:px-8 lg:py-16">
         <div className="relative mx-auto max-w-7xl">
           <p className="text-xs font-bold uppercase tracking-[0.35em] text-luxe-bronze-light">
             Dining Experience
           </p>
-          <h1 className="mt-4 max-w-3xl font-serif text-4xl leading-none sm:text-5xl lg:text-6xl">
+          <h1 className="mt-4 max-w-3xl font-serif text-4xl leading-[0.95] tracking-tight sm:text-5xl lg:text-6xl">
             Culinary excellence awaits
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-white/70 sm:text-lg sm:leading-8">
-            Discover our curated menu featuring signature dishes, reserve your table, or order room service for ultimate convenience.
+            Discover our curated menu featuring signature dishes, reserve your
+            table, or order room service for ultimate convenience.
           </p>
         </div>
       </section>
 
-      <div className="mx-auto max-w-7xl px-4 py-8 lg:px-8">
+      <div
+        className="mx-auto max-w-7xl px-4 py-8 lg:px-8"
+        style={BELOW_THE_FOLD_STYLE}
+      >
         {pageMessage ? (
           <div className="mb-6 rounded-2xl border border-luxe-border bg-white px-4 py-3 text-sm shadow-[0_18px_50px_rgba(28,28,28,0.06)]">
             {pageMessage}
           </div>
         ) : null}
 
-        {/* Navigation Tabs */}
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap gap-2 rounded-2xl bg-luxe-smoke p-1">
             {[
@@ -452,11 +724,11 @@ export default function Dining() {
             ))}
           </div>
 
-          {/* Cart Summary - Always visible when items in cart */}
           {cart.length > 0 && (
             <div className="flex items-center gap-4 rounded-2xl bg-luxe-bronze/10 px-4 py-3">
               <div className="text-sm font-semibold text-luxe-charcoal">
-                {cart.length} item{cart.length > 1 ? "s" : ""} • {formatCurrency(totalAmount)}
+                {cart.length} item{cart.length > 1 ? "s" : ""} •{" "}
+                {formatCurrency(totalAmount)}
               </div>
               <button
                 onClick={() => setActiveTab("cart")}
@@ -468,10 +740,8 @@ export default function Dining() {
           )}
         </div>
 
-        {/* Menu Tab */}
         {activeTab === "menu" && (
           <div className="space-y-8">
-            {/* Search and Filters */}
             <div className="rounded-[30px] border border-luxe-border bg-white p-6 shadow-[0_18px_50px_rgba(28,28,28,0.06)]">
               <div className="flex flex-col gap-6 lg:flex-row lg:items-end">
                 <div className="flex-1">
@@ -480,7 +750,7 @@ export default function Dining() {
                       type="text"
                       placeholder="Search for dishes..."
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onChange={(event) => setSearchQuery(event.target.value)}
                       className="w-full rounded-2xl border border-luxe-border bg-luxe-smoke py-3 pl-11 pr-4 text-sm outline-none transition focus:border-luxe-bronze focus:bg-white focus:ring-4 focus:ring-luxe-bronze/10"
                     />
                     <svg
@@ -489,13 +759,20 @@ export default function Dining() {
                       stroke="currentColor"
                       viewBox="0 0 24 24"
                     >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
                     </svg>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                  <span className="flex items-center text-sm font-semibold text-luxe-muted">Filters:</span>
+                  <span className="flex items-center text-sm font-semibold text-luxe-muted">
+                    Filters:
+                  </span>
                   {Object.keys(badgeStyles).map((filter) => (
                     <button
                       key={filter}
@@ -512,14 +789,13 @@ export default function Dining() {
                 </div>
               </div>
 
-              {/* Category Pills */}
               <div className="mt-6 flex gap-3 overflow-x-auto pb-2">
                 {categories.map((category) => (
                   <button
                     key={category}
                     type="button"
                     onClick={() => setSelectedCategory(category)}
-                    className={`shrink-0 rounded-full px-5 py-2.5 text-sm font-semibold transition whitespace-nowrap ${
+                    className={`shrink-0 rounded-full px-5 py-2.5 text-sm font-semibold whitespace-nowrap transition ${
                       selectedCategory === category
                         ? "bg-luxe-charcoal text-white shadow-lg shadow-luxe-charcoal/20"
                         : "border border-luxe-border bg-white text-luxe-charcoal hover:bg-luxe-smoke"
@@ -531,118 +807,66 @@ export default function Dining() {
               </div>
             </div>
 
-            {/* Menu Items Grid */}
-            {loadingMenu ? (
+            {!shouldLoadMenu || loadingMenu ? (
+              !shouldLoadMenu ? (
+                <div className="rounded-[30px] border border-luxe-border bg-white p-6 shadow-[0_18px_50px_rgba(28,28,28,0.06)]">
+                  <div className="h-5 w-40 animate-pulse rounded-full bg-luxe-smoke" />
+                  <div className="mt-6 grid gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                    {Array.from({ length: 4 }).map((_, index) => (
+                      <div
+                        key={index}
+                        className="overflow-hidden rounded-[24px] border border-luxe-border bg-white"
+                      >
+                        <div className="aspect-[4/3] animate-pulse bg-luxe-smoke" />
+                        <div className="space-y-3 p-5">
+                          <div className="h-3 w-20 animate-pulse rounded-full bg-luxe-smoke" />
+                          <div className="h-6 w-2/3 animate-pulse rounded-full bg-luxe-smoke" />
+                          <div className="h-4 w-full animate-pulse rounded-full bg-luxe-smoke" />
+                          <div className="h-4 w-5/6 animate-pulse rounded-full bg-luxe-smoke" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
               <Loader />
+              )
             ) : menuError ? (
               <div className="rounded-[30px] border border-dashed border-luxe-border bg-white px-6 py-14 text-center">
                 <h3 className="font-serif text-3xl">Menu unavailable</h3>
                 <p className="mt-3 text-luxe-muted">{menuError}</p>
               </div>
             ) : filteredMenuItems.length > 0 ? (
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {filteredMenuItems.map((item) => {
-                  const cartItem = cartMap.get(item._id);
-
-                  return (
-                    <div
+              <div className="space-y-6">
+                <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                  {visibleMenuItems.map((item) => (
+                    <MenuCard
                       key={item._id}
-                      className="group overflow-hidden rounded-[24px] border border-luxe-border bg-white shadow-[0_18px_50px_rgba(28,28,28,0.06)] transition-all hover:shadow-[0_25px_60px_rgba(28,28,28,0.12)]"
+                      item={item}
+                      quantity={cartMap.get(item._id)?.quantity || 0}
+                      onUpdateCart={updateCart}
+                    />
+                  ))}
+                </div>
+
+                {hasMoreMenuItems ? (
+                  <div className="flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setVisibleMenuItemCount((prev) =>
+                          Math.min(
+                            prev + MENU_ITEMS_LOAD_STEP,
+                            filteredMenuItems.length,
+                          ),
+                        )
+                      }
+                      className="rounded-full border border-luxe-border bg-white px-6 py-3 text-sm font-semibold text-luxe-charcoal transition hover:bg-luxe-smoke"
                     >
-                      <div className="relative aspect-[4/3] overflow-hidden">
-                        <img
-                          src={getImageUrl(item.image)}
-                          alt={item.name}
-                          className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                          loading="lazy"
-                        />
-                        {item.isSignatureDish && (
-                          <span className="absolute left-3 top-3 rounded-full bg-luxe-charcoal/90 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-white">
-                            Signature
-                          </span>
-                        )}
-                        {!item.isAvailable && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                            <span className="rounded-full bg-rose-500 px-4 py-2 text-sm font-semibold text-white">
-                              Unavailable
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="p-5">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0 flex-1">
-                            <p className="text-xs font-bold uppercase tracking-[0.24em] text-luxe-bronze">
-                              {item.category}
-                            </p>
-                            <h3 className="mt-2 font-serif text-xl leading-tight">
-                              {item.name}
-                            </h3>
-                          </div>
-                          <p className="shrink-0 text-lg font-semibold text-luxe-charcoal">
-                            {formatCurrency(item.price)}
-                          </p>
-                        </div>
-
-                        <p className="mt-3 text-sm leading-6 text-luxe-muted line-clamp-2">
-                          {item.description || "Freshly prepared and served with KNSU dining care."}
-                        </p>
-
-                        <div className="mt-4 flex flex-wrap gap-2">
-                          {(item.dietaryInfo || []).map((diet) => (
-                            <span
-                              key={`${item._id}-${diet}`}
-                              className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                                badgeStyles[diet] || "bg-luxe-smoke text-luxe-charcoal"
-                              }`}
-                            >
-                              {diet}
-                            </span>
-                          ))}
-                        </div>
-
-                        <div className="mt-5 flex items-center justify-between">
-                          <div className="flex items-center rounded-full border border-luxe-border bg-luxe-smoke p-1">
-                            <button
-                              type="button"
-                              onClick={() => updateCart(item, -1)}
-                              className="h-8 w-8 rounded-full text-sm text-luxe-charcoal transition hover:bg-white"
-                            >
-                              -
-                            </button>
-                            <span className="min-w-8 text-center text-sm font-semibold">
-                              {cartItem?.quantity || 0}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => updateCart(item, 1)}
-                              disabled={!item.isAvailable}
-                              className="h-8 w-8 rounded-full text-sm text-luxe-charcoal transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
-                            >
-                              +
-                            </button>
-                          </div>
-
-                          {cartItem ? (
-                            <span className="text-sm font-semibold text-luxe-bronze">
-                              Added to cart
-                            </span>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => updateCart(item, 1)}
-                              disabled={!item.isAvailable}
-                              className="rounded-full bg-luxe-bronze px-4 py-2 text-sm font-semibold text-white transition hover:bg-luxe-charcoal disabled:cursor-not-allowed disabled:bg-luxe-muted"
-                            >
-                              Add
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                      Load more dishes
+                    </button>
+                  </div>
+                ) : null}
               </div>
             ) : (
               <div className="rounded-[30px] border border-dashed border-luxe-border bg-white px-6 py-14 text-center">
@@ -657,416 +881,60 @@ export default function Dining() {
           </div>
         )}
 
-        {/* Cart Tab */}
         {activeTab === "cart" && (
-          <div className="grid gap-8 lg:grid-cols-[1fr_400px]">
-            <div className="space-y-6">
-              <div className="rounded-[30px] border border-luxe-border bg-white p-6 shadow-[0_18px_50px_rgba(28,28,28,0.06)]">
-                <h2 className="font-serif text-2xl">Your Order</h2>
-                <p className="mt-2 text-luxe-muted">Review your items before placing the order</p>
-              </div>
-
-              {cart.length > 0 ? (
-                <div className="space-y-4">
-                  {cart.map((item) => (
-                    <div
-                      key={item._id}
-                      className="flex items-center gap-4 rounded-[24px] border border-luxe-border bg-white p-4 shadow-sm"
-                    >
-                      <img
-                        src={getImageUrl(item.image)}
-                        alt={item.name}
-                        className="h-16 w-16 rounded-xl object-cover"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-luxe-charcoal">{item.name}</h3>
-                        <p className="text-sm text-luxe-muted">{formatCurrency(item.price)} each</p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center rounded-full border border-luxe-border bg-luxe-smoke p-1">
-                          <button
-                            onClick={() => updateCart(item, -1)}
-                            className="h-6 w-6 rounded-full text-xs text-luxe-charcoal transition hover:bg-white"
-                          >
-                            -
-                          </button>
-                          <span className="min-w-6 text-center text-xs font-semibold">
-                            {item.quantity}
-                          </span>
-                          <button
-                            onClick={() => updateCart(item, 1)}
-                            className="h-6 w-6 rounded-full text-xs text-luxe-charcoal transition hover:bg-white"
-                          >
-                            +
-                          </button>
-                        </div>
-                        <span className="text-sm font-semibold text-luxe-charcoal">
-                          {formatCurrency(item.price * item.quantity)}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="rounded-[30px] border border-dashed border-luxe-border bg-white px-6 py-14 text-center">
-                  <div className="text-6xl">🛒</div>
-                  <h3 className="mt-4 font-serif text-2xl">Your cart is empty</h3>
-                  <p className="mt-2 text-luxe-muted">Browse our menu to add delicious items</p>
-                  <button
-                    onClick={() => setActiveTab("menu")}
-                    className="mt-6 rounded-full bg-luxe-bronze px-6 py-3 font-semibold text-white transition hover:bg-luxe-charcoal"
-                  >
-                    Browse Menu
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Order Form Sidebar */}
-            {cart.length > 0 && (
-              <div className="lg:sticky lg:top-8 h-fit">
-                <div className="rounded-[30px] border border-luxe-border bg-white p-6 shadow-[0_18px_50px_rgba(28,28,28,0.06)]">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-serif text-xl">Order Details</h3>
-                    <div className="text-right">
-                      <p className="text-xs text-luxe-muted">Total Amount</p>
-                      <p className="text-lg font-semibold text-luxe-charcoal">{formatCurrency(totalAmount)}</p>
-                    </div>
-                  </div>
-
-                  {user && !isAdmin ? (
-                    <form className="mt-6 space-y-4" onSubmit={handlePlaceOrder}>
-                      <div>
-                        <label className="text-sm font-semibold text-luxe-charcoal">Order Type</label>
-                        <select
-                          name="orderType"
-                          value={orderForm.orderType}
-                          onChange={handleOrderInputChange}
-                          className={inputClass}
-                        >
-                          <option value="Room Service">Room Service</option>
-                          <option value="In-Restaurant">In-Restaurant</option>
-                        </select>
-                      </div>
-
-                      {orderForm.orderType === "Room Service" ? (
-                        <div>
-                          <label className="text-sm font-semibold text-luxe-charcoal">Room Number</label>
-                          <input
-                            type="text"
-                            name="roomNumber"
-                            value={orderForm.roomNumber}
-                            onChange={handleOrderInputChange}
-                            className={inputClass}
-                            placeholder="Eg. 1204"
-                          />
-                        </div>
-                      ) : (
-                        <div>
-                          <label className="text-sm font-semibold text-luxe-charcoal">Table Number</label>
-                          <select
-                            name="tableNumber"
-                            value={orderForm.tableNumber}
-                            onChange={handleOrderInputChange}
-                            className={inputClass}
-                          >
-                            <option value="">Select a table</option>
-                            {tables.map((table) => (
-                              <option key={table._id} value={table.tableNumber}>
-                                Table {table.tableNumber}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      )}
-
-                      <div>
-                        <label className="text-sm font-semibold text-luxe-charcoal">Payment Method</label>
-                        <select
-                          name="paymentMethod"
-                          value={orderForm.paymentMethod}
-                          onChange={handleOrderInputChange}
-                          className={inputClass}
-                        >
-                          <option value="Cash">Cash</option>
-                          <option value="Card">Card</option>
-                          <option value="Online">Online</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="text-sm font-semibold text-luxe-charcoal">Special Instructions</label>
-                        <textarea
-                          name="specialInstructions"
-                          rows="3"
-                          value={orderForm.specialInstructions}
-                          onChange={handleOrderInputChange}
-                          className={inputClass}
-                          placeholder="Optional notes for the kitchen"
-                        />
-                      </div>
-
-                      <div className="flex gap-3 pt-4">
-                        <button
-                          type="submit"
-                          disabled={submittingOrder}
-                          className="flex-1 rounded-2xl bg-luxe-bronze px-5 py-3 font-semibold text-white transition hover:bg-luxe-charcoal disabled:cursor-not-allowed disabled:bg-luxe-muted"
-                        >
-                          {submittingOrder ? "Placing order..." : "Place Order"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={clearCart}
-                          className="rounded-2xl border border-luxe-border px-5 py-3 font-semibold text-luxe-charcoal transition hover:bg-luxe-smoke"
-                        >
-                          Clear
-                        </button>
-                      </div>
-
-                      {orderMessage.text && (
-                        <div className={`mt-4 rounded-xl px-4 py-2 text-sm font-medium ${
-                          orderMessage.type === "success" ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
-                        }`}>
-                          {orderMessage.text}
-                        </div>
-                      )}
-                    </form>
-                  ) : (
-                    <div className="mt-6 rounded-[24px] border border-dashed border-luxe-border px-5 py-8 text-center text-luxe-muted">
-                      {user ? "Admin users cannot place dining orders." : "Please log in to place an order."}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+          <Suspense fallback={<Loader />}>
+            <DiningCartTab
+              cart={cart}
+              clearCart={clearCart}
+              formatCurrency={formatCurrency}
+              getImageUrl={getImageUrl}
+              handleOrderInputChange={handleOrderInputChange}
+              handlePlaceOrder={handlePlaceOrder}
+              inputClass={inputClass}
+              isAdmin={isAdmin}
+              orderForm={orderForm}
+              orderMessage={orderMessage}
+              submittingOrder={submittingOrder}
+              tables={tables}
+              totalAmount={totalAmount}
+              updateCart={updateCart}
+              user={user}
+            />
+          </Suspense>
         )}
 
-        {/* Reserve Table Tab */}
         {activeTab === "reserve" && (
-          <div className="grid gap-8 lg:grid-cols-[1fr_400px]">
-            <div className="space-y-6">
-              <div className="rounded-[30px] border border-luxe-border bg-white p-6 shadow-[0_18px_50px_rgba(28,28,28,0.06)]">
-                <h2 className="font-serif text-2xl">Table Availability</h2>
-                <p className="mt-2 text-luxe-muted">Choose from our available dining tables</p>
-              </div>
-
-              {user && !isAdmin ? (
-                loadingProtectedData ? (
-                  <Loader />
-                ) : availableTables.length > 0 ? (
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {availableTables.map((table) => (
-                      <div
-                        key={table._id}
-                        className={`cursor-pointer rounded-[24px] border-2 p-5 transition-all ${
-                          reservationForm.tableNumber === table.tableNumber.toString()
-                            ? "border-luxe-bronze bg-luxe-bronze/5 shadow-lg"
-                            : "border-luxe-border bg-white hover:border-luxe-bronze/50"
-                        }`}
-                        onClick={() => setReservationForm(prev => ({ ...prev, tableNumber: table.tableNumber.toString() }))}
-                      >
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-serif text-xl">Table {table.tableNumber}</h3>
-                          <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
-                            Available
-                          </span>
-                        </div>
-                        <p className="mt-2 text-sm text-luxe-muted">{table.location}</p>
-                        <p className="mt-1 text-sm font-semibold text-luxe-charcoal">
-                          Capacity: {table.capacity} guests
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="rounded-[30px] border border-dashed border-luxe-border bg-white px-6 py-14 text-center">
-                    <h3 className="font-serif text-2xl">No tables available</h3>
-                    <p className="mt-2 text-luxe-muted">All tables are currently reserved. Please try again later.</p>
-                  </div>
-                )
-              ) : (
-                <div className="rounded-[30px] border border-dashed border-luxe-border bg-white px-6 py-14 text-center">
-                  {user ? "Admin users cannot reserve tables." : "Please log in to view table availability."}
-                </div>
-              )}
-            </div>
-
-            {/* Reservation Form Sidebar */}
-            <div className="lg:sticky lg:top-8 h-fit">
-              <div className="rounded-[30px] border border-luxe-border bg-white p-6 shadow-[0_18px_50px_rgba(28,28,28,0.06)]">
-                <h3 className="font-serif text-xl">Make Reservation</h3>
-                <p className="mt-2 text-sm text-luxe-muted">Book your table for a special dining experience</p>
-
-                {user && !isAdmin ? (
-                  <form className="mt-6 space-y-4" onSubmit={handleReserveTable}>
-                    <div>
-                      <label className="text-sm font-semibold text-luxe-charcoal">Selected Table</label>
-                      <div className="mt-2 rounded-2xl border border-luxe-border bg-luxe-smoke px-4 py-3 text-sm">
-                        {reservationForm.tableNumber ? `Table ${reservationForm.tableNumber}` : "Select a table from the list"}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="text-sm font-semibold text-luxe-charcoal">Reservation Time</label>
-                      <input
-                        type="datetime-local"
-                        name="reservationTime"
-                        value={reservationForm.reservationTime}
-                        onChange={handleReservationInputChange}
-                        className={inputClass}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-sm font-semibold text-luxe-charcoal">Number of Guests</label>
-                      <input
-                        type="number"
-                        name="guestsCount"
-                        min="1"
-                        max="20"
-                        value={reservationForm.guestsCount}
-                        onChange={handleReservationInputChange}
-                        className={inputClass}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-sm font-semibold text-luxe-charcoal">Special Requests</label>
-                      <textarea
-                        name="specialRequests"
-                        rows="3"
-                        value={reservationForm.specialRequests}
-                        onChange={handleReservationInputChange}
-                        className={inputClass}
-                        placeholder="Window seat, anniversary, dietary requirements..."
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={submittingReservation || !reservationForm.tableNumber || !reservationForm.reservationTime}
-                      className="mt-6 w-full rounded-2xl bg-luxe-charcoal px-5 py-3 font-semibold text-white transition hover:bg-luxe-bronze disabled:cursor-not-allowed disabled:bg-luxe-muted"
-                    >
-                      {submittingReservation ? "Reserving..." : "Reserve Table"}
-                    </button>
-
-                    {reserveMessage.text && (
-                      <div className={`mt-4 rounded-xl px-4 py-2 text-sm font-medium ${
-                        reserveMessage.type === "success" ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
-                      }`}>
-                        {reserveMessage.text}
-                      </div>
-                    )}
-                  </form>
-                ) : (
-                  <div className="mt-6 rounded-[24px] border border-dashed border-luxe-border px-5 py-8 text-center text-luxe-muted">
-                    {user ? "Admin users cannot make reservations." : "Please log in to make a reservation."}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+          <Suspense fallback={<Loader />}>
+            <DiningReserveTab
+              availableTables={availableTables}
+              handleReservationInputChange={handleReservationInputChange}
+              handleReserveTable={handleReserveTable}
+              inputClass={inputClass}
+              isAdmin={isAdmin}
+              loadingProtectedData={loadingProtectedData}
+              reservationForm={reservationForm}
+              reserveMessage={reserveMessage}
+              setReservationForm={setReservationForm}
+              submittingReservation={submittingReservation}
+              user={user}
+            />
+          </Suspense>
         )}
 
-        {/* Orders Tab */}
         {activeTab === "orders" && (
-          <div className="space-y-6">
-            <div className="rounded-[30px] border border-luxe-border bg-white p-6 shadow-[0_18px_50px_rgba(28,28,28,0.06)]">
-              <h2 className="font-serif text-2xl">My Dining History</h2>
-              <p className="mt-2 text-luxe-muted">Track your orders and reservations</p>
-            </div>
-
-            {user && !isAdmin ? (
-              loadingProtectedData ? (
-                <Loader />
-              ) : (
-                <div className="grid gap-6 lg:grid-cols-2">
-                  {/* Recent Orders */}
-                  <div className="space-y-4">
-                    <h3 className="font-serif text-xl">Recent Orders</h3>
-                    {orders.length > 0 ? (
-                      orders.slice(0, 3).map((order) => (
-                        <div
-                          key={order._id}
-                          className="rounded-[24px] border border-luxe-border bg-white p-5 shadow-sm"
-                        >
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <p className="font-semibold text-luxe-charcoal">{order.orderType}</p>
-                              <p className="text-sm text-luxe-muted">
-                                {new Date(order.createdAt).toLocaleDateString()}
-                              </p>
-                            </div>
-                            <div className="flex gap-2">
-                              <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                                statusStyles[order.status] || "bg-white text-luxe-charcoal"
-                              }`}>
-                                {order.status}
-                              </span>
-                              {canCancelOrder(order) && (
-                                <button
-                                  onClick={() => handleCancelOrder(order._id)}
-                                  className="rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-200 transition"
-                                >
-                                  Cancel
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                          <div className="mt-3 text-sm text-luxe-muted">
-                            {order.items?.length} item{order.items?.length > 1 ? "s" : ""} • {formatCurrency(order.totalAmount)}
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="rounded-[24px] border border-dashed border-luxe-border px-5 py-8 text-center text-luxe-muted">
-                        No orders yet
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Recent Reservations */}
-                  <div className="space-y-4">
-                    <h3 className="font-serif text-xl">Table Reservations</h3>
-                    {reservations.length > 0 ? (
-                      reservations.slice(0, 3).map((res) => (
-                        <div
-                          key={res._id}
-                          className="rounded-[24px] border border-luxe-border bg-white p-5 shadow-sm"
-                        >
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <p className="font-semibold text-luxe-charcoal">Table {res.tableNumber}</p>
-                              <p className="text-sm text-luxe-muted">
-                                {new Date(res.reservationTime).toLocaleDateString()}
-                              </p>
-                            </div>
-                            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                              statusStyles[res.status] || "bg-white text-luxe-charcoal"
-                            }`}>
-                              {res.status}
-                            </span>
-                          </div>
-                          <div className="mt-3 text-sm text-luxe-muted">
-                            {res.guestsCount} guests • {new Date(res.reservationTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="rounded-[24px] border border-dashed border-luxe-border px-5 py-8 text-center text-luxe-muted">
-                        No reservations yet
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )
-            ) : (
-              <div className="rounded-[30px] border border-dashed border-luxe-border bg-white px-6 py-14 text-center">
-                {user ? "Admin users don't have guest dining history." : "Please log in to view your dining history."}
-              </div>
-            )}
-          </div>
+          <Suspense fallback={<Loader />}>
+            <DiningOrdersTab
+              canCancelOrder={canCancelOrder}
+              formatCurrency={formatCurrency}
+              handleCancelOrder={handleCancelOrder}
+              isAdmin={isAdmin}
+              loadingProtectedData={loadingProtectedData}
+              orders={orders}
+              reservations={reservations}
+              statusStyles={statusStyles}
+              user={user}
+            />
+          </Suspense>
         )}
       </div>
     </div>

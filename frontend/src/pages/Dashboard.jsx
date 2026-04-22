@@ -47,6 +47,11 @@ const Dashboard = () => {
           copy: "Create, edit, and remove dishes from the dining menu.",
           to: "/admin/menu",
         },
+        {
+          title: "Contact Messages",
+          copy: "Review contact page submissions from guests and visitors.",
+          to: "/admin/contact-messages",
+        },
       ]
     : [
         {

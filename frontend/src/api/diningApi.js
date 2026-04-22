@@ -64,3 +64,8 @@ export const updateDiningReservationStatus = async (id, reservationData) => {
   const response = await api.put(`/dining/reservation/${id}`, reservationData);
   return response.data;
 };
+
+export const cancelDiningReservation = async (id) => {
+  const response = await api.put(`/dining/reservation/${id}/cancel`);
+  return response.data;
+};

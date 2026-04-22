@@ -1,9 +1,10 @@
-@import url("https://fonts.googleapis.com/css2?family=Tenor+Sans&family=Montserrat:wght@300;400;500;600;700;800&display=swap");
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Montserrat", sans-serif;
-  --font-serif: "Tenor Sans", serif;
+  --font-sans:
+    "Segoe UI", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Helvetica Neue", sans-serif;
+  --font-serif: Georgia, Cambria, "Times New Roman", Times, serif;
 
   --color-luxe-ivory: #fafaf8;
   --color-luxe-charcoal: #1c1c1c;
@@ -29,7 +30,9 @@
       radial-gradient(circle at top, rgba(212, 176, 138, 0.16), transparent 35%),
       #fafaf8;
     color: #1c1c1c;
-    font-family: "Montserrat", sans-serif;
+    font-family:
+      "Segoe UI", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+      "Helvetica Neue", sans-serif;
     font-synthesis: none;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;

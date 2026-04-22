@@ -1,10 +1,7 @@
-<<<<<<< HEAD
-{}
-=======
 {
   "dependencies": {
     "react-virtualized-auto-sizer": "^2.0.3",
     "react-window": "^2.2.7"
   }
 }
->>>>>>> 9dfb3430f3ee769771a50a755324b16c9abb8b8d
+

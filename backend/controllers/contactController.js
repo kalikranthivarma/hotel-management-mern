@@ -27,6 +27,32 @@ const createContactMessage = async (req, res, next) => {
 
     const contactMessage = await ContactMessage.create(payload);
 
+    // Send auto-responder email to guest
+    try {
+      console.log(`Attempting auto-responder for: ${payload.email}`);
+      await sendEmail({
+        email: payload.email,
+        subject: "We've received your message - KNSU Stays",
+        html: `
+          <div style="font-family:Arial,sans-serif;max-width:640px;margin:auto;border:1px solid #e5ded6;padding:24px;border-radius:16px;background:#fffdf9;">
+            <p style="margin:0 0 12px;color:#9b7b56;font-size:12px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;">
+              KNSU Stays
+            </p>
+            <h2 style="margin:0 0 18px;color:#1c1c1c;">Thank you for contacting us</h2>
+            <p style="margin:0 0 16px;color:#4b5563;">Hello ${payload.name},</p>
+            <p style="margin:0 0 16px;color:#4b5563;">We have received your message regarding <strong>"${payload.subject}"</strong>. Our team is reviewing your request and will get back to you shortly.</p>
+            <div style="margin:20px 0;padding:18px;border-radius:14px;background:#f7f3ee;color:#6b7280;line-height:1.7;font-style:italic;">
+              "${payload.message}"
+            </div>
+            <p style="margin:20px 0 0;color:#6b7280;">Best Regards,<br />Concierge Team<br />KNSU Stays</p>
+          </div>
+        `,
+      });
+    } catch (emailError) {
+      console.error("Auto-responder email failed:", emailError);
+      // Don't fail the request if auto-responder fails
+    }
+
     res.status(201).json({
       success: true,
       message: "Contact message submitted successfully",
@@ -113,6 +139,8 @@ const replyToContactMessage = async (req, res, next) => {
       </div>
     `;
 
+    console.log(`Admin is replying to contact message ${contactMessage._id}. Sending email to: ${contactMessage.email}`);
+
     await sendEmail({
       email: contactMessage.email,
       subject: `Re: ${contactMessage.subject}`,
@@ -139,4 +167,68 @@ const replyToContactMessage = async (req, res, next) => {
   }
 };
 
-export { createContactMessage, getContactMessages, replyToContactMessage };
+// @desc    Update contact message status
+// @route   PATCH /api/contact/:id/status
+// @access  Private/Admin
+const updateContactStatus = async (req, res, next) => {
+  try {
+    const { status } = req.body;
+
+    if (!["new", "reviewed", "closed"].includes(status)) {
+      res.status(400);
+      throw new Error("Invalid status");
+    }
+
+    const contactMessage = await ContactMessage.findById(req.params.id);
+
+    if (!contactMessage) {
+      res.status(404);
+      throw new Error("Contact message not found");
+    }
+
+    contactMessage.status = status;
+    await contactMessage.save();
+    await contactMessage.populate("user", "firstName lastName email");
+    await contactMessage.populate("replies.repliedBy", "firstName lastName email");
+
+    res.status(200).json({
+      success: true,
+      message: `Status updated to ${status}`,
+      contactMessage,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Delete contact message
+// @route   DELETE /api/contact/:id
+// @access  Private/Admin
+const deleteContactMessage = async (req, res, next) => {
+  try {
+    const contactMessage = await ContactMessage.findById(req.params.id);
+
+    if (!contactMessage) {
+      res.status(404);
+      throw new Error("Contact message not found");
+    }
+
+    await contactMessage.deleteOne();
+
+    res.status(200).json({
+      success: true,
+      message: "Contact message deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export {
+  createContactMessage,
+  getContactMessages,
+  replyToContactMessage,
+  updateContactStatus,
+  deleteContactMessage,
+};
+

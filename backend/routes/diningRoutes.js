@@ -14,6 +14,7 @@ import {
   getMyReservations,
   getAllReservations,
   updateReservationStatus,
+  cancelReservation,
 } from '../controllers/diningController.js';
 import { protect, protectAdmin, protectUser } from '../middleware/authMiddleware.js';
 
@@ -25,6 +26,7 @@ router.get('/my-orders', protectUser, getMyOrders);
 router.put('/order/:id/cancel', protectUser, cancelOrder);
 router.post('/book-table', protectUser, bookTable);
 router.get('/my-reservations', protectUser, getMyReservations);
+router.put('/reservation/:id/cancel', protectUser, cancelReservation);
 
 // Admin routes
 router.get('/orders', protectAdmin, getAllOrders);

@@ -13,7 +13,7 @@ const PrivateRoute = ({ children, allowedRoles }) => {
   }
 
   if (allowedRoles?.length && !allowedRoles.includes(role)) {
-    const redirectPath = adminRoles.includes(role) ? "/admin/manage-rooms" : "/rooms";
+    const redirectPath = adminRoles.includes(role) ? "/admin/manage-rooms" : "/";
     return <Navigate to={redirectPath} replace />;
   }
 

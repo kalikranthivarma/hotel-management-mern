@@ -10,8 +10,9 @@ import { useDispatch, useSelector, shallowEqual } from "react-redux";
 import { logoutUser } from "../redux/authSlice";
 
 /* ✅ Move NavLinkItem OUTSIDE (prevents recreation every render) */
-const NavLinkItem = React.memo(({ link, mobile, isActive }) => {
-  const active = isActive(link.to);
+const NavLinkItem = React.memo(({ link, mobile }) => {
+  const location = useLocation();
+  const active = location.pathname === link.to;
 
   const baseClass = mobile
     ? `flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 ${
@@ -55,6 +56,25 @@ const NavLinkItem = React.memo(({ link, mobile, isActive }) => {
   );
 });
 
+/* ✅ Memoized AdminLink */
+const AdminLink = React.memo(({ link }) => {
+  const location = useLocation();
+  const active = location.pathname === link.to;
+
+  return (
+    <Link
+      to={link.to}
+      className={`rounded-lg px-3.5 py-1.5 text-[0.78rem] font-medium tracking-wide transition-all duration-200 ${
+        active
+          ? "bg-luxe-bronze text-white shadow-[0_2px_8px_rgba(184,149,106,0.5)]"
+          : "text-white/60 hover:bg-white/8 hover:text-white"
+      }`}
+    >
+      {link.label}
+    </Link>
+  );
+});
+
 const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -80,19 +100,21 @@ const Navbar = () => {
         { to: "/admin/bookings", label: "Bookings" },
         { to: "/admin/dining-orders", label: "Orders" },
         { to: "/admin/menu", label: "Menu" },
+        { to: "/admin/contact-messages", label: "Contacts" },
         { to: "/admin/reservations", label: "Reservations" },
         { to: "/admin/tables", label: "Tables" },
       ];
     }
 
-    if (!user) return [];
-
-    return [
-      { to: "/#hotels", label: "Hotels", hash: true },
+    const guestLinks = [
       { to: "/rooms", label: "Rooms" },
       { to: "/dining", label: "Dining" },
-      { to: "/bookings", label: "My Bookings" },
+      { to: "/contact", label: "Contact" },
     ];
+
+    if (!user) return guestLinks;
+
+    return [...guestLinks, { to: "/bookings", label: "My Bookings" }];
   }, [isAdmin, user]);
 
   /* ✅ stable function */
@@ -128,13 +150,6 @@ const Navbar = () => {
 
   /* ✅ prevent unnecessary state updates */
   useEffect(() => {
-    if (menuOpen || profileOpen) {
-      setMenuOpen(false);
-      setProfileOpen(false);
-    }
-  }, [location.pathname]);
-
-  useEffect(() => {
     const handleClickOutside = (e) => {
       if (profileRef.current && !profileRef.current.contains(e.target)) {
         setProfileOpen(false);
@@ -161,7 +176,7 @@ const Navbar = () => {
 
   return (
     <>
-      <header className="fixed left-0 right-0 top-0 z-50 border-b border-white/8 bg-[#0B0908]/92 shadow-[0_8px_32px_rgba(0,0,0,0.4)] backdrop-blur-xl">
+      <header className="fixed left-0 right-0 top-0 z-50 border-b border-white/8 bg-[#0B0908]/96 shadow-[0_4px_18px_rgba(0,0,0,0.28)]">
         <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10">
           <div className="flex h-16 items-center justify-between lg:h-[68px]">
 
@@ -183,7 +198,7 @@ const Navbar = () => {
             {/* ── Desktop Nav ── */}
             <nav className={`hidden items-center lg:flex ${isAdmin ? "gap-1" : "gap-8"}`}>
               {isAdmin ? (
-                <div className="flex items-center rounded-xl border border-white/10 bg-white/5 p-1 backdrop-blur-sm">
+                <div className="flex items-center rounded-xl border border-white/10 bg-white/5 p-1">
                   {navLinks.map((link) => {
                     const active = isActive(link.to);
                     return (
@@ -237,7 +252,7 @@ const Navbar = () => {
                   </button>
 
                   {profileOpen && (
-                    <div className="absolute right-0 mt-2 w-52 overflow-hidden rounded-2xl border border-white/10 bg-[#141210]/95 shadow-[0_20px_60px_rgba(0,0,0,0.5)] backdrop-blur-xl">
+                    <div className="absolute right-0 mt-2 w-52 overflow-hidden rounded-2xl border border-white/10 bg-[#141210] shadow-[0_16px_42px_rgba(0,0,0,0.38)]">
                       <div className="border-b border-white/8 px-4 py-3">
                         <p className="text-[0.82rem] font-semibold text-white">
                           {user.firstName} {user.lastName}
@@ -315,7 +330,7 @@ const Navbar = () => {
 
       {/* ── Mobile Overlay ── */}
       <div
-        className={`fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity duration-300 lg:hidden ${
+        className={`fixed inset-0 z-40 bg-black/60 transition-opacity duration-300 lg:hidden ${
           menuOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
         }`}
         onClick={() => setMenuOpen(false)}

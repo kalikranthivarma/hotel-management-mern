@@ -9,6 +9,7 @@ import bookingRoutes from './routes/bookingRoutes.js';
 import roomRoutes from './routes/roomRoutes.js';
 import menuRoutes from './routes/menuRoutes.js';
 import diningRoutes from './routes/diningRoutes.js';
+import contactRoutes from './routes/contactRoutes.js';
 
 dotenv.config();
 
@@ -38,6 +39,7 @@ app.use('/api/rooms', roomRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/dining', diningRoutes);
+app.use('/api/contact', contactRoutes);
 
 // Images are now stored in MongoDB GridFS and served via /api/menu/image/:filename
 

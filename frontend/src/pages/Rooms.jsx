@@ -276,10 +276,10 @@ const Rooms = () => {
               className={inputClass}
             >
               <option value="">All Types</option>
-              <option value="Single">Single Room</option>
-              <option value="Double">Double Room</option>
-              <option value="Suite">Presidential Suite</option>
-              <option value="Deluxe">Deluxe Room</option>
+              <option value="single">Single Room</option>
+              <option value="double">Double Room</option>
+              <option value="suite">Presidential Suite</option>
+              <option value="deluxe">Deluxe Room</option>
             </select>
           </div>
 

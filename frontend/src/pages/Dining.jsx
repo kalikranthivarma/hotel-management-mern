@@ -18,9 +18,12 @@ import {
   getDiningTables,
   getMyDiningOrders,
   getMyDiningReservations,
+  cancelDiningReservation,
 } from "../api/diningApi";
 import { getMenuItems } from "../api/menuApi";
 import api from "../api/axios";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const DiningCartTab = lazy(
   () => import("../components/dining/DiningCartTab"),
@@ -111,6 +114,7 @@ const formatCurrency = (amount) => currencyFormatter.format(amount || 0);
 
 const MenuCard = memo(function MenuCard({
   ariaAttributes,
+  isPriority,
   item,
   quantity,
   onUpdateCart,
@@ -124,8 +128,9 @@ const MenuCard = memo(function MenuCard({
             src={getImageUrl(item.image)}
             alt={item.name}
             className="h-full w-full object-cover transition-transform group-hover:scale-105"
-            decoding="async"
-            loading="lazy"
+            decoding={isPriority ? "sync" : "async"}
+            fetchPriority={isPriority ? "high" : "auto"}
+            loading={isPriority ? "eager" : "lazy"}
           />
           {item.isSignatureDish && (
             <span className="absolute left-3 top-3 rounded-full bg-luxe-charcoal/90 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-white">
@@ -310,24 +315,13 @@ export default function Dining() {
   }, [selectedCategory, deferredSearchQuery, dietaryFilters]);
 
   useEffect(() => {
-    const scheduleMenuLoad = () => setShouldLoadMenu(true);
-
     if (typeof window === "undefined") {
-      scheduleMenuLoad();
+      setShouldLoadMenu(true);
       return undefined;
     }
 
     const rafId = window.requestAnimationFrame(() => {
-      if ("requestIdleCallback" in window) {
-        const idleId = window.requestIdleCallback(scheduleMenuLoad, {
-          timeout: 400,
-        });
-
-        return () => window.cancelIdleCallback(idleId);
-      }
-
-      const timeoutId = window.setTimeout(scheduleMenuLoad, 180);
-      return () => window.clearTimeout(timeoutId);
+      setShouldLoadMenu(true);
     });
 
     return () => window.cancelAnimationFrame(rafId);
@@ -399,6 +393,9 @@ export default function Dining() {
   }, []);
 
   useEffect(() => {
+    setOrderMessage({ text: "", type: "" });
+    setReserveMessage({ text: "", type: "" });
+
     if (!user || isAdmin) {
       setTables([]);
       setOrders([]);
@@ -613,6 +610,8 @@ export default function Dining() {
           ? reservationsResponse.data
           : [],
       );
+      hasLoadedProtectedDataRef.current = true;
+      setActiveTab("orders");
     } catch (error) {
       console.error("Failed to reserve table:", error);
       setReserveMessage({
@@ -652,6 +651,38 @@ export default function Dining() {
     }
   };
 
+  const handleCancelReservation = async (resId) => {
+    if (!window.confirm("Are you sure you want to cancel this reservation?")) {
+      return;
+    }
+
+    try {
+      const response = await cancelDiningReservation(resId);
+      const cancelledRes = response?.data;
+
+      setPageMessage("Reservation cancelled successfully.");
+      toast.success("Reservation cancelled.");
+
+      if (cancelledRes?._id) {
+        setReservations((prev) =>
+          prev.map((res) =>
+            res._id === cancelledRes._id ? cancelledRes : res,
+          ),
+        );
+      }
+
+      // Refresh available tables list
+      const tablesResponse = await getDiningTables();
+      setTables(Array.isArray(tablesResponse?.data) ? tablesResponse.data : []);
+    } catch (error) {
+      console.error("Failed to cancel reservation:", error);
+      setPageMessage(
+        error.response?.data?.message || "Unable to cancel the reservation.",
+      );
+      toast.error(error.response?.data?.message || "Failed to cancel.");
+    }
+  };
+
   const canCancelOrder = (order) => {
     const orderTime = new Date(order.createdAt);
     const now = new Date();
@@ -666,12 +697,27 @@ export default function Dining() {
     );
   };
 
+  const canCancelReservation = useCallback((reservation) => {
+    const cancellableStatuses = new Set(["Pending", "Reserved", "Confirmed"]);
+
+    return (
+      cancellableStatuses.has(reservation.status) &&
+      new Date(reservation.reservationTime) > new Date()
+    );
+  }, []);
+
   const toggleDietaryFilter = useCallback((filter) => {
     setDietaryFilters((prev) =>
       prev.includes(filter)
         ? prev.filter((existingFilter) => existingFilter !== filter)
         : [...prev, filter],
     );
+  }, []);
+
+  const resetFilters = useCallback(() => {
+    setSearchQuery("");
+    setDietaryFilters([]);
+    setSelectedCategory("All");
   }, []);
 
   return (
@@ -701,8 +747,8 @@ export default function Dining() {
           </div>
         ) : null}
 
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap gap-2 rounded-2xl bg-luxe-smoke p-1">
+        <div className="mb-8 flex flex-col items-center gap-4">
+          <div className="flex flex-wrap justify-center gap-2 rounded-2xl bg-luxe-smoke p-1">
             {[
               { id: "menu", label: "Browse Menu", icon: "🍽️" },
               { id: "cart", label: `Cart (${cart.length})`, icon: "🛒" },
@@ -769,7 +815,7 @@ export default function Dining() {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="flex items-center text-sm font-semibold text-luxe-muted">
                     Filters:
                   </span>
@@ -786,6 +832,13 @@ export default function Dining() {
                       {filter}
                     </button>
                   ))}
+                  <button
+                    type="button"
+                    onClick={resetFilters}
+                    className="rounded-full border border-luxe-border bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-luxe-muted transition hover:border-luxe-bronze hover:text-luxe-charcoal"
+                  >
+                    Reset
+                  </button>
                 </div>
               </div>
 
@@ -842,6 +895,7 @@ export default function Dining() {
                   {visibleMenuItems.map((item) => (
                     <MenuCard
                       key={item._id}
+                      isPriority={item._id === visibleMenuItems[0]?._id}
                       item={item}
                       quantity={cartMap.get(item._id)?.quantity || 0}
                       onUpdateCart={updateCart}
@@ -898,6 +952,7 @@ export default function Dining() {
               tables={tables}
               totalAmount={totalAmount}
               updateCart={updateCart}
+              setActiveTab={setActiveTab}
               user={user}
             />
           </Suspense>
@@ -915,6 +970,7 @@ export default function Dining() {
               reservationForm={reservationForm}
               reserveMessage={reserveMessage}
               setReservationForm={setReservationForm}
+              setActiveTab={setActiveTab}
               submittingReservation={submittingReservation}
               user={user}
             />
@@ -924,9 +980,11 @@ export default function Dining() {
         {activeTab === "orders" && (
           <Suspense fallback={<Loader />}>
             <DiningOrdersTab
+              canCancelReservation={canCancelReservation}
               canCancelOrder={canCancelOrder}
               formatCurrency={formatCurrency}
               handleCancelOrder={handleCancelOrder}
+              handleCancelReservation={handleCancelReservation}
               isAdmin={isAdmin}
               loadingProtectedData={loadingProtectedData}
               orders={orders}
@@ -937,6 +995,7 @@ export default function Dining() {
           </Suspense>
         )}
       </div>
+      <ToastContainer position="bottom-right" theme="dark" />
     </div>
   );
 }

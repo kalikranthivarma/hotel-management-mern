@@ -1,7 +1,17 @@
 import axios from "axios";
 
+const baseURL =
+  import.meta.env.VITE_API_BASE_URL?.trim() || "http://localhost:5000/api";
+
+if (!import.meta.env.VITE_API_BASE_URL) {
+  console.warn(
+    "[axios] VITE_API_BASE_URL is not set. Falling back to localhost. " +
+    "Make sure to set this env variable in Render for production builds."
+  );
+}
+
 const instance = axios.create({
-  baseURL: "http://127.0.0.1:5000/api",
+  baseURL,
 });
 
 instance.interceptors.request.use((config) => {

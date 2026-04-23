@@ -385,3 +385,52 @@ export const cancelOrder = async (req, res, next) => {
   }
 };
 
+// @desc    Cancel table reservation
+// @route   PUT /api/dining/reservation/:id/cancel
+// @access  Private/User
+export const cancelReservation = async (req, res, next) => {
+  try {
+    const reservation = await TableReservation.findById(req.params.id);
+    if (!reservation) {
+      res.status(404);
+      throw new Error('Reservation not found');
+    }
+
+    // Check if reservation belongs to user
+    if (reservation.user.toString() !== req.user._id.toString()) {
+      res.status(403);
+      throw new Error('Not authorized to cancel this reservation');
+    }
+
+    // Check if reservation can be cancelled
+    if (new Date(reservation.reservationTime) < new Date()) {
+      res.status(400);
+      throw new Error('Cannot cancel past reservations');
+    }
+
+    if (reservation.status === 'Cancelled' || reservation.status === 'Completed') {
+      res.status(400);
+      throw new Error(`Reservation is already ${reservation.status.toLowerCase()}`);
+    }
+
+    // Update reservation status
+    reservation.status = 'Cancelled';
+    await reservation.save();
+
+    // Make table available again
+    const table = await DiningTable.findById(reservation.table);
+    if (table) {
+      table.status = 'Available';
+      await table.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Reservation cancelled successfully',
+      data: reservation
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

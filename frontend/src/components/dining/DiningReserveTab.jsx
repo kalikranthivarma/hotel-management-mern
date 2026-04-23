@@ -1,3 +1,6 @@
+import { useEffect } from "react";
+import { toast } from "react-toastify";
+
 export default function DiningReserveTab({
   availableTables,
   handleReservationInputChange,
@@ -8,9 +11,35 @@ export default function DiningReserveTab({
   reservationForm,
   reserveMessage,
   setReservationForm,
+  setActiveTab,
   submittingReservation,
   user,
 }) {
+  useEffect(() => {
+    if (reserveMessage.type === "success") {
+      toast.success("Table Booked Successfully!");
+      const timer = setTimeout(() => {
+        setActiveTab("orders");
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [reserveMessage, setActiveTab]);
+
+  const handleReset = () => {
+    setReservationForm({
+      tableNumber: "",
+      reservationTime: "",
+      guestsCount: 2,
+      specialRequests: "",
+    });
+  };
+
+  const selectedTable = availableTables.find(
+    (t) => t.tableNumber.toString() === reservationForm.tableNumber
+  );
+  const isOverCapacity =
+    selectedTable && reservationForm.guestsCount > selectedTable.capacity;
+
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_400px]">
       <div className="space-y-6">
@@ -105,6 +134,7 @@ export default function DiningReserveTab({
                 <input
                   type="datetime-local"
                   name="reservationTime"
+                  min={new Date().toISOString().slice(0, 16)}
                   value={reservationForm.reservationTime}
                   onChange={handleReservationInputChange}
                   className={inputClass}
@@ -124,6 +154,12 @@ export default function DiningReserveTab({
                   onChange={handleReservationInputChange}
                   className={inputClass}
                 />
+                {isOverCapacity && (
+                  <p className="mt-2 text-xs font-medium text-rose-600">
+                    Warning: This table only accommodates up to{" "}
+                    {selectedTable.capacity} guests.
+                  </p>
+                )}
               </div>
 
               <div>
@@ -140,27 +176,48 @@ export default function DiningReserveTab({
                 />
               </div>
 
-              <button
-                type="submit"
-                disabled={
-                  submittingReservation ||
-                  !reservationForm.tableNumber ||
-                  !reservationForm.reservationTime
-                }
-                className="mt-6 w-full rounded-2xl bg-luxe-charcoal px-5 py-3 font-semibold text-white transition hover:bg-luxe-bronze disabled:cursor-not-allowed disabled:bg-luxe-muted"
-              >
-                {submittingReservation ? "Reserving..." : "Reserve Table"}
-              </button>
+              <div className="mt-6 flex gap-3">
+                <button
+                  type="submit"
+                  disabled={
+                    submittingReservation ||
+                    !reservationForm.tableNumber ||
+                    !reservationForm.reservationTime ||
+                    isOverCapacity
+                  }
+                  className="flex-1 rounded-2xl bg-luxe-charcoal px-5 py-3 font-semibold text-white transition hover:bg-luxe-bronze disabled:cursor-not-allowed disabled:bg-luxe-muted"
+                >
+                  {submittingReservation ? "Reserving..." : "Reserve Table"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="rounded-2xl border border-luxe-border bg-white px-5 py-3 font-semibold text-luxe-charcoal transition hover:bg-luxe-smoke"
+                >
+                  Clear
+                </button>
+              </div>
 
               {reserveMessage.text && (
                 <div
-                  className={`mt-4 rounded-xl px-4 py-2 text-sm font-medium ${
+                  className={`mt-4 rounded-xl p-5 text-sm font-medium ${
                     reserveMessage.type === "success"
                       ? "bg-emerald-50 text-emerald-700"
                       : "bg-rose-50 text-rose-700"
                   }`}
                 >
-                  {reserveMessage.text}
+                  <div className="flex flex-col gap-3">
+                    <p>{reserveMessage.text}</p>
+                    {reserveMessage.type === "success" && (
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("orders")}
+                        className="w-fit rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-emerald-700"
+                      >
+                        View My Bookings
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
             </form>

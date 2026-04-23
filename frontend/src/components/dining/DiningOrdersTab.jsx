@@ -5,6 +5,7 @@ export default function DiningOrdersTab({
   canCancelOrder,
   formatCurrency,
   handleCancelOrder,
+  handleCancelReservation,
   isAdmin,
   loadingProtectedData,
   orders,
@@ -82,12 +83,18 @@ export default function DiningOrdersTab({
             <div className="space-y-4">
               <h3 className="font-serif text-xl">Table Reservations</h3>
               {reservations.length > 0 ? (
-                reservations.slice(0, 3).map((reservation) => (
+                [...reservations]
+                  .sort(
+                    (a, b) =>
+                      new Date(b.createdAt || b.reservationTime) -
+                      new Date(a.createdAt || a.reservationTime),
+                  )
+                  .map((reservation) => (
                   <div
                     key={reservation._id}
                     className="rounded-[24px] border border-luxe-border bg-white p-5 shadow-sm"
                   >
-                    <div className="flex items-start justify-between">
+                    <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="font-semibold text-luxe-charcoal">
                           Table {reservation.tableNumber}
@@ -98,14 +105,29 @@ export default function DiningOrdersTab({
                           ).toLocaleDateString()}
                         </p>
                       </div>
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusClass(
-                          reservation.status,
-                          statusStyles,
-                        )}`}
-                      >
-                        {reservation.status}
-                      </span>
+                      <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusClass(
+                            reservation.status,
+                            statusStyles,
+                          )}`}
+                        >
+                          {reservation.status}
+                        </span>
+                        {(reservation.status === "Pending" ||
+                          reservation.status === "Reserved" ||
+                          reservation.status === "Confirmed") && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleCancelReservation(reservation._id)
+                            }
+                            className="rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700 transition hover:bg-rose-200"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <div className="mt-3 text-sm text-luxe-muted">
                       {reservation.guestsCount} guests •{" "}

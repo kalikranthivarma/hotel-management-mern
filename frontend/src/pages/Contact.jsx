@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
 import { createContactMessage } from "../api/contactApi";
 
 const initialForm = {
@@ -10,46 +11,8 @@ const initialForm = {
   message: "",
 };
 
-const contactCards = [
-  {
-    title: "Guest Services",
-    value: "+91 800-123-4567",
-    href: "tel:+918001234567",
-    detail: "Available 24/7 for reservations, stay support, and travel help.",
-  },
-  {
-    title: "Email Concierge",
-    value: "stay@knsu.com",
-    href: "mailto:stay@knsu.com",
-    detail: "Reach us for booking guidance, group stays, and special requests.",
-  },
-  {
-    title: "Corporate Desk",
-    value: "Hyderabad, Shimla, Goa",
-    href: "https://maps.google.com/?q=KNSU+Stays",
-    detail: "Serving leisure, corporate, and event guests across destinations.",
-  },
-];
-
-const faqs = [
-  {
-    question: "Can I request early check-in or late check-out?",
-    answer:
-      "Yes. Availability-based requests can be shared with the front desk or concierge before arrival.",
-  },
-  {
-    question: "Do you support event and group bookings?",
-    answer:
-      "Yes. Our team can help coordinate room blocks, dining, and venue requirements for groups.",
-  },
-  {
-    question: "Can I contact the hotel without creating an account?",
-    answer:
-      "Yes. This page is available directly from the frontend and does not require login.",
-  },
-];
-
 export default function Contact() {
+  const navigate = useNavigate();
   const user = useSelector((state) => state.auth.user);
   const [formData, setFormData] = useState(initialForm);
   const [submitted, setSubmitted] = useState(false);
@@ -57,279 +20,184 @@ export default function Contact() {
   const [submitError, setSubmitError] = useState("");
 
   useEffect(() => {
-    if (!user) {
-      return;
+    if (submitted) {
+      const timer = setTimeout(() => {
+        navigate("/");
+      }, 3000);
+      return () => clearTimeout(timer);
     }
+  }, [submitted, navigate]);
 
-    setFormData((current) => ({
-      ...current,
-      name:
-        current.name ||
-        `${user.firstName || ""} ${user.lastName || ""}`.trim(),
-      email: current.email || user.email || "",
-      phone: current.phone || user.phone || "",
+  useEffect(() => {
+    if (!user) return;
+    setFormData((cur) => ({
+      ...cur,
+      name: cur.name || `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+      email: cur.email || user.email || "",
+      phone: cur.phone || user.phone || "",
     }));
   }, [user]);
 
-  const isFormValid = useMemo(() => {
-    return (
-      formData.name.trim() &&
-      formData.email.trim() &&
-      formData.subject.trim() &&
-      formData.message.trim()
-    );
-  }, [formData]);
+  const isFormValid = useMemo(() => (
+    formData.name.trim() &&
+    formData.email.trim() &&
+    formData.subject.trim() &&
+    formData.message.trim() &&
+    /^\S+@\S+\.\S+$/.test(formData.email)
+  ), [formData]);
 
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-    setFormData((current) => ({
-      ...current,
-      [name]: value,
-    }));
-    if (submitted) {
-      setSubmitted(false);
-    }
-    if (submitError) {
-      setSubmitError("");
-    }
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((cur) => ({ ...cur, [name]: value }));
+    if (submitError) setSubmitError("");
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-
-    if (!isFormValid) {
-      return;
-    }
-
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!isFormValid) return;
     try {
       setIsSubmitting(true);
       setSubmitError("");
-
       await createContactMessage(formData);
-
       setSubmitted(true);
-      setFormData({
-        ...initialForm,
-        name: user ? `${user.firstName || ""} ${user.lastName || ""}`.trim() : "",
-        email: user?.email || "",
-        phone: user?.phone || "",
-      });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error) {
-      setSubmitError(
-        error.response?.data?.message ||
-          "Unable to submit your message right now."
-      );
+      setSubmitError(error.response?.data?.message || "Unable to submit your message right now.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  return (
-    <div className="bg-[#FAFAF8] text-luxe-charcoal">
-      <section className="overflow-hidden border-b border-luxe-border bg-[linear-gradient(135deg,#171412_0%,#2c241f_55%,#c39562_140%)] px-4 py-14 text-white lg:px-8 lg:py-20">
-        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.35em] text-[#e7c8a0]">
-              Contact KNSU
-            </p>
-            <h1 className="mt-4 max-w-3xl font-serif text-4xl leading-[0.95] tracking-tight sm:text-5xl lg:text-6xl">
-              Let&apos;s plan your next stay with care
-            </h1>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-white/75 sm:text-lg sm:leading-8">
-              Reach our hospitality team for reservations, dining help, group
-              bookings, or anything you need before check-in.
-            </p>
-          </div>
+  const handleReset = () => {
+    setSubmitted(false);
+    setFormData({
+      ...initialForm,
+      name: user ? `${user.firstName || ""} ${user.lastName || ""}`.trim() : "",
+      email: user?.email || "",
+      phone: user?.phone || "",
+    });
+  };
 
-          <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-            {contactCards.map((card) => (
-              <a
-                key={card.title}
-                href={card.href}
-                target={card.href.startsWith("http") ? "_blank" : undefined}
-                rel={card.href.startsWith("http") ? "noreferrer" : undefined}
-                className="rounded-[28px] border border-white/10 bg-white/10 p-5 backdrop-blur-sm transition hover:bg-white/15"
-              >
-                <p className="text-[0.68rem] font-bold uppercase tracking-[0.28em] text-[#e7c8a0]">
-                  {card.title}
-                </p>
-                <p className="mt-3 font-serif text-2xl leading-tight text-white">
-                  {card.value}
-                </p>
-                <p className="mt-3 text-sm leading-6 text-white/70">
-                  {card.detail}
-                </p>
-              </a>
-            ))}
+  if (submitted) {
+    return (
+      <div className="flex min-h-[80vh] items-center justify-center bg-[#FAFAF8] px-4">
+        <div className="w-full max-w-md rounded-[28px] border border-luxe-border bg-white p-10 text-center shadow-[0_16px_48px_rgba(28,28,28,0.07)]">
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
+            <svg className="h-8 w-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="font-serif text-3xl tracking-tight text-luxe-charcoal">Message Sent</h2>
+          <p className="mt-4 text-sm leading-7 text-luxe-muted">
+            We'll get back to <span className="font-semibold text-luxe-charcoal">{formData.email}</span> within 2 hours.
+          </p>
+          <p className="mt-2 text-xs text-luxe-bronze font-medium">
+            Redirecting to home in 3 seconds...
+          </p>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+            <Link to="/" className="rounded-full bg-luxe-charcoal px-7 py-3 text-sm font-semibold text-white transition hover:bg-luxe-bronze">
+              Return Home
+            </Link>
+            <button onClick={handleReset} className="rounded-full border border-luxe-border px-7 py-3 text-sm font-semibold text-luxe-charcoal transition hover:bg-luxe-smoke">
+              Send Another
+            </button>
           </div>
         </div>
-      </section>
+      </div>
+    );
+  }
 
-      <section className="mx-auto grid max-w-7xl gap-8 px-4 py-12 lg:grid-cols-[1.05fr_0.95fr] lg:px-8 lg:py-16">
-        <div className="rounded-[32px] border border-luxe-border bg-white p-6 shadow-[0_18px_50px_rgba(28,28,28,0.06)] sm:p-8">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.3em] text-luxe-bronze">
-                Send a Message
-              </p>
-              <h2 className="mt-3 font-serif text-3xl sm:text-4xl">
-                We&apos;ll help you from here
-              </h2>
-            </div>
-            <div className="rounded-full bg-luxe-smoke px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-luxe-muted">
-              Live Form
-            </div>
-          </div>
-
-          <p className="mt-4 max-w-2xl text-sm leading-7 text-luxe-muted sm:text-base">
-            Send your stay, reservation, or dining questions here and the
-            message will be stored through the backend for follow-up.
+  return (
+    <div className="flex min-h-screen items-start justify-center bg-[#FAFAF8] px-4 py-16">
+      <div className="w-full max-w-2xl">
+        <div className="mb-10">
+          <p className="text-[0.6rem] font-bold uppercase tracking-[0.45em] text-luxe-bronze">Concierge &amp; Support</p>
+          <h1 className="mt-3 font-serif text-4xl tracking-tight text-luxe-charcoal sm:text-5xl">Get in touch</h1>
+          <p className="mt-4 text-sm leading-7 text-luxe-muted">
+            Fill out the form and our team will respond within 2 hours during business hours.
           </p>
+        </div>
 
-          {submitted ? (
-            <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-              Your message has been sent successfully. Our team can now review it
-              from the backend.
-            </div>
-          ) : null}
-
-          {submitError ? (
-            <div className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <div className="rounded-[32px] border border-luxe-border bg-white p-8 shadow-[0_16px_48px_rgba(28,28,28,0.05)] sm:p-10">
+          {submitError && (
+            <div className="mb-6 flex items-center gap-3 rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+              <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
               {submitError}
             </div>
-          ) : null}
+          )}
 
-          <form onSubmit={handleSubmit} className="mt-8 grid gap-5 sm:grid-cols-2">
-            <div>
-              <label className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-luxe-charcoal/60">
-                Full Name
-              </label>
+          <form onSubmit={handleSubmit} className="grid gap-5 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <label className="ml-1 text-[0.6rem] font-bold uppercase tracking-widest text-luxe-muted">Full Name</label>
               <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Enter your name"
-                className="mt-2 w-full rounded-2xl border border-luxe-border bg-luxe-smoke px-4 py-3 outline-none transition focus:border-luxe-bronze focus:bg-white focus:ring-4 focus:ring-luxe-bronze/10"
+                type="text" name="name" required
+                value={formData.name} onChange={handleChange}
+                placeholder="Julian Casablancas"
+                className="w-full rounded-xl border border-luxe-border bg-luxe-smoke/40 px-4 py-3.5 text-sm outline-none transition focus:border-luxe-bronze focus:bg-white focus:ring-4 focus:ring-luxe-bronze/5"
               />
             </div>
 
-            <div>
-              <label className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-luxe-charcoal/60">
-                Email Address
-              </label>
+            <div className="space-y-1.5">
+              <label className="ml-1 text-[0.6rem] font-bold uppercase tracking-widest text-luxe-muted">Email Address</label>
               <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="name@example.com"
-                className="mt-2 w-full rounded-2xl border border-luxe-border bg-luxe-smoke px-4 py-3 outline-none transition focus:border-luxe-bronze focus:bg-white focus:ring-4 focus:ring-luxe-bronze/10"
+                type="email" name="email" required
+                value={formData.email} onChange={handleChange}
+                placeholder="name@email.com"
+                className="w-full rounded-xl border border-luxe-border bg-luxe-smoke/40 px-4 py-3.5 text-sm outline-none transition focus:border-luxe-bronze focus:bg-white focus:ring-4 focus:ring-luxe-bronze/5"
               />
             </div>
 
-            <div>
-              <label className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-luxe-charcoal/60">
-                Phone
+            <div className="space-y-1.5">
+              <label className="ml-1 text-[0.6rem] font-bold uppercase tracking-widest text-luxe-muted">
+                Phone <span className="normal-case font-normal tracking-normal text-luxe-muted/60">(optional)</span>
               </label>
               <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="+91 98765 43210"
-                className="mt-2 w-full rounded-2xl border border-luxe-border bg-luxe-smoke px-4 py-3 outline-none transition focus:border-luxe-bronze focus:bg-white focus:ring-4 focus:ring-luxe-bronze/10"
+                type="tel" name="phone"
+                value={formData.phone} onChange={handleChange}
+                placeholder="+91 90000 00000"
+                className="w-full rounded-xl border border-luxe-border bg-luxe-smoke/40 px-4 py-3.5 text-sm outline-none transition focus:border-luxe-bronze focus:bg-white focus:ring-4 focus:ring-luxe-bronze/5"
               />
             </div>
 
-            <div>
-              <label className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-luxe-charcoal/60">
-                Subject
-              </label>
+            <div className="space-y-1.5">
+              <label className="ml-1 text-[0.6rem] font-bold uppercase tracking-widest text-luxe-muted">Subject</label>
               <input
-                type="text"
-                name="subject"
-                value={formData.subject}
-                onChange={handleChange}
+                type="text" name="subject" required
+                value={formData.subject} onChange={handleChange}
                 placeholder="How can we help?"
-                className="mt-2 w-full rounded-2xl border border-luxe-border bg-luxe-smoke px-4 py-3 outline-none transition focus:border-luxe-bronze focus:bg-white focus:ring-4 focus:ring-luxe-bronze/10"
+                className="w-full rounded-xl border border-luxe-border bg-luxe-smoke/40 px-4 py-3.5 text-sm outline-none transition focus:border-luxe-bronze focus:bg-white focus:ring-4 focus:ring-luxe-bronze/5"
               />
             </div>
 
-            <div className="sm:col-span-2">
-              <label className="text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-luxe-charcoal/60">
-                Message
-              </label>
+            <div className="space-y-1.5 sm:col-span-2">
+              <label className="ml-1 text-[0.6rem] font-bold uppercase tracking-widest text-luxe-muted">Message</label>
               <textarea
-                name="message"
-                value={formData.message}
-                onChange={handleChange}
-                rows={6}
-                placeholder="Tell us about your stay, dining, or reservation request."
-                className="mt-2 w-full rounded-[24px] border border-luxe-border bg-luxe-smoke px-4 py-3 outline-none transition focus:border-luxe-bronze focus:bg-white focus:ring-4 focus:ring-luxe-bronze/10"
+                name="message" required
+                value={formData.message} onChange={handleChange}
+                rows={5}
+                placeholder="Tell us about your requirements…"
+                className="w-full rounded-2xl border border-luxe-border bg-luxe-smoke/40 px-4 py-4 text-sm outline-none transition focus:border-luxe-bronze focus:bg-white focus:ring-4 focus:ring-luxe-bronze/5"
               />
             </div>
 
-            <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-4">
-              <p className="text-sm leading-6 text-luxe-muted">
-                Prefer direct help? Call us or email the concierge team anytime.
-              </p>
+            <div className="flex items-center justify-between gap-4 sm:col-span-2">
+              <p className="text-xs text-luxe-muted">By submitting, you agree to our privacy policy.</p>
               <button
                 type="submit"
                 disabled={!isFormValid || isSubmitting}
-                className="rounded-full bg-luxe-bronze px-6 py-3 text-sm font-semibold text-white transition hover:bg-luxe-charcoal disabled:cursor-not-allowed disabled:bg-luxe-muted"
+                className="group flex items-center gap-2 rounded-full bg-luxe-charcoal px-8 py-3.5 text-sm font-bold text-white transition hover:bg-luxe-bronze disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {isSubmitting ? "Sending..." : "Send Message"}
+                {isSubmitting ? "Sending…" : "Send Message"}
+                <svg className="h-4 w-4 transition group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
               </button>
             </div>
           </form>
         </div>
-
-        <div className="space-y-8">
-          <div className="overflow-hidden rounded-[32px] border border-luxe-border bg-white shadow-[0_18px_50px_rgba(28,28,28,0.06)]">
-            <div className="border-b border-luxe-border bg-luxe-smoke px-6 py-5">
-              <p className="text-xs font-bold uppercase tracking-[0.3em] text-luxe-bronze">
-                Visit Us
-              </p>
-              <h2 className="mt-3 font-serif text-3xl">Our featured destinations</h2>
-            </div>
-            <div className="grid gap-px bg-luxe-border sm:grid-cols-3">
-              {[
-                "Hyderabad Gateway",
-                "Shimla Highlands",
-                "Goa Serenity",
-              ].map((location) => (
-                <div key={location} className="bg-white px-6 py-6">
-                  <p className="text-sm font-semibold uppercase tracking-[0.16em] text-luxe-charcoal/45">
-                    KNSU Stays
-                  </p>
-                  <p className="mt-3 font-serif text-2xl">{location}</p>
-                  <p className="mt-3 text-sm leading-6 text-luxe-muted">
-                    Concierge support, dining reservations, and booking help are
-                    available for each property.
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-[32px] border border-luxe-border bg-[linear-gradient(145deg,#1d1a18_0%,#2b241f_100%)] p-6 text-white shadow-[0_24px_70px_rgba(28,28,28,0.18)] sm:p-8">
-            <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#e7c8a0]">
-              Common Questions
-            </p>
-            <div className="mt-6 space-y-5">
-              {faqs.map((item) => (
-                <div key={item.question} className="rounded-[24px] border border-white/10 bg-white/5 p-5">
-                  <h3 className="font-semibold text-white">{item.question}</h3>
-                  <p className="mt-2 text-sm leading-6 text-white/70">
-                    {item.answer}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      </div>
     </div>
   );
 }

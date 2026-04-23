@@ -106,13 +106,12 @@ const Navbar = () => {
       ];
     }
 
+    if (!user) return [];
+
     const guestLinks = [
       { to: "/rooms", label: "Rooms" },
       { to: "/dining", label: "Dining" },
-      { to: "/contact", label: "Contact" },
     ];
-
-    if (!user) return guestLinks;
 
     return [...guestLinks, { to: "/bookings", label: "My Bookings" }];
   }, [isAdmin, user]);
@@ -179,12 +178,8 @@ const Navbar = () => {
       <header className="fixed left-0 right-0 top-0 z-50 border-b border-white/8 bg-[#0B0908]/96 shadow-[0_4px_18px_rgba(0,0,0,0.28)]">
         <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10">
           <div className="flex h-16 items-center justify-between lg:h-[68px]">
-
             {/* ── Brand ── */}
-            <Link
-              to="/"
-              className="group flex shrink-0 items-center gap-2.5"
-            >
+            <Link to="/" className="group flex shrink-0 items-center gap-2.5">
               <div className="flex flex-col leading-none">
                 <span className="text-[1rem] font-light tracking-[0.18em] text-white">
                   KNSU
@@ -196,7 +191,9 @@ const Navbar = () => {
             </Link>
 
             {/* ── Desktop Nav ── */}
-            <nav className={`hidden items-center lg:flex ${isAdmin ? "gap-1" : "gap-8"}`}>
+            <nav
+              className={`hidden items-center lg:flex ${isAdmin ? "gap-1" : "gap-8"}`}
+            >
               {isAdmin ? (
                 <div className="flex items-center rounded-xl border border-white/10 bg-white/5 p-1">
                   {navLinks.map((link) => {
@@ -218,7 +215,11 @@ const Navbar = () => {
                 </div>
               ) : (
                 navLinks.map((link) => (
-                  <NavLinkItem key={link.label} link={link} isActive={isActive} />
+                  <NavLinkItem
+                    key={link.label}
+                    link={link}
+                    isActive={isActive}
+                  />
                 ))
               )}
             </nav>
@@ -234,7 +235,9 @@ const Navbar = () => {
                     <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-luxe-bronze to-luxe-charcoal text-[0.65rem] font-bold text-white">
                       {initials}
                     </span>
-                    <span className="text-[0.82rem] font-medium">{user.firstName}</span>
+                    <span className="text-[0.82rem] font-medium">
+                      {user.firstName}
+                    </span>
                     {isAdmin && (
                       <span className="rounded-md bg-luxe-bronze/30 px-1.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-white">
                         {role === "superAdmin" ? "Super" : "Admin"}
@@ -247,7 +250,11 @@ const Navbar = () => {
                       stroke="currentColor"
                       strokeWidth={2.5}
                     >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M19 9l-7 7-7-7"
+                      />
                     </svg>
                   </button>
 
@@ -257,7 +264,9 @@ const Navbar = () => {
                         <p className="text-[0.82rem] font-semibold text-white">
                           {user.firstName} {user.lastName}
                         </p>
-                        <p className="text-[0.72rem] text-white/40">{user.email}</p>
+                        <p className="text-[0.72rem] text-white/40">
+                          {user.email}
+                        </p>
                       </div>
                       <div className="py-1">
                         <Link
@@ -265,21 +274,41 @@ const Navbar = () => {
                           className="flex items-center gap-3 px-4 py-2.5 text-[0.82rem] text-white/75 transition hover:bg-white/6 hover:text-white"
                           onClick={() => setProfileOpen(false)}
                         >
-                          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          <svg
+                            className="h-3.5 w-3.5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                            />
                           </svg>
                           My Profile
                         </Link>
                         {!isAdmin && (
                           <Link
-                            to="/bookings"
+                            to="/contact"
                             className="flex items-center gap-3 px-4 py-2.5 text-[0.82rem] text-white/75 transition hover:bg-white/6 hover:text-white"
                             onClick={() => setProfileOpen(false)}
                           >
-                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            <svg
+                              className="h-3.5 w-3.5"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                              />
                             </svg>
-                            My Bookings
+                            Contact Us
                           </Link>
                         )}
                         <div className="my-1 mx-3 border-t border-white/8" />
@@ -287,8 +316,18 @@ const Navbar = () => {
                           onClick={handleLogout}
                           className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-[0.82rem] text-red-400/80 transition hover:bg-red-500/8 hover:text-red-400"
                         >
-                          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                          <svg
+                            className="h-3.5 w-3.5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                            />
                           </svg>
                           Sign Out
                         </button>
@@ -320,9 +359,15 @@ const Navbar = () => {
               onClick={toggleMenu}
               aria-label="Toggle menu"
             >
-              <span className={`h-[1.5px] w-5 bg-white transition-all duration-300 ${menuOpen ? "translate-y-[6.5px] rotate-45" : ""}`} />
-              <span className={`h-[1.5px] w-5 bg-white transition-all duration-300 ${menuOpen ? "opacity-0" : ""}`} />
-              <span className={`h-[1.5px] w-5 bg-white transition-all duration-300 ${menuOpen ? "-translate-y-[6.5px] -rotate-45" : ""}`} />
+              <span
+                className={`h-[1.5px] w-5 bg-white transition-all duration-300 ${menuOpen ? "translate-y-[6.5px] rotate-45" : ""}`}
+              />
+              <span
+                className={`h-[1.5px] w-5 bg-white transition-all duration-300 ${menuOpen ? "opacity-0" : ""}`}
+              />
+              <span
+                className={`h-[1.5px] w-5 bg-white transition-all duration-300 ${menuOpen ? "-translate-y-[6.5px] -rotate-45" : ""}`}
+              />
             </button>
           </div>
         </div>
@@ -331,7 +376,9 @@ const Navbar = () => {
       {/* ── Mobile Overlay ── */}
       <div
         className={`fixed inset-0 z-40 bg-black/60 transition-opacity duration-300 lg:hidden ${
-          menuOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
+          menuOpen
+            ? "pointer-events-auto opacity-100"
+            : "pointer-events-none opacity-0"
         }`}
         onClick={() => setMenuOpen(false)}
       />
@@ -346,7 +393,9 @@ const Navbar = () => {
         {/* Drawer header */}
         <div className="flex items-center justify-between border-b border-white/8 px-5 py-4">
           <div className="flex flex-col leading-none">
-            <span className="text-sm font-light tracking-[0.2em] text-white">KNSU STAYS</span>
+            <span className="text-sm font-light tracking-[0.2em] text-white">
+              KNSU STAYS
+            </span>
             <span className="text-[0.5rem] tracking-[0.3em] text-[#B8956A]">
               {isAdmin ? "ADMIN" : "STAYS"}
             </span>
@@ -355,8 +404,18 @@ const Navbar = () => {
             onClick={() => setMenuOpen(false)}
             className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/60 hover:text-white"
           >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -385,26 +444,40 @@ const Navbar = () => {
           </p>
           <div className="space-y-0.5">
             {navLinks.map((link) => (
-              <NavLinkItem key={link.label} link={link} mobile isActive={isActive} />
+              <NavLinkItem
+                key={link.label}
+                link={link}
+                mobile
+                isActive={isActive}
+              />
             ))}
           </div>
 
-          {user && (
-            <>
-              <p className="mb-2 mt-5 px-2 text-[0.65rem] font-bold uppercase tracking-[0.25em] text-white/25">
-                Account
-              </p>
-              <div className="space-y-0.5">
-                <Link
-                  to="/dashboard"
-                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-white/70 transition-all hover:bg-white/5 hover:text-white"
-                >
-                  <span className="h-1.5 w-1.5 rounded-full bg-current opacity-50" />
-                  Profile
-                </Link>
-              </div>
-            </>
-          )}
+          <p className="mb-2 mt-5 px-2 text-[0.65rem] font-bold uppercase tracking-[0.25em] text-white/25">
+            {user ? "Account" : "Support"}
+          </p>
+          <div className="space-y-0.5">
+            {user && (
+              <Link
+                to="/dashboard"
+                className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-white/70 transition-all hover:bg-white/5 hover:text-white"
+                onClick={() => setMenuOpen(false)}
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-current opacity-50" />
+                My Profile
+              </Link>
+            )}
+            {!isAdmin && (
+              <Link
+                to="/contact"
+                className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-white/70 transition-all hover:bg-white/5 hover:text-white"
+                onClick={() => setMenuOpen(false)}
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-current opacity-50" />
+                Contact Us
+              </Link>
+            )}
+          </div>
         </nav>
 
         {/* Drawer footer */}
@@ -414,8 +487,18 @@ const Navbar = () => {
               onClick={handleLogout}
               className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-500/20 bg-red-500/8 py-3 text-sm font-medium text-red-400 transition hover:bg-red-500/15"
             >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                />
               </svg>
               Sign Out
             </button>
@@ -424,12 +507,14 @@ const Navbar = () => {
               <Link
                 to="/login"
                 className="rounded-xl border border-white/10 py-3 text-center text-sm font-medium text-white/80 transition hover:bg-white/5 hover:text-white"
+                onClick={() => setMenuOpen(false)}
               >
                 Sign In
               </Link>
               <Link
                 to="/register"
                 className="rounded-xl bg-luxe-bronze py-3 text-center text-sm font-semibold text-white shadow-[0_4px_16px_rgba(184,149,106,0.35)] transition hover:bg-luxe-bronze-light"
+                onClick={() => setMenuOpen(false)}
               >
                 Book Now
               </Link>

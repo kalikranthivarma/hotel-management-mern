@@ -15,6 +15,8 @@ const BookingForm = ({ roomId, pricePerNight }) => {
     checkInDate: "",
     checkOutDate: "",
   });
+  // Suggestion 7 — store nights as its own variable
+  const [nights, setNights] = useState(0);
   const [totalPrice, setTotalPrice] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -24,12 +26,15 @@ const BookingForm = ({ roomId, pricePerNight }) => {
     if (dates.checkInDate && dates.checkOutDate) {
       const start = new Date(dates.checkInDate);
       const end = new Date(dates.checkOutDate);
-      const nights = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+      // Suggestion 7 — clean night count calculation
+      const nightCount = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
 
-      if (nights > 0) {
-        setTotalPrice(nights * pricePerNight);
+      if (nightCount > 0) {
+        setNights(nightCount);
+        setTotalPrice(nightCount * pricePerNight);
         setError("");
       } else {
+        setNights(0);
         setTotalPrice(0);
         setError("Check-out must be after check-in");
       }
@@ -75,8 +80,11 @@ const BookingForm = ({ roomId, pricePerNight }) => {
 
   return (
     <div className="rounded-[30px] border border-luxe-border bg-white p-6 shadow-[0_20px_60px_rgba(28,28,28,0.08)]">
+      {/* Suggestion 6 — Formatted price with Indian locale */}
       <div className="mb-6 rounded-[24px] bg-luxe-charcoal px-5 py-4 text-white">
-        <span className="block text-3xl font-semibold">Rs. {pricePerNight}</span>
+        <span className="block text-3xl font-semibold">
+          Rs. {pricePerNight?.toLocaleString("en-IN")}
+        </span>
         <span className="text-sm uppercase tracking-[0.25em] text-white/70">per night</span>
       </div>
 
@@ -109,20 +117,31 @@ const BookingForm = ({ roomId, pricePerNight }) => {
           />
         </label>
 
+        {/* Suggestion 7 — Clear breakdown: nights × price = total */}
         {totalPrice > 0 && (
-          <div className="rounded-[24px] bg-luxe-smoke p-4">
+          <div className="rounded-[24px] bg-luxe-smoke p-4 space-y-2">
             <div className="flex items-center justify-between text-sm text-luxe-muted">
-              <span>Total nights</span>
-              <span>{totalPrice / pricePerNight}</span>
+              <span>🌙 Nights</span>
+              <span className="font-medium text-luxe-charcoal">{nights}</span>
             </div>
-            <div className="mt-3 flex items-center justify-between border-t border-luxe-border pt-3 font-semibold text-luxe-charcoal">
+            <div className="flex items-center justify-between text-sm text-luxe-muted">
+              <span>Price per night</span>
+              {/* Suggestion 6 — formatted per-night price */}
+              <span>Rs. {pricePerNight?.toLocaleString("en-IN")}</span>
+            </div>
+            <div className="flex items-center justify-between border-t border-luxe-border pt-3 font-semibold text-luxe-charcoal">
               <span>Total amount</span>
-              <span>Rs. {totalPrice}</span>
+              {/* Suggestion 6 — formatted total */}
+              <span>Rs. {totalPrice.toLocaleString("en-IN")}</span>
             </div>
           </div>
         )}
 
-        {error && <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
+        {error && (
+          <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </p>
+        )}
         {success && (
           <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
             {success}
@@ -134,11 +153,19 @@ const BookingForm = ({ roomId, pricePerNight }) => {
           className="w-full rounded-2xl bg-luxe-bronze px-5 py-3.5 font-semibold text-white transition hover:bg-luxe-charcoal disabled:cursor-wait disabled:opacity-70"
           disabled={loading || isAdmin}
         >
-          {loading ? "Processing..." : isAdmin ? "Staff Cannot Book" : user ? "Reserve Now" : "Login to Book"}
+          {loading
+            ? "Processing..."
+            : isAdmin
+            ? "Staff Cannot Book"
+            : user
+            ? "Reserve Now"
+            : "Login to Book"}
         </button>
 
         <p className="text-center text-sm text-luxe-muted">
-          {isAdmin ? "Switch to a guest account to make a reservation." : "You will not be charged yet."}
+          {isAdmin
+            ? "Switch to a guest account to make a reservation."
+            : "You will not be charged yet."}
         </p>
       </form>
     </div>

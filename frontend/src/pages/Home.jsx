@@ -76,6 +76,24 @@ const deals = [
   },
 ];
 
+const diningThumbs = [
+  {
+    id: 1,
+    image: "https://images.unsplash.com/photo-1567521464027-f127ff144326?w=600&q=80",
+    label: "Indian Cuisine — Hyderabad",
+  },
+  {
+    id: 2,
+    image: "https://images.unsplash.com/photo-1551218372-a8789b81b253?w=600&q=80",
+    label: "Mountain Bistro — Shimla",
+  },
+  {
+    id: 3,
+    image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&q=80",
+    label: "Beachside Grill — Goa",
+  },
+];
+
 /* ─── HERO ───────────────────────────────────── */
 function HeroCarousel() {
   const [active, setActive] = useState(0);
@@ -120,8 +138,6 @@ function HeroCarousel() {
 }
 
 /* ─── HOTELS ───────────────────────────────────── */
-
-
 function HotelsSection() {
   const [country, setCountry] = useState("");
   const [city, setCity] = useState("");
@@ -200,6 +216,126 @@ function HotelsSection() {
   );
 }
 
+/* ─── DINING ───────────────────────────────────── */
+function DiningSection() {
+  return (
+    <section className="bg-[#F5F5F5] py-16 px-4" id="dining">
+      <div className="mx-auto max-w-7xl">
+
+        {/* Section header */}
+        <div className="mb-10">
+          <p className="text-xs font-bold uppercase tracking-[0.35em] text-luxe-bronze">
+            KNSU Culinary Experience
+          </p>
+          <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <h2 className="font-serif text-5xl leading-none max-w-lg">
+              A Table Worth Travelling For
+            </h2>
+            <p className="text-lg leading-8 text-luxe-muted max-w-md">
+              Signature menus, curated wine lists and immersive ambience
+              across every KNSU property.
+            </p>
+          </div>
+        </div>
+
+        {/* Cinematic hero image */}
+        <div className="relative h-[420px] md:h-[500px] w-full overflow-hidden rounded-[32px]">
+          <img
+            src="https://images.unsplash.com/photo-1600891964092-4316c288032e?w=1400&q=80"
+            alt="KNSU fine dining experience"
+            className="h-full w-full object-cover"
+            loading="lazy"
+          />
+          {/* Dark overlay */}
+          <div className="absolute inset-0 bg-black/50" />
+
+          {/* Overlay content */}
+          <div className="absolute inset-0 flex flex-col justify-end p-8 sm:p-12">
+            <p className="text-xs font-bold uppercase tracking-[0.35em] text-luxe-bronze mb-3">
+              KNSU Culinary Experience
+            </p>
+            <h3 className="font-serif text-3xl sm:text-4xl text-white max-w-xl leading-tight mb-3">
+              Dine Where Every Detail Is Considered
+            </h3>
+            <p className="text-white/70 text-sm sm:text-base max-w-lg mb-6 leading-7">
+              From candlelit fine dining rooms to breezy open-air terraces —
+              our chefs craft every plate with local produce and global inspiration.
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <Link
+                to="/dining"
+                className="rounded-full bg-luxe-bronze px-6 py-3 text-sm font-semibold text-white transition hover:bg-white hover:text-luxe-charcoal"
+              >
+                Explore Dining
+              </Link>
+              <Link
+                to="/dining"
+                className="rounded-full border border-white/40 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+              >
+                Reserve a Table
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Three property thumbnails */}
+        <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {diningThumbs.map((thumb) => (
+            <Link
+              to="/dining"
+              key={thumb.id}
+              className="group relative h-52 overflow-hidden rounded-[24px] cursor-pointer"
+            >
+              <img
+                src={thumb.image}
+                alt={thumb.label}
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                loading="lazy"
+              />
+              {/* Gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 px-5 py-4">
+                <p className="text-xs font-bold uppercase tracking-[0.22em] text-white">
+                  {thumb.label}
+                </p>
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        {/* Reservation info strip */}
+        <div className="mt-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-[20px] bg-white border border-luxe-border px-6 py-5">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-luxe-bronze mb-1">
+              Reservations
+            </p>
+            <p className="text-sm text-luxe-muted">
+              dining@knsu.com &nbsp;|&nbsp; +91 800-123-4568
+            </p>
+          </div>
+          <p className="text-sm text-luxe-bronze font-medium">
+            Member bookings get priority seating →
+          </p>
+          <div className="flex gap-3">
+            <Link
+              to="/dining"
+              className="rounded-full border border-luxe-bronze px-5 py-2.5 text-sm font-semibold text-luxe-bronze transition hover:bg-luxe-bronze hover:text-white"
+            >
+              View All Restaurants
+            </Link>
+            <Link
+              to="/dining"
+              className="rounded-full bg-luxe-bronze px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-luxe-charcoal"
+            >
+              Book a Table
+            </Link>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  );
+}
 
 /* ─── DEALS ───────────────────────────────────── */
 function DealsSection() {
@@ -212,8 +348,8 @@ function DealsSection() {
 
         <div className="grid md:grid-cols-3 gap-6">
           {deals.map((d) => (
-            <div className="bg-white/10 rounded-xl overflow-hidden">
-              <img src={d.image} className="h-52 w-full object-cover" />
+            <div key={d.id} className="bg-white/10 rounded-xl overflow-hidden">
+              <img src={d.image} className="h-52 w-full object-cover" alt={d.title} />
               <div className="p-4 text-white">
                 <h3 className="text-xl font-semibold">{d.title}</h3>
                 <p className="mt-2 text-white/70">{d.desc}</p>
@@ -227,14 +363,13 @@ function DealsSection() {
   );
 }
 
-
 /* ─── CTA BANNER ────────────────────────────────────────── */
 function CTABanner() {
   return (
     <section className="bg-[#F5F5F5] py-20 px-4">
       <div className="max-w-7xl mx-auto">
         <div className="overflow-hidden rounded-[36px] bg-[linear-gradient(135deg,#1c1c1c_0%,#3d2b1f_100%)] px-6 py-12 text-white shadow-[0_24px_80px_rgba(28,28,28,0.18)] sm:px-10">
-          
+
           <p className="text-xs font-bold uppercase tracking-[0.35em] text-[#c6a77d]">
             Start Your Journey
           </p>
@@ -270,12 +405,10 @@ function CTABanner() {
   );
 }
 
-
 /* ─── FOOTER ────────────────────────────────────────────── */
-
 function Footer() {
   const cols = [
-    { title: "Explore",  links: [["Hotels", "#hotels"], ["Experiences", "#experiences"], ["Dining", "#"], ["Wellness", "#"], ["Offers", "#offers"]] },
+    { title: "Explore",  links: [["Hotels", "#hotels"], ["Experiences", "#experiences"], ["Dining", "#dining"], ["Wellness", "#"], ["Offers", "#offers"]] },
     { title: "Account",  links: [["Register", "/register"], ["Login", "/login"], ["Dashboard", "/dashboard"], ["My Bookings", "/dashboard"], ["Membership", "/register"]] },
     { title: "Contact",  links: [["stay@knsu.com", "mailto:stay@knsu.com"], ["+91 800-123-4567", "tel:+918001234567"], ["Careers", "#"], ["Press", "#"]] },
     { title: "Staff",    links: [["Staff Login", "/admin/login"], ["Staff Register", "/admin/register"], ["Back Office", "#"], ["Support", "#"]] },
@@ -303,10 +436,8 @@ function Footer() {
                         lg:grid-cols-[1.8fr_1fr_1fr_1fr_1fr]
                         border-b border-luxe-bronze/[0.12]">
 
-          {/* Brand column — full width on mobile */}
+          {/* Brand column */}
           <div className="col-span-2 sm:col-span-2 md:col-span-3 lg:col-span-1">
-
-            {/* Logo */}
             <div className="mb-6">
               <p className="font-serif text-2xl tracking-[0.14em] text-white">
                 KNSU STAYS
@@ -315,30 +446,17 @@ function Footer() {
                 Modern Boutique Collection
               </p>
             </div>
-
-            {/* Divider */}
             <div className="mb-5 h-px w-10 bg-luxe-bronze/40" />
-
-            {/* Tagline */}
             <p className="mb-7 max-w-xs text-[0.88rem] leading-relaxed text-white/40">
               A world of curated luxury experiences across India's most iconic destinations.
             </p>
-
-            {/* Social icons */}
             <div className="flex gap-2.5">
               {socials.map(({ label, title }) => (
                 <button
                   key={title}
                   aria-label={title}
                   title={title}
-                  className="
-                    flex h-9 w-9 items-center justify-center
-                    rounded-full border border-white/15
-                    text-[0.72rem] text-white/40
-                    transition-all duration-200
-                    hover:border-luxe-bronze/70 hover:text-luxe-bronze-light
-                    hover:bg-white/5 hover:scale-110
-                  "
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 text-[0.72rem] text-white/40 transition-all duration-200 hover:border-luxe-bronze/70 hover:text-luxe-bronze-light hover:bg-white/5 hover:scale-110"
                 >
                   {label}
                 </button>
@@ -349,25 +467,15 @@ function Footer() {
           {/* Link columns */}
           {cols.map((col) => (
             <div key={col.title} className="flex flex-col gap-3.5">
-              {/* Column heading */}
               <p className="mb-1 text-[0.62rem] font-bold tracking-[0.28em] uppercase text-luxe-bronze-light/80">
                 {col.title}
               </p>
-
               {col.links.map(([label, href]) =>
                 href.startsWith("/") ? (
                   <Link
                     key={label}
                     to={href}
-                    className="
-                      w-fit text-[0.85rem] text-white/40
-                      transition-colors duration-200
-                      hover:text-white
-                      relative after:absolute after:-bottom-0.5 after:left-0
-                      after:h-px after:w-0 after:bg-luxe-bronze/60
-                      after:transition-all after:duration-300
-                      hover:after:w-full
-                    "
+                    className="w-fit text-[0.85rem] text-white/40 transition-colors duration-200 hover:text-white relative after:absolute after:-bottom-0.5 after:left-0 after:h-px after:w-0 after:bg-luxe-bronze/60 after:transition-all after:duration-300 hover:after:w-full"
                   >
                     {label}
                   </Link>
@@ -375,15 +483,7 @@ function Footer() {
                   <a
                     key={label}
                     href={href}
-                    className="
-                      w-fit text-[0.85rem] text-white/40
-                      transition-colors duration-200
-                      hover:text-white
-                      relative after:absolute after:-bottom-0.5 after:left-0
-                      after:h-px after:w-0 after:bg-luxe-bronze/60
-                      after:transition-all after:duration-300
-                      hover:after:w-full
-                    "
+                    className="w-fit text-[0.85rem] text-white/40 transition-colors duration-200 hover:text-white relative after:absolute after:-bottom-0.5 after:left-0 after:h-px after:w-0 after:bg-luxe-bronze/60 after:transition-all after:duration-300 hover:after:w-full"
                   >
                     {label}
                   </a>
@@ -394,12 +494,10 @@ function Footer() {
         </div>
 
         {/* ── Bottom bar ── */}
-        <div className="flex flex-col items-center justify-between gap-4 py-7
-                        sm:flex-row">
+        <div className="flex flex-col items-center justify-between gap-4 py-7 sm:flex-row">
           <p className="text-[0.73rem] text-white/25 tracking-wide">
             © 2026 KNSU STAYS. All rights reserved.
           </p>
-
           <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
             {["Privacy Policy", "Terms of Use", "Cookie Policy"].map((l) => (
               <a
@@ -417,15 +515,16 @@ function Footer() {
   );
 }
 
-
 /* ─── PAGE ───────────────────────────────────── */
 export default function Home() {
   return (
     <div className="w-full overflow-x-hidden bg-[#FAFAF8] text-[#1C1C1C] leading-relaxed">
       <HeroCarousel />
       <HotelsSection />
+      <DiningSection />
       <DealsSection />
       <CTABanner />
-      <Footer />    </div>
+      <Footer />
+    </div>
   );
 }

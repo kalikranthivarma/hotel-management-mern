@@ -1,6 +1,41 @@
 import { Link } from "react-router-dom";
 import { getImageUrl } from "../utils/getImageUrl";
 
+// Suggestion 3 — Amenity icon mapping
+const amenityIcons = {
+  wifi: "📶",
+  "wi-fi": "📶",
+  internet: "📶",
+  ac: "❄️",
+  "air conditioning": "❄️",
+  "air-conditioning": "❄️",
+  tv: "📺",
+  television: "📺",
+  pool: "🏊",
+  "swimming pool": "🏊",
+  gym: "🏋️",
+  fitness: "🏋️",
+  spa: "💆",
+  parking: "🚗",
+  breakfast: "🍳",
+  minibar: "🍷",
+  bar: "🍷",
+  balcony: "🌅",
+  jacuzzi: "🛁",
+  bathtub: "🛁",
+  safe: "🔒",
+  locker: "🔒",
+  laundry: "👕",
+};
+
+const getAmenityIcon = (amenity) => {
+  const key = amenity.toLowerCase();
+  for (const [keyword, icon] of Object.entries(amenityIcons)) {
+    if (key.includes(keyword)) return icon;
+  }
+  return "✦";
+};
+
 const RoomCard = ({ room, datesActive }) => {
   const { _id, title, type, pricePerNight, images, description, amenities, maxGuests, isBookedForDates } = room;
 
@@ -9,9 +44,19 @@ const RoomCard = ({ room, datesActive }) => {
       ? getImageUrl(images[0])
       : "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800&q=80";
 
-  // Only show availability badge when user has selected dates
   const isBooked = datesActive && isBookedForDates;
   const isAvailable = datesActive && !isBookedForDates;
+
+  // Suggestion 1 — Capitalize room type badge
+  const capitalizedType = type
+    ? type.charAt(0).toUpperCase() + type.slice(1)
+    : type;
+
+  // Suggestion 2 — Indian locale price formatting (e.g. Rs. 5,000)
+  const formattedPrice = pricePerNight?.toLocaleString("en-IN");
+
+  // Suggestion 8 — Smart button label based on date state
+  const buttonLabel = isAvailable ? "Book Now →" : "Explore Room";
 
   return (
     <article
@@ -28,9 +73,10 @@ const RoomCard = ({ room, datesActive }) => {
           className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
           loading="lazy"
         />
-        {/* Room type badge */}
+
+        {/* Suggestion 1 — Capitalized room type badge */}
         <div className="absolute left-4 top-4 rounded-full bg-luxe-charcoal/80 px-4 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-white">
-          {type}
+          {capitalizedType}
         </div>
 
         {/* Availability badge — only shown when dates are selected */}
@@ -64,19 +110,24 @@ const RoomCard = ({ room, datesActive }) => {
               {description?.length > 100 ? `${description.substring(0, 100)}...` : description}
             </p>
           </div>
+
+          {/* Suggestion 2 — Formatted price with Indian locale */}
           <p className="shrink-0 text-right">
-            <span className="block text-xl font-semibold text-luxe-bronze">Rs. {pricePerNight}</span>
+            <span className="block text-xl font-semibold text-luxe-bronze">
+              Rs. {formattedPrice}
+            </span>
             <span className="text-xs uppercase tracking-[0.2em] text-luxe-muted">per night</span>
           </p>
         </div>
 
+        {/* Suggestion 3 — Amenity icons in pills */}
         <div className="flex flex-wrap gap-2">
           {amenities?.slice(0, 3).map((amenity, idx) => (
             <span
               key={idx}
               className="rounded-full border border-luxe-border bg-luxe-smoke px-3 py-1 text-xs font-medium text-luxe-charcoal"
             >
-              {amenity}
+              {getAmenityIcon(amenity)} {amenity}
             </span>
           ))}
           {amenities?.length > 3 && (
@@ -89,6 +140,7 @@ const RoomCard = ({ room, datesActive }) => {
         <div className="flex items-center justify-between gap-4 border-t border-luxe-border pt-5">
           <p className="text-sm font-medium text-luxe-muted">Up to {maxGuests} guests</p>
 
+          {/* Suggestion 8 — Smart button label */}
           {isBooked ? (
             <span className="cursor-not-allowed rounded-full bg-luxe-muted/30 px-5 py-2.5 text-sm font-semibold text-luxe-muted">
               Unavailable
@@ -98,7 +150,7 @@ const RoomCard = ({ room, datesActive }) => {
               to={`/room/${_id}`}
               className="rounded-full bg-luxe-bronze px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-luxe-charcoal"
             >
-              {isAvailable ? "Book Now →" : "View Details"}
+              {buttonLabel}
             </Link>
           )}
         </div>
@@ -108,3 +160,5 @@ const RoomCard = ({ room, datesActive }) => {
 };
 
 export default RoomCard;
+
+

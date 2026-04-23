@@ -12,6 +12,13 @@ const tomorrow = new Date(Date.now() + 86400000).toISOString().split("T")[0];
 const ESTIMATED_CARD_HEIGHT = 520;
 const OVERSCAN_ROWS = 1;
 
+// Suggestion 6 — Sort options
+const SORT_OPTIONS = [
+  { value: "featured", label: "Featured First" },
+  { value: "price-asc", label: "Price: Low → High" },
+  { value: "price-desc", label: "Price: High → Low" },
+];
+
 const useDebouncedValue = (value, delay = 300) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
 
@@ -33,7 +40,9 @@ const Rooms = () => {
     type: "",
     minPrice: "",
     maxPrice: "",
+    minGuests: "", // Suggestion 7 — Guest count filter
   });
+  const [sortBy, setSortBy] = useState("featured"); // Suggestion 6
   const [dates, setDates] = useState({ checkIn: "", checkOut: "" });
   const [datesActive, setDatesActive] = useState(false);
   const [viewportWidth, setViewportWidth] = useState(() => window.innerWidth);
@@ -56,7 +65,13 @@ const Rooms = () => {
   }, []);
 
   const requestParams = useMemo(() => {
-    const params = { ...debouncedFilters };
+    const params = {
+      ...(debouncedFilters.type && { type: debouncedFilters.type }),
+      ...(debouncedFilters.minPrice && { minPrice: debouncedFilters.minPrice }),
+      ...(debouncedFilters.maxPrice && { maxPrice: debouncedFilters.maxPrice }),
+      // Suggestion 7 — send minGuests as maxGuests param (backend filters rooms with capacity >= value)
+      ...(debouncedFilters.minGuests && { maxGuests: debouncedFilters.minGuests }),
+    };
 
     // Only send dates if both are set and dates mode is active
     if (datesActive && debouncedDates.checkIn && debouncedDates.checkOut) {
@@ -70,6 +85,14 @@ const Rooms = () => {
   useEffect(() => {
     fetchRooms(requestParams);
   }, [fetchRooms, requestParams]);
+
+  // Suggestion 6 — Client-side sort after fetch
+  const sortedRooms = useMemo(() => {
+    const copy = [...rooms];
+    if (sortBy === "price-asc") return copy.sort((a, b) => a.pricePerNight - b.pricePerNight);
+    if (sortBy === "price-desc") return copy.sort((a, b) => b.pricePerNight - a.pricePerNight);
+    return copy; // "featured" keeps server order (isFeatured desc, pricePerNight asc)
+  }, [rooms, sortBy]);
 
   const handleFilterChange = useCallback((e) => {
     const { name, value } = e.target;
@@ -89,15 +112,56 @@ const Rooms = () => {
   }, []);
 
   const handleReset = useCallback(() => {
-    setFilters({ type: "", minPrice: "", maxPrice: "" });
+    setFilters({ type: "", minPrice: "", maxPrice: "", minGuests: "" });
     setDates({ checkIn: "", checkOut: "" });
     setDatesActive(false);
+    setSortBy("featured");
   }, []);
 
   const clearDates = useCallback(() => {
     setDates({ checkIn: "", checkOut: "" });
     setDatesActive(false);
   }, []);
+
+  // Suggestion 5 — Clear a single filter by key
+  const clearFilter = useCallback(
+    (key) => {
+      if (key === "dates") {
+        clearDates();
+      } else {
+        setFilters((prev) => ({ ...prev, [key]: "" }));
+      }
+    },
+    [clearDates]
+  );
+
+  // Suggestion 5 — Build active filter chips array
+  const activeChips = useMemo(() => {
+    const typeLabels = {
+      single: "Single",
+      double: "Double",
+      suite: "Suite",
+      deluxe: "Deluxe",
+    };
+    const chips = [];
+    if (filters.type)
+      chips.push({ key: "type", label: `Type: ${typeLabels[filters.type] ?? filters.type}` });
+    if (filters.minPrice)
+      chips.push({
+        key: "minPrice",
+        label: `Min: Rs.${Number(filters.minPrice).toLocaleString("en-IN")}`,
+      });
+    if (filters.maxPrice)
+      chips.push({
+        key: "maxPrice",
+        label: `Max: Rs.${Number(filters.maxPrice).toLocaleString("en-IN")}`,
+      });
+    if (filters.minGuests)
+      chips.push({ key: "minGuests", label: `Guests ≥ ${filters.minGuests}` });
+    if (datesActive)
+      chips.push({ key: "dates", label: `${dates.checkIn} → ${dates.checkOut}` });
+    return chips;
+  }, [filters, datesActive, dates]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -116,13 +180,13 @@ const Rooms = () => {
 
   const availableCount = useMemo(() => {
     if (!datesActive) return null;
-    return rooms.filter((room) => !room.isBookedForDates).length;
-  }, [datesActive, rooms]);
+    return sortedRooms.filter((room) => !room.isBookedForDates).length;
+  }, [datesActive, sortedRooms]);
 
-  const virtualizationEnabled = rooms.length > columnCount * 6;
+  const virtualizationEnabled = sortedRooms.length > columnCount * 6;
   const totalRows = useMemo(
-    () => Math.ceil(rooms.length / columnCount),
-    [columnCount, rooms.length]
+    () => Math.ceil(sortedRooms.length / columnCount),
+    [columnCount, sortedRooms.length]
   );
 
   const updateVirtualRange = useCallback(() => {
@@ -165,12 +229,12 @@ const Rooms = () => {
   }, [updateVirtualRange, virtualizationEnabled]);
 
   const visibleRooms = useMemo(() => {
-    if (!virtualizationEnabled) return rooms;
+    if (!virtualizationEnabled) return sortedRooms;
 
     const startIndex = virtualRange.startRow * columnCount;
     const endIndex = virtualRange.endRow * columnCount;
-    return rooms.slice(startIndex, endIndex);
-  }, [columnCount, rooms, virtualRange.endRow, virtualRange.startRow, virtualizationEnabled]);
+    return sortedRooms.slice(startIndex, endIndex);
+  }, [columnCount, sortedRooms, virtualRange.endRow, virtualRange.startRow, virtualizationEnabled]);
 
   const paddingTop = virtualizationEnabled
     ? virtualRange.startRow * ESTIMATED_CARD_HEIGHT
@@ -206,9 +270,11 @@ const Rooms = () => {
       </section>
 
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 lg:grid-cols-[300px_1fr] lg:px-8">
+        {/* ── FILTER SIDEBAR ── */}
         <aside className="h-fit rounded-[30px] border border-luxe-border bg-white p-6 shadow-[0_18px_50px_rgba(28,28,28,0.06)]">
           <h2 className="font-serif text-2xl">Filter By</h2>
 
+          {/* Date availability */}
           <div className="mt-6 rounded-2xl border border-luxe-border bg-luxe-smoke p-4">
             <p className="text-xs font-bold uppercase tracking-[0.25em] text-luxe-bronze">
               Check Availability
@@ -264,6 +330,7 @@ const Rooms = () => {
             )}
           </div>
 
+          {/* Room Type */}
           <div className="mt-6">
             <label htmlFor="type" className="text-sm font-semibold text-luxe-charcoal">
               Room Type
@@ -283,6 +350,25 @@ const Rooms = () => {
             </select>
           </div>
 
+          {/* Suggestion 7 — Minimum Guests filter */}
+          <div className="mt-6">
+            <label htmlFor="minGuests" className="text-sm font-semibold text-luxe-charcoal">
+              Minimum Guests
+            </label>
+            <input
+              type="number"
+              name="minGuests"
+              id="minGuests"
+              placeholder="e.g. 2"
+              min="1"
+              max="10"
+              value={filters.minGuests}
+              onChange={handleFilterChange}
+              className={inputClass}
+            />
+          </div>
+
+          {/* Price Range */}
           <div className="mt-6">
             <label className="text-sm font-semibold text-luxe-charcoal">
               Price Range
@@ -315,10 +401,50 @@ const Rooms = () => {
           </button>
         </aside>
 
+        {/* ── MAIN CONTENT ── */}
         <main>
+          {/* Suggestion 6 + 5 — Sort bar and active filter chips */}
+          <div className="mb-6 flex flex-wrap items-center gap-3">
+            {/* Sort dropdown */}
+            <div className="flex items-center gap-2 rounded-2xl border border-luxe-border bg-white px-4 py-2 shadow-sm">
+              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-luxe-muted">
+                Sort
+              </span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="border-none bg-transparent text-sm font-semibold text-luxe-charcoal outline-none cursor-pointer"
+              >
+                {SORT_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Suggestion 5 — Active filter chips */}
+            {activeChips.map((chip) => (
+              <span
+                key={chip.key}
+                className="flex items-center gap-1.5 rounded-full border border-luxe-bronze/30 bg-luxe-bronze/10 px-3 py-1.5 text-xs font-semibold text-luxe-bronze"
+              >
+                {chip.label}
+                <button
+                  type="button"
+                  onClick={() => clearFilter(chip.key)}
+                  className="ml-0.5 rounded-full leading-none text-luxe-bronze transition hover:text-luxe-charcoal"
+                  aria-label={`Remove ${chip.label} filter`}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+
           {loading ? (
             <Loader />
-          ) : rooms.length > 0 ? (
+          ) : sortedRooms.length > 0 ? (
             <div ref={listContainerRef}>
               {paddingTop > 0 ? <div style={{ height: paddingTop }} aria-hidden="true" /> : null}
               <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">{renderedRoomCards}</div>
@@ -327,14 +453,19 @@ const Rooms = () => {
               ) : null}
             </div>
           ) : (
+            // Suggestion 4 — Fixed empty state (removed duplicate h3, added icon + reset button)
             <div className="rounded-[30px] border border-dashed border-luxe-border bg-white px-6 py-14 text-center">
-              <h3 className="font-serif text-3xl">No rooms found</h3>
+              <p className="text-4xl">🔍</p>
+              <h3 className="mt-4 font-serif text-3xl">No rooms found</h3>
               <p className="mt-3 text-luxe-muted">
                 Try adjusting your filters or check back later.
               </p>
-
-              <h3 className="font-serif text-3xl">No rooms found</h3>
-              <p className="mt-3 text-luxe-muted">Try adjusting your filters or check back later.</p>
+              <button
+                onClick={handleReset}
+                className="mt-6 rounded-full bg-luxe-bronze px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-luxe-charcoal"
+              >
+                Reset Filters
+              </button>
             </div>
           )}
         </main>

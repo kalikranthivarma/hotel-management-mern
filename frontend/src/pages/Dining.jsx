@@ -73,7 +73,6 @@ const protectedTabs = new Set(["cart", "reserve", "orders"]);
 
 const INITIAL_VISIBLE_MENU_ITEMS = 8;
 const MENU_ITEMS_LOAD_STEP = 8;
-//performance optimization for rendering for many menu items
 const BELOW_THE_FOLD_STYLE = {
   contentVisibility: "auto",
   containIntrinsicSize: "1200px",

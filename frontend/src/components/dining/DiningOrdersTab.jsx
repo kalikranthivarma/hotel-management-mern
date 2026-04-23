@@ -90,57 +90,57 @@ export default function DiningOrdersTab({
                       new Date(a.createdAt || a.reservationTime),
                   )
                   .map((reservation) => (
-                  <div
-                    key={reservation._id}
-                    className="rounded-[24px] border border-luxe-border bg-white p-5 shadow-sm"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="font-semibold text-luxe-charcoal">
-                          Table {reservation.tableNumber}
-                        </p>
-                        <p className="text-sm text-luxe-muted">
-                          {new Date(
-                            reservation.reservationTime,
-                          ).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
-                        <span
-                          className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusClass(
-                            reservation.status,
-                            statusStyles,
-                          )}`}
-                        >
-                          {reservation.status}
-                        </span>
-                        {(reservation.status === "Pending" ||
-                          reservation.status === "Reserved" ||
-                          reservation.status === "Confirmed") && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleCancelReservation(reservation._id)
-                            }
-                            className="rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700 transition hover:bg-rose-200"
+                    <div
+                      key={reservation._id}
+                      className="rounded-[24px] border border-luxe-border bg-white p-5 shadow-sm"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="font-semibold text-luxe-charcoal">
+                            Table {reservation.tableNumber}
+                          </p>
+                          <p className="text-sm text-luxe-muted">
+                            {new Date(
+                              reservation.reservationTime,
+                            ).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+                          <span
+                            className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusClass(
+                              reservation.status,
+                              statusStyles,
+                            )}`}
                           >
-                            Cancel
-                          </button>
+                            {reservation.status}
+                          </span>
+                          {(reservation.status === "Pending" ||
+                            reservation.status === "Reserved" ||
+                            reservation.status === "Confirmed") && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleCancelReservation(reservation._id)
+                                }
+                                className="rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700 transition hover:bg-rose-200"
+                              >
+                                Cancel
+                              </button>
+                            )}
+                        </div>
+                      </div>
+                      <div className="mt-3 text-sm text-luxe-muted">
+                        {reservation.guestsCount} guests •{" "}
+                        {new Date(reservation.reservationTime).toLocaleTimeString(
+                          [],
+                          {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          },
                         )}
                       </div>
                     </div>
-                    <div className="mt-3 text-sm text-luxe-muted">
-                      {reservation.guestsCount} guests •{" "}
-                      {new Date(reservation.reservationTime).toLocaleTimeString(
-                        [],
-                        {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        },
-                      )}
-                    </div>
-                  </div>
-                ))
+                  ))
               ) : (
                 <div className="rounded-[24px] border border-dashed border-luxe-border px-5 py-8 text-center text-luxe-muted">
                   No reservations yet

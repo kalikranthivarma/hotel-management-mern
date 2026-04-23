@@ -73,6 +73,7 @@ const protectedTabs = new Set(["cart", "reserve", "orders"]);
 
 const INITIAL_VISIBLE_MENU_ITEMS = 8;
 const MENU_ITEMS_LOAD_STEP = 8;
+//performance optimization for rendering for many menu items
 const BELOW_THE_FOLD_STYLE = {
   contentVisibility: "auto",
   containIntrinsicSize: "1200px",
@@ -170,9 +171,8 @@ const MenuCard = memo(function MenuCard({
             {(item.dietaryInfo || []).map((diet) => (
               <span
                 key={`${item._id}-${diet}`}
-                className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                  badgeStyles[diet] || "bg-luxe-smoke text-luxe-charcoal"
-                }`}
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${badgeStyles[diet] || "bg-luxe-smoke text-luxe-charcoal"
+                  }`}
               >
                 {diet}
               </span>
@@ -758,11 +758,10 @@ export default function Dining() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
-                  activeTab === tab.id
-                    ? "bg-luxe-charcoal text-white shadow-lg shadow-luxe-charcoal/20"
-                    : "text-luxe-charcoal hover:bg-white"
-                }`}
+                className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${activeTab === tab.id
+                  ? "bg-luxe-charcoal text-white shadow-lg shadow-luxe-charcoal/20"
+                  : "text-luxe-charcoal hover:bg-white"
+                  }`}
               >
                 <span>{tab.icon}</span>
                 {tab.label}
@@ -823,11 +822,10 @@ export default function Dining() {
                     <button
                       key={filter}
                       onClick={() => toggleDietaryFilter(filter)}
-                      className={`rounded-full px-4 py-2 text-xs font-semibold transition-all ${
-                        dietaryFilters.includes(filter)
-                          ? "bg-luxe-bronze text-white shadow-md shadow-luxe-bronze/30"
-                          : "bg-luxe-smoke text-luxe-muted hover:text-luxe-charcoal"
-                      }`}
+                      className={`rounded-full px-4 py-2 text-xs font-semibold transition-all ${dietaryFilters.includes(filter)
+                        ? "bg-luxe-bronze text-white shadow-md shadow-luxe-bronze/30"
+                        : "bg-luxe-smoke text-luxe-muted hover:text-luxe-charcoal"
+                        }`}
                     >
                       {filter}
                     </button>
@@ -848,11 +846,10 @@ export default function Dining() {
                     key={category}
                     type="button"
                     onClick={() => setSelectedCategory(category)}
-                    className={`shrink-0 rounded-full px-5 py-2.5 text-sm font-semibold whitespace-nowrap transition ${
-                      selectedCategory === category
-                        ? "bg-luxe-charcoal text-white shadow-lg shadow-luxe-charcoal/20"
-                        : "border border-luxe-border bg-white text-luxe-charcoal hover:bg-luxe-smoke"
-                    }`}
+                    className={`shrink-0 rounded-full px-5 py-2.5 text-sm font-semibold whitespace-nowrap transition ${selectedCategory === category
+                      ? "bg-luxe-charcoal text-white shadow-lg shadow-luxe-charcoal/20"
+                      : "border border-luxe-border bg-white text-luxe-charcoal hover:bg-luxe-smoke"
+                      }`}
                   >
                     {category}
                   </button>
@@ -882,7 +879,7 @@ export default function Dining() {
                   </div>
                 </div>
               ) : (
-              <Loader />
+                <Loader />
               )
             ) : menuError ? (
               <div className="rounded-[30px] border border-dashed border-luxe-border bg-white px-6 py-14 text-center">

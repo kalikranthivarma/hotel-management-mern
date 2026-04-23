@@ -1,5 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Navbar from "./components/Navbar";
 import AdminRegister from "./pages/AdminRegister";
 import Dashboard from "./pages/Dashboard";
@@ -103,6 +105,7 @@ function App() {
           />
         </Routes>
       </main>
+      <ToastContainer position="bottom-right" theme="colored" />
     </BrowserRouter>
   );
 }

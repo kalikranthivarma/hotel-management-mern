@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { getImageUrl } from "../utils/getImageUrl";
 
-const RoomCard = ({ room, datesActive }) => {
+const RoomCard = ({ room, datesActive, lockInfo }) => {
   const { _id, title, type, pricePerNight, images, description, amenities, maxGuests, isBookedForDates } = room;
 
   const displayImage =
@@ -11,13 +11,16 @@ const RoomCard = ({ room, datesActive }) => {
 
   // Only show availability badge when user has selected dates
   const isBooked = datesActive && isBookedForDates;
-  const isAvailable = datesActive && !isBookedForDates;
+  const isLocked = datesActive && lockInfo;
+  const isAvailable = datesActive && !isBookedForDates && !lockInfo;
 
   return (
     <article
       className={`group overflow-hidden rounded-[28px] border bg-white shadow-[0_18px_50px_rgba(28,28,28,0.08)] transition hover:-translate-y-1 hover:shadow-[0_24px_70px_rgba(28,28,28,0.12)] ${
         isBooked
           ? "border-rose-200 opacity-75"
+          : isLocked
+          ? "border-amber-200"
           : "border-luxe-border"
       }`}
     >
@@ -39,10 +42,12 @@ const RoomCard = ({ room, datesActive }) => {
             className={`absolute right-4 top-4 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] ${
               isBooked
                 ? "bg-rose-500 text-white"
+                : isLocked
+                ? "bg-amber-500 text-white"
                 : "bg-emerald-500 text-white"
             }`}
           >
-            {isBooked ? "Booked" : "Available"}
+            {isBooked ? "Booked" : isLocked ? "In Selection" : "Available"}
           </div>
         )}
 
@@ -51,6 +56,15 @@ const RoomCard = ({ room, datesActive }) => {
           <div className="absolute inset-0 flex items-center justify-center bg-black/30">
             <span className="rounded-full bg-white/90 px-4 py-2 text-sm font-semibold text-rose-600">
               Not available for selected dates
+            </span>
+          </div>
+        )}
+
+        {/* Overlay for locked rooms */}
+        {isLocked && (
+          <div className="absolute inset-0 flex items-center justify-center bg-amber-900/10 backdrop-blur-[1px]">
+            <span className="rounded-full bg-white/95 px-4 py-2 text-xs font-bold text-amber-700 shadow-xl">
+               Another guest is selecting dates
             </span>
           </div>
         )}
@@ -96,9 +110,13 @@ const RoomCard = ({ room, datesActive }) => {
           ) : (
             <Link
               to={`/room/${_id}`}
-              className="rounded-full bg-luxe-bronze px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-luxe-charcoal"
+              className={`rounded-full px-5 py-2.5 text-sm font-semibold transition ${
+                isLocked 
+                ? "bg-amber-100 text-amber-700 hover:bg-amber-200" 
+                : "bg-luxe-bronze text-white hover:bg-luxe-charcoal"
+              }`}
             >
-              {isAvailable ? "Book Now →" : "View Details"}
+              {isAvailable ? "Book Now →" : isLocked ? "Join Selection" : "View Details"}
             </Link>
           )}
         </div>

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { getAllRooms } from "../api/roomApi";
 import RoomCard from "../components/RoomCard";
 import Loader from "../components/Loader";
+import socket from "../socket";
 
 const inputClass =
   "mt-2 w-full rounded-2xl border border-luxe-border bg-white px-4 py-3 outline-none transition focus:border-luxe-bronze focus:ring-4 focus:ring-luxe-bronze/10";
@@ -13,6 +14,8 @@ const tomorrow = new Date(Date.now() + 86400000).toISOString().split("T")[0];
 const Rooms = () => {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
+  // Map of roomId -> { checkIn, checkOut } for date-aware locking
+  const [roomLockDates, setRoomLockDates] = useState({});
   const [filters, setFilters] = useState({
     type: "",
     minPrice: "",
@@ -24,6 +27,49 @@ const Rooms = () => {
   useEffect(() => {
     fetchRooms();
   }, [filters, datesActive, dates]);
+
+  useEffect(() => {
+    socket.on('current_locks', (locks) => {
+      const dateMap = {};
+      Object.entries(locks).forEach(([roomId, info]) => {
+        dateMap[roomId] = { checkIn: info.checkIn, checkOut: info.checkOut };
+      });
+      setRoomLockDates(dateMap);
+    });
+
+    socket.on('room_locked', ({ roomId, checkIn, checkOut }) => {
+      setRoomLockDates((prev) => ({ ...prev, [roomId]: { checkIn, checkOut } }));
+    });
+
+    socket.on('room_unlocked', (roomId) => {
+      setRoomLockDates((prev) => {
+        const next = { ...prev };
+        delete next[roomId];
+        return next;
+      });
+    });
+
+    socket.on('room_booked', ({ roomId }) => {
+      setRooms((prev) =>
+        prev.map((r) =>
+          r._id === roomId ? { ...r, isBookedForDates: true } : r
+        )
+      );
+      setRoomLockDates((prev) => {
+        const next = { ...prev };
+        delete next[roomId];
+        return next;
+      });
+    });
+
+    return () => {
+      socket.off('current_locks');
+      socket.off('room_locked');
+      socket.off('room_unlocked');
+      socket.off('room_booked');
+    };
+  }, []);
+
 
   const fetchRooms = async () => {
     try {
@@ -43,6 +89,7 @@ const Rooms = () => {
       setLoading(false);
     }
   };
+
 
   const handleFilterChange = (e) => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
@@ -64,7 +111,10 @@ const Rooms = () => {
     setDatesActive(false);
   };
 
-  const availableCount = datesActive ? rooms.filter((r) => !r.isBookedForDates).length : null;
+  const availableCount = datesActive 
+    ? rooms.filter((r) => !r.isBookedForDates && !roomLockDates[r._id]).length 
+    : null;
+
 
   return (
     <div className="pb-14">
@@ -167,9 +217,17 @@ const Rooms = () => {
           ) : rooms.length > 0 ? (
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {rooms.map((room) => (
-                <RoomCard key={room._id} room={room} datesActive={datesActive} />
+                <RoomCard 
+                  key={room._id} 
+                  room={room} 
+                  datesActive={datesActive}
+                  selectedCheckIn={dates.checkIn}
+                  selectedCheckOut={dates.checkOut}
+                  lockInfo={roomLockDates[room._id] || null}
+                />
               ))}
             </div>
+
           ) : (
             <div className="rounded-[30px] border border-dashed border-luxe-border bg-white px-6 py-14 text-center">
               <h3 className="font-serif text-3xl">No rooms found</h3>

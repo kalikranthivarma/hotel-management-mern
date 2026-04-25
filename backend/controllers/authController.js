@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import Admin from '../models/Admin.js';
 import User from '../models/User.js';
-import generateToken from '../utils/generateToken.js';
+import generateToken, { generateRefreshToken } from '../utils/generateToken.js';
 import sendEmail from '../utils/sendEmail.js';
 
 // ─── HELPER: shared OTP + email logic ───────────────────────────────────────
@@ -152,11 +152,13 @@ const registerUserStep3 = async (req, res, next) => {
     await user.save(); // Password will be hashed by pre-save hook 
 
     const token = generateToken(user._id, user.role || 'guest');
+    const refreshToken = generateRefreshToken(user._id, user.role || 'guest');
 
     res.status(201).json({
       success: true,
       message: 'Registration completed successfully!',
       token,
+      refreshToken,
       user: {
         id: user._id,
         firstName: user.firstName,
@@ -200,11 +202,13 @@ const loginUser = async (req, res, next) => {
     }
 
     const token = generateToken(user._id, 'user');
+    const refreshToken = generateRefreshToken(user._id, 'user');
 
     res.status(200).json({
       success: true,
       message: 'Welcome back!',
       token,
+      refreshToken,
       user: {
         id: user._id,
         firstName: user.firstName,
@@ -419,11 +423,13 @@ const registerAdminStep3 = async (req, res, next) => {
     await admin.save();
 
     const token = generateToken(admin._id, 'admin');
+    const refreshToken = generateRefreshToken(admin._id, 'admin');
 
     res.status(201).json({
       success: true,
       message: 'Staff registration completed successfully!',
       token,
+      refreshToken,
       user: {
         id: admin._id,
         firstName: admin.firstName,
@@ -468,11 +474,13 @@ const loginAdmin = async (req, res, next) => {
     }
 
     const token = generateToken(admin._id, 'admin');
+    const refreshToken = generateRefreshToken(admin._id, 'admin');
 
     res.status(200).json({
       success: true,
       message: 'Welcome, Staff Member!',
       token,
+      refreshToken,
       user: {
         id: admin._id,
         firstName: admin.firstName,
@@ -555,6 +563,34 @@ const resetAdminPassword = async (req, res, next) => {
   }
 };
 
+// ─── REFRESH TOKEN CONTROLLER ───────────────────────────────────────────────────
+const refreshAccessToken = async (req, res, next) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      res.status(401);
+      throw new Error('Refresh token is required');
+    }
+
+    // Verify the refresh token
+    const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+
+    // Issue new access and refresh tokens
+    const newToken = generateToken(decoded.id, decoded.role);
+    const newRefreshToken = generateRefreshToken(decoded.id, decoded.role);
+
+    res.status(200).json({
+      success: true,
+      token: newToken,
+      refreshToken: newRefreshToken,
+    });
+  } catch (error) {
+    res.status(401);
+    next(new Error('Invalid or expired refresh token'));
+  }
+};
+
 export {
   forgotAdminPassword,
   forgotUserPassword,
@@ -564,6 +600,7 @@ export {
   registerAdminStep3,
   registerUserStep1,
   registerUserStep3,
+  refreshAccessToken,
   resetAdminPassword,
   resetUserPassword,
   verifyAdminOTP,

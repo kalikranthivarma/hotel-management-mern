@@ -183,11 +183,11 @@ const AdminReservations = () => {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
-      <header className="rounded-[34px] bg-black px-6 py-8 text-white">
-        <h1 className="text-3xl font-bold leading-none sm:text-4xl lg:text-5xl">
+      <header className="rounded-[28px] bg-black px-6 py-5 text-white">
+       <h1 className="text-2xl font-bold leading-none sm:text-3xl lg:text-4xl">
           Table Reservations
         </h1>
-        <p className="mt-4 max-w-2xl text-lg leading-8 text-white/70">
+        <p className="mt-2 max-w-2xl text-base leading-7 text-white/70">
           Manage guest table bookings, confirm arrivals, or handle cancellations.
         </p>
       </header>

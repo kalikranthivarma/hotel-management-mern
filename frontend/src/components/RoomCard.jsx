@@ -60,13 +60,10 @@ const RoomCard = ({ room, datesActive }) => {
 
   return (
     <article
-      className={`group overflow-hidden rounded-[28px] border bg-white shadow-[0_18px_50px_rgba(28,28,28,0.08)] transition hover:-translate-y-1 hover:shadow-[0_24px_70px_rgba(28,28,28,0.12)] ${
-        isBooked
-          ? "border-rose-200 opacity-75"
-          : "border-luxe-border"
-      }`}
+      className={`group overflow-hidden rounded-[28px] max-w-[315px] mx-auto border bg-white shadow-[0_18px_50px_rgba(28,28,28,0.08)] transition hover:-translate-y-1 hover:shadow-[0_24px_70px_rgba(28,28,28,0.12)] ${isBooked ? "border-rose-200 opacity-75" : "border-luxe-border"
+        }`}
     >
-      <div className="relative h-64 overflow-hidden">
+      <div className="relative aspect-[4/3] overflow-hidden">
         <img
           src={displayImage}
           alt={title}
@@ -82,11 +79,10 @@ const RoomCard = ({ room, datesActive }) => {
         {/* Availability badge — only shown when dates are selected */}
         {datesActive && (
           <div
-            className={`absolute right-4 top-4 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] ${
-              isBooked
-                ? "bg-rose-500 text-white"
-                : "bg-emerald-500 text-white"
-            }`}
+            className={`absolute right-4 top-4 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] ${isBooked
+              ? "bg-rose-500 text-white"
+              : "bg-emerald-500 text-white"
+              }`}
           >
             {isBooked ? "Booked" : "Available"}
           </div>
@@ -102,10 +98,10 @@ const RoomCard = ({ room, datesActive }) => {
         )}
       </div>
 
-      <div className="space-y-5 p-6">
+      <div className="space-y-4 p-5">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h3 className="font-serif text-2xl text-luxe-charcoal">{title}</h3>
+            <h3 className="font-serif text-xl text-luxe-charcoal">{title}</h3>
             <p className="mt-2 text-sm leading-6 text-luxe-muted">
               {description?.length > 100 ? `${description.substring(0, 100)}...` : description}
             </p>
@@ -137,7 +133,7 @@ const RoomCard = ({ room, datesActive }) => {
           )}
         </div>
 
-        <div className="flex items-center justify-between gap-4 border-t border-luxe-border pt-5">
+        <div className="flex items-center justify-between gap-4 border-t border-luxe-border pt-6">
           <p className="text-sm font-medium text-luxe-muted">Up to {maxGuests} guests</p>
 
           {/* Suggestion 8 — Smart button label */}
@@ -148,7 +144,7 @@ const RoomCard = ({ room, datesActive }) => {
           ) : (
             <Link
               to={`/room/${_id}`}
-              className="rounded-full bg-luxe-bronze px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-luxe-charcoal"
+              className="rounded-full bg-luxe-bronze px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-luxe-charcoal whitespace-nowrap"
             >
               {buttonLabel}
             </Link>

@@ -253,25 +253,10 @@ const Rooms = () => {
 
   return (
     <div className="pb-14">
-      <section className="relative overflow-hidden border-b border-luxe-border bg-luxe-charcoal px-4 py-16 text-white lg:px-8">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(212,176,138,0.28),transparent_38%)]" />
-        <div className="relative mx-auto max-w-7xl">
-          <p className="text-xs font-bold uppercase tracking-[0.35em] text-luxe-bronze-light">
-            Our Collection
-          </p>
-          <h1 className="mt-4 max-w-3xl font-serif text-5xl leading-none sm:text-6xl">
-            Elegant stays, timeless comfort
-          </h1>
-          <p className="mt-5 max-w-2xl text-lg leading-8 text-white/70">
-            Discover our curated selection of premium rooms and suites, designed to
-            provide the ideal hospitality experience.
-          </p>
-        </div>
-      </section>
 
-      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 lg:grid-cols-[300px_1fr] lg:px-8">
+      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-6 lg:grid-cols-[300px_1fr] lg:items-start lg:px-8">
         {/* ── FILTER SIDEBAR ── */}
-        <aside className="h-fit rounded-[30px] border border-luxe-border bg-white p-6 shadow-[0_18px_50px_rgba(28,28,28,0.06)]">
+        <aside className="sticky top-24 rounded-[30px] border border-luxe-border bg-white p-6 shadow-[0_18px_50px_rgba(28,28,28,0.06)]">
           <h2 className="font-serif text-2xl">Filter By</h2>
 
           {/* Date availability */}
@@ -350,49 +335,6 @@ const Rooms = () => {
             </select>
           </div>
 
-          {/* Suggestion 7 — Minimum Guests filter */}
-          <div className="mt-6">
-            <label htmlFor="minGuests" className="text-sm font-semibold text-luxe-charcoal">
-              Minimum Guests
-            </label>
-            <input
-              type="number"
-              name="minGuests"
-              id="minGuests"
-              placeholder="e.g. 2"
-              min="1"
-              max="10"
-              value={filters.minGuests}
-              onChange={handleFilterChange}
-              className={inputClass}
-            />
-          </div>
-
-          {/* Price Range */}
-          <div className="mt-6">
-            <label className="text-sm font-semibold text-luxe-charcoal">
-              Price Range
-            </label>
-            <div className="mt-2 grid grid-cols-2 gap-3">
-              <input
-                type="number"
-                name="minPrice"
-                placeholder="Min"
-                value={filters.minPrice}
-                onChange={handleFilterChange}
-                className={inputClass.replace("mt-2 ", "")}
-              />
-              <input
-                type="number"
-                name="maxPrice"
-                placeholder="Max"
-                value={filters.maxPrice}
-                onChange={handleFilterChange}
-                className={inputClass.replace("mt-2 ", "")}
-              />
-            </div>
-          </div>
-
           <button
             className="mt-6 w-full rounded-2xl border border-luxe-border px-4 py-3 font-semibold text-luxe-charcoal transition hover:bg-luxe-smoke"
             onClick={handleReset}
@@ -447,7 +389,7 @@ const Rooms = () => {
           ) : sortedRooms.length > 0 ? (
             <div ref={listContainerRef}>
               {paddingTop > 0 ? <div style={{ height: paddingTop }} aria-hidden="true" /> : null}
-              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">{renderedRoomCards}</div>
+              <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3 max-w-6xl">{renderedRoomCards}</div>
               {paddingBottom > 0 ? (
                 <div style={{ height: paddingBottom }} aria-hidden="true" />
               ) : null}

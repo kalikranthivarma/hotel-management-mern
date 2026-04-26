@@ -33,13 +33,26 @@ const AdminBookings = () => {
     }
   };
 
-  const filteredBookings = (bookings || []).filter((booking) => {
+  const filteredBookings = (bookings || [])
+  .filter((booking) => {
     const searchStr = searchTerm.toLowerCase();
-    const guestName = `${booking.user?.firstName} ${booking.user?.lastName}`.toLowerCase();
+    const guestName =
+      `${booking.user?.firstName} ${booking.user?.lastName}`.toLowerCase();
     const roomTitle = booking.room?.title?.toLowerCase() || "";
     const status = booking.status.toLowerCase();
-    return guestName.includes(searchStr) || roomTitle.includes(searchStr) || status.includes(searchStr) || booking.user?.email?.toLowerCase().includes(searchStr);
-  });
+
+    return (
+      guestName.includes(searchStr) ||
+      roomTitle.includes(searchStr) ||
+      status.includes(searchStr) ||
+      booking.user?.email?.toLowerCase().includes(searchStr)
+    );
+  })
+  .sort(
+    (a, b) =>
+      new Date(b.checkIn || 0).getTime() -
+      new Date(a.checkIn || 0).getTime()
+  );
 
   if (loading) return <Loader />;
 

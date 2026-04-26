@@ -52,22 +52,22 @@ const MENU_IMAGE_HEIGHT = 200;
 
 const MenuCard = React.memo(({ item, onEdit, onDelete, getImageUrl: resolveImageUrl }) => {
   return (
-    <article className="overflow-hidden rounded-[30px] border border-luxe-border bg-white shadow-[0_18px_50px_rgba(28,28,28,0.06)]">
+    <article className="overflow-hidden rounded-[24px] border border-luxe-border bg-white shadow-[0_18px_50px_rgba(28,28,28,0.06)]">
       <img
         src={resolveImageUrl(item.image)}
         alt={item.name}
         loading="lazy"
         width={MENU_IMAGE_WIDTH}
         height={MENU_IMAGE_HEIGHT}
-        className="h-52 w-full object-cover"
+        className="h-44 w-full object-cover"
       />
-      <div className="p-5">
+      <div className="p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-[0.24em] text-luxe-bronze">
               {item.category}
             </p>
-            <h2 className="mt-2 font-serif text-3xl leading-none">{item.name}</h2>
+            <h2 className="mt-2 font-serif text-2xl leading-none">{item.name}</h2>
           </div>
           <div className="text-right">
             <p className="font-semibold">Rs. {item.price}</p>
@@ -99,13 +99,13 @@ const MenuCard = React.memo(({ item, onEdit, onDelete, getImageUrl: resolveImage
 
         <div className="mt-5 flex gap-3">
           <button
-            className="rounded-full border border-luxe-border px-4 py-2 text-sm font-semibold hover:bg-luxe-smoke"
+            className="rounded-full border border-luxe-border px-3 py-1.5 text-sm font-semibold hover:bg-luxe-smoke"
             onClick={() => onEdit(item)}
           >
             Edit
           </button>
           <button
-            className="rounded-full border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
+            className="rounded-full border border-red-200 px-3 py-1.5 text-sm font-semibold text-red-700 hover:bg-red-50"
             onClick={() => onDelete(item._id)}
           >
             Delete
@@ -274,10 +274,10 @@ const AdminMenuManagement = () => {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
-      <header className="mb-6 flex flex-col gap-6 rounded-[34px] bg-white px-6 py-8 shadow-[0_18px_50px_rgba(28,28,28,0.06)] lg:flex-row lg:items-end lg:justify-between">
+      <header className="mb-6 flex flex-col gap-4 rounded-[28px] bg-white px-6 py-5 shadow-[0_18px_50px_rgba(28,28,28,0.06)] lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h1 className="font-serif text-5xl leading-none">Menu Management</h1>
-          <p className="mt-4 text-lg leading-8 text-luxe-muted">
+          <h1 className="font-serif text-4xl leading-none">Menu Management</h1>
+          <p className="mt-2 text-base leading-7 text-luxe-muted">
             Add, update, or remove dishes shown on the dining menu.
           </p>
         </div>
@@ -313,7 +313,7 @@ const AdminMenuManagement = () => {
         </div>
       </header>
 
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+     <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3 max-w-6xl mx-auto">
         {filteredMenuItems.map((item) => (
           <MenuCard
             key={item._id}
@@ -414,7 +414,7 @@ const AdminMenuManagement = () => {
                     {dietaryOptions.map((option) => (
                       <label
                         key={option}
-                        className="flex items-center gap-2 rounded-full border border-luxe-border bg-luxe-smoke px-4 py-2 text-sm"
+                        className="flex items-center gap-2 rounded-full border border-luxe-border bg-luxe-smoke px-3 py-1.5 text-sm"
                       >
                         <input
                           type="checkbox"
@@ -427,7 +427,7 @@ const AdminMenuManagement = () => {
                   </div>
                 </div>
 
-                <label className="flex items-center gap-3 rounded-[24px] bg-luxe-smoke px-4 py-4 text-sm font-semibold text-luxe-charcoal">
+                <label className="flex items-center gap-3 rounded-[24px] bg-luxe-smoke px-3 py-1.5 text-sm font-semibold text-luxe-charcoal">
                   <input
                     type="checkbox"
                     checked={formData.isAvailable}

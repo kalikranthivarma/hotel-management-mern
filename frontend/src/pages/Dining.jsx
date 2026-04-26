@@ -574,7 +574,7 @@ export default function Dining() {
         {activeTab === "menu" && (
           <div className="space-y-8">
 
-            {/* ✅ UPDATED: Search + Dietary filters + Category DROPDOWN */}
+            {/* Search, category, and dietary filters */}
             <div className="rounded-[30px] border border-luxe-border bg-white p-6 shadow-[0_18px_50px_rgba(28,28,28,0.06)]">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
 
@@ -598,7 +598,7 @@ export default function Dining() {
                   </div>
                 </div>
 
-                {/* ✅ Category Dropdown — replaces the pills row */}
+                {/* Category dropdown */}
                 <div className="relative">
                   <select
                     value={selectedCategory}
@@ -611,7 +611,6 @@ export default function Dining() {
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
                   </select>
-                  {/* Custom chevron icon */}
                   <svg
                     className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-luxe-muted"
                     fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -644,27 +643,7 @@ export default function Dining() {
                   </button>
                 </div>
               </div>
-<<<<<<< HEAD
-
-              <div className="mt-6 flex gap-3 overflow-x-auto pb-2">
-                {categories.map((category) => (
-                  <button
-                    key={category}
-                    type="button"
-                    onClick={() => setSelectedCategory(category)}
-                    className={`shrink-0 rounded-full px-5 py-2.5 text-sm font-semibold whitespace-nowrap transition ${selectedCategory === category
-                      ? "bg-luxe-charcoal text-white shadow-lg shadow-luxe-charcoal/20"
-                      : "border border-luxe-border bg-white text-luxe-charcoal hover:bg-luxe-smoke"
-                      }`}
-                  >
-                    {category}
-                  </button>
-                ))}
-              </div>
-=======
->>>>>>> d942895ce6de60a7ef4db51895dc77c9bdd415fe
             </div>
-            {/* END filter card */}
 
             {/* Menu grid */}
             {!shouldLoadMenu || loadingMenu ? (

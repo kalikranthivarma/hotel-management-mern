@@ -213,11 +213,10 @@ export default function DiningCartTab({
 
                 {orderMessage.text && (
                   <div
-                    className={`mt-4 rounded-xl p-5 text-sm font-medium ${
-                      orderMessage.type === "success"
+                    className={`mt-4 rounded-xl p-5 text-sm font-medium ${orderMessage.type === "success"
                         ? "bg-emerald-50 text-emerald-700"
                         : "bg-rose-50 text-rose-700"
-                    }`}
+                      }`}
                   >
                     <div className="flex flex-col gap-3">
                       <p>{orderMessage.text}</p>

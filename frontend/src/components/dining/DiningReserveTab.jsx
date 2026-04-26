@@ -61,11 +61,10 @@ export default function DiningReserveTab({
                 <button
                   key={table._id}
                   type="button"
-                  className={`text-left cursor-pointer rounded-[24px] border-2 p-5 transition-all ${
-                    reservationForm.tableNumber === table.tableNumber.toString()
-                      ? "border-luxe-bronze bg-luxe-bronze/5 shadow-lg"
-                      : "border-luxe-border bg-white hover:border-luxe-bronze/50"
-                  }`}
+                  className={`text-left cursor-pointer rounded-[24px] border-2 p-5 transition-all ${reservationForm.tableNumber === table.tableNumber.toString()
+                    ? "border-luxe-bronze bg-luxe-bronze/5 shadow-lg"
+                    : "border-luxe-border bg-white hover:border-luxe-bronze/50"
+                    }`}
                   onClick={() =>
                     setReservationForm((prev) => ({
                       ...prev,
@@ -200,11 +199,10 @@ export default function DiningReserveTab({
 
               {reserveMessage.text && (
                 <div
-                  className={`mt-4 rounded-xl p-5 text-sm font-medium ${
-                    reserveMessage.type === "success"
-                      ? "bg-emerald-50 text-emerald-700"
-                      : "bg-rose-50 text-rose-700"
-                  }`}
+                  className={`mt-4 rounded-xl p-5 text-sm font-medium ${reserveMessage.type === "success"
+                    ? "bg-emerald-50 text-emerald-700"
+                    : "bg-rose-50 text-rose-700"
+                    }`}
                 >
                   <div className="flex flex-col gap-3">
                     <p>{reserveMessage.text}</p>

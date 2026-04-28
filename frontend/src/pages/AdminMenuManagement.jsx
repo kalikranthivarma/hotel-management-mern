@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import useDebounce from "../hooks/useDebounce";
 import {
   createMenuItem,
   deleteMenuItem,
@@ -34,7 +35,7 @@ const dietaryOptions = ["Veg", "Non-Veg", "Vegan", "Gluten-Free", "Spicy"];
 const inputClass =
   "mt-2 w-full rounded-2xl border border-luxe-border bg-luxe-smoke px-4 py-3 outline-none transition focus:border-luxe-bronze focus:bg-white focus:ring-4 focus:ring-luxe-bronze/10";
 
-const getImageUrl = (imagePath) => {
+const getImageUrl = (imagePath, { width, height, fit } = {}) => {
   if (!imagePath) {
     return "https://images.unsplash.com/photo-1544025162-d76694265947?w=300&q=80";
   }
@@ -44,7 +45,11 @@ const getImageUrl = (imagePath) => {
   }
 
   const baseUrl = api.defaults.baseURL?.replace(/\/api$/, "") || "";
-  return `${baseUrl}${imagePath}`;
+  const imageUrl = new URL(`${baseUrl}${imagePath}`, window.location.origin);
+  if (width) imageUrl.searchParams.set("w", String(width));
+  if (height) imageUrl.searchParams.set("h", String(height));
+  if (fit) imageUrl.searchParams.set("fit", fit);
+  return imageUrl.toString();
 };
 
 const MENU_IMAGE_WIDTH = 300;
@@ -54,7 +59,11 @@ const MenuCard = React.memo(({ item, onEdit, onDelete, getImageUrl: resolveImage
   return (
     <article className="overflow-hidden rounded-[24px] border border-luxe-border bg-white shadow-[0_18px_50px_rgba(28,28,28,0.06)]">
       <img
-        src={resolveImageUrl(item.image)}
+        src={resolveImageUrl(item.image, {
+          width: MENU_IMAGE_WIDTH * 2,
+          height: MENU_IMAGE_HEIGHT * 2,
+          fit: "cover",
+        })}
         alt={item.name}
         loading="lazy"
         width={MENU_IMAGE_WIDTH}
@@ -116,6 +125,30 @@ const MenuCard = React.memo(({ item, onEdit, onDelete, getImageUrl: resolveImage
   );
 });
 
+const MenuCardSkeleton = () => (
+  <div className="animate-pulse overflow-hidden rounded-[24px] border border-luxe-border bg-white shadow-sm">
+    <div className="h-44 w-full bg-luxe-smoke" />
+    <div className="p-4">
+      <div className="flex items-start justify-between">
+        <div className="w-1/2 space-y-2">
+          <div className="h-2 w-1/3 bg-luxe-smoke rounded" />
+          <div className="h-6 w-full bg-luxe-smoke rounded" />
+        </div>
+        <div className="w-1/4 h-6 bg-luxe-smoke rounded" />
+      </div>
+      <div className="mt-4 h-12 w-full bg-luxe-smoke rounded" />
+      <div className="mt-4 flex gap-2">
+        <div className="h-6 w-12 bg-luxe-smoke rounded-full" />
+        <div className="h-6 w-12 bg-luxe-smoke rounded-full" />
+      </div>
+      <div className="mt-5 flex gap-3">
+        <div className="h-8 w-16 bg-luxe-smoke rounded-full" />
+        <div className="h-8 w-16 bg-luxe-smoke rounded-full" />
+      </div>
+    </div>
+  </div>
+);
+
 const AdminMenuManagement = () => {
   const [menuItems, setMenuItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -124,6 +157,7 @@ const AdminMenuManagement = () => {
   const [editingItem, setEditingItem] = useState(null);
   const [formData, setFormData] = useState(emptyFormData);
   const menuCacheRef = useRef(null);
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   const fetchMenuItems = useCallback(async () => {
     try {
@@ -244,20 +278,23 @@ const AdminMenuManagement = () => {
       return;
     }
 
+    // Optimistic Update
+    const previousItems = [...menuItems];
+    setMenuItems((prev) => prev.filter((item) => item._id !== id));
+    menuCacheRef.current = menuCacheRef.current?.filter((item) => item._id !== id);
+
     try {
       await deleteMenuItem(id);
-      setMenuItems((prev) => {
-        const nextItems = prev.filter((item) => item._id !== id);
-        menuCacheRef.current = nextItems;
-        return nextItems;
-      });
     } catch (error) {
+      // Rollback on error
+      setMenuItems(previousItems);
+      menuCacheRef.current = previousItems;
       alert(error.response?.data?.message || "Failed to delete menu item.");
     }
-  }, []);
+  }, [menuItems]);
 
   const filteredMenuItems = useMemo(() => {
-    const normalizedSearch = searchTerm.toLowerCase();
+    const normalizedSearch = debouncedSearchTerm.toLowerCase();
 
     return menuItems.filter((item) => {
       return (
@@ -266,11 +303,8 @@ const AdminMenuManagement = () => {
         item.description?.toLowerCase().includes(normalizedSearch)
       );
     });
-  }, [menuItems, searchTerm]);
+  }, [menuItems, debouncedSearchTerm]);
 
-  if (loading) {
-    return <Loader />;
-  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
@@ -314,15 +348,25 @@ const AdminMenuManagement = () => {
       </header>
 
      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3 max-w-6xl mx-auto">
-        {filteredMenuItems.map((item) => (
-          <MenuCard
-            key={item._id}
-            item={item}
-            onEdit={handleOpenModal}
-            onDelete={handleDelete}
-            getImageUrl={getImageUrl}
-          />
-        ))}
+        {loading ? (
+          Array.from({ length: 6 }).map((_, i) => (
+            <MenuCardSkeleton key={`skeleton-${i}`} />
+          ))
+        ) : filteredMenuItems.length > 0 ? (
+          filteredMenuItems.map((item) => (
+            <MenuCard
+              key={item._id}
+              item={item}
+              onEdit={handleOpenModal}
+              onDelete={handleDelete}
+              getImageUrl={getImageUrl}
+            />
+          ))
+        ) : (
+          <div className="col-span-full py-20 text-center">
+            <p className="text-xl text-luxe-muted">No menu items found.</p>
+          </div>
+        )}
       </div>
 
       {showModal ? (
@@ -381,12 +425,12 @@ const AdminMenuManagement = () => {
                   Image
                   <input
                     type="file"
-                    accept="image/webp"
+                    accept="image/jpeg,image/png,image/webp"
                     onChange={(event) => {
                       const file = event.target.files?.[0];
                       if (file) {
-                        if (file.type !== "image/webp") {
-                          alert("Please upload only WebP images.");
+                        if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+                          alert("Please upload a JPG, PNG, or WebP image.");
                           event.target.value = "";
                           return;
                         }

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import useDebounce from "../hooks/useDebounce";
 import {
   createDiningTable,
   deleteDiningTable,
@@ -117,6 +118,25 @@ const TableCard = React.memo(({ table, onEdit, onDelete }) => {
     </article>
   );
 });
+
+const TableCardSkeleton = () => (
+  <div className="animate-pulse overflow-hidden rounded-[28px] border border-luxe-border bg-white shadow-sm">
+    <div className="h-1 w-full bg-luxe-smoke" />
+    <div className="p-5">
+      <div className="flex items-start justify-between">
+        <div className="h-12 w-12 rounded-2xl bg-luxe-smoke" />
+        <div className="h-6 w-20 rounded-full bg-luxe-smoke" />
+      </div>
+      <div className="mt-4 h-10 w-full bg-luxe-smoke rounded" />
+      <div className="mt-3 h-10 w-full bg-luxe-smoke rounded" />
+      <div className="mt-4 h-1.5 w-full bg-luxe-smoke rounded-full" />
+      <div className="mt-5 flex gap-2">
+        <div className="h-10 flex-1 bg-luxe-smoke rounded-xl" />
+        <div className="h-10 w-16 bg-luxe-smoke rounded-xl" />
+      </div>
+    </div>
+  </div>
+);
 
 // ── TableModal ────────────────────────────────────────────────────────────────
 const TableModal = ({ editingTable, formData, submitting, error, onClose, onChange, onSubmit }) => {
@@ -292,6 +312,7 @@ const AdminTableManagement = () => {
   const [error, setError]               = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [searchTerm, setSearchTerm]     = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   const fetchTables = useCallback(async () => {
     try {
@@ -378,27 +399,32 @@ const AdminTableManagement = () => {
 
   const handleDelete = useCallback(async (tableId) => {
     if (!window.confirm("Are you sure you want to delete this table? This action cannot be undone.")) return;
+    
+    // Optimistic Update
+    const previousTables = [...tables];
+    setTables((prev) => prev.filter((t) => t._id !== tableId));
+
     try {
       await deleteDiningTable(tableId);
-      setTables((prev) => prev.filter((t) => t._id !== tableId));
     } catch (err) {
+      // Rollback
+      setTables(previousTables);
       alert(err.response?.data?.message || "Failed to delete table.");
     }
-  }, []);
+  }, [tables]);
 
   // ✅ stats kept in code for filter counts but NO stat cards rendered
   const filteredTables = useMemo(() =>
     tables.filter((t) => {
       const matchStatus = statusFilter === "All" || t.status === statusFilter;
-      const q = searchTerm.toLowerCase();
+      const q = debouncedSearchTerm.toLowerCase();
       const matchSearch = !q ||
         t.tableNumber.toLowerCase().includes(q) ||
         t.location.toLowerCase().includes(q);
       return matchStatus && matchSearch;
     }),
-  [tables, statusFilter, searchTerm]);
+  [tables, statusFilter, debouncedSearchTerm]);
 
-  if (loading) return <Loader />;
 
   return (
     <>
@@ -478,7 +504,13 @@ const AdminTableManagement = () => {
         )}
 
         {/* ── Cards grid ── */}
-        {filteredTables.length > 0 ? (
+        {loading ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <TableCardSkeleton key={`skeleton-${i}`} />
+            ))}
+          </div>
+        ) : filteredTables.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredTables.map((table) => (
               <TableCard

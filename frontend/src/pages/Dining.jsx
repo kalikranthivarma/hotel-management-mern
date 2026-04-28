@@ -377,7 +377,7 @@ export default function Dining() {
     setOrderForm((prev) => ({ ...prev, roomNumber: "", tableNumber: "", specialInstructions: "" }));
   }, []);
 
-  const handleOrderInputChange = (event) => {
+  const handleOrderInputChange = useCallback((event) => {
     const { name, value } = event.target;
     setOrderForm((prev) => ({
       ...prev,
@@ -385,17 +385,17 @@ export default function Dining() {
       ...(name === "orderType" && value === "Room Service" ? { tableNumber: "" } : {}),
       ...(name === "orderType" && value === "In-Restaurant" ? { roomNumber: "" } : {}),
     }));
-  };
+  }, []);
 
-  const handleReservationInputChange = (event) => {
+  const handleReservationInputChange = useCallback((event) => {
     const { name, value } = event.target;
     setReservationForm((prev) => ({
       ...prev,
       [name]: name === "guestsCount" ? Number(value) : value,
     }));
-  };
+  }, []);
 
-  const handlePlaceOrder = async (event) => {
+  const handlePlaceOrder = useCallback(async (event) => {
     event.preventDefault();
     if (submittingOrder) return;
     setOrderMessage({ text: "", type: "" });
@@ -426,9 +426,9 @@ export default function Dining() {
     } finally {
       setSubmittingOrder(false);
     }
-  };
+  }, [cart, clearCart, orderForm, submittingOrder, user]);
 
-  const handleReserveTable = async (event) => {
+  const handleReserveTable = useCallback(async (event) => {
     event.preventDefault();
     setReserveMessage({ text: "", type: "" });
     if (!user) { setReserveMessage({ text: "Please log in to reserve a table.", type: "error" }); return; }
@@ -456,9 +456,9 @@ export default function Dining() {
     } finally {
       setSubmittingReservation(false);
     }
-  };
+  }, [reservationForm, user]);
 
-  const handleCancelOrder = async (orderId) => {
+  const handleCancelOrder = useCallback(async (orderId) => {
     if (!window.confirm("Are you sure you want to cancel this order?")) return;
     try {
       const response = await cancelDiningOrder(orderId);
@@ -471,9 +471,9 @@ export default function Dining() {
       console.error("Failed to cancel order:", error);
       setPageMessage(error.response?.data?.message || "Unable to cancel the order.");
     }
-  };
+  }, []);
 
-  const handleCancelReservation = async (resId) => {
+  const handleCancelReservation = useCallback(async (resId) => {
     if (!window.confirm("Are you sure you want to cancel this reservation?")) return;
     try {
       const response = await cancelDiningReservation(resId);
@@ -490,9 +490,9 @@ export default function Dining() {
       setPageMessage(error.response?.data?.message || "Unable to cancel the reservation.");
       toast.error(error.response?.data?.message || "Failed to cancel.");
     }
-  };
+  }, []);
 
-  const canCancelOrder = (order) => {
+  const canCancelOrder = useCallback((order) => {
     const orderTime = new Date(order.createdAt);
     const now = new Date();
     const timeDiff = now - orderTime;
@@ -503,7 +503,7 @@ export default function Dining() {
       order.status !== "Served" &&
       timeDiff <= thirtyMinutes
     );
-  };
+  }, []);
 
   const canCancelReservation = useCallback((reservation) => {
     const cancellableStatuses = new Set(["Pending", "Reserved", "Confirmed"]);

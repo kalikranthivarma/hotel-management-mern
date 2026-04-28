@@ -268,7 +268,29 @@ const ManageRooms = () => {
                 </label>
                 <label className="block text-sm font-semibold text-luxe-charcoal md:col-span-2">
                   Room Image
-                  <input type="file" accept="image/*" onChange={(e) => setFormData({ ...formData, imageFile: e.target.files?.[0] || null })} className={inputClass} />
+                  <input
+                    type="file"
+                    accept="image/webp"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        if (file.type !== "image/webp") {
+                          alert("Please upload only WebP images.");
+                          e.target.value = "";
+                          return;
+                        }
+                        if (file.size > 1024 * 1024) {
+                          alert("File size must be below 1MB.");
+                          e.target.value = "";
+                          return;
+                        }
+                        setFormData({ ...formData, imageFile: file });
+                      } else {
+                        setFormData({ ...formData, imageFile: null });
+                      }
+                    }}
+                    className={inputClass}
+                  />
                 </label>
               </div>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">

@@ -1,7 +1,66 @@
-import { useEffect } from "react";
+import { memo, useCallback, useEffect, useMemo } from "react";
 import { toast } from "react-toastify";
 
-export default function DiningCartTab({
+const CartItem = memo(function CartItem({
+  formatCurrency,
+  getImageUrl,
+  item,
+  updateCart,
+}) {
+  const handleDecrement = useCallback(() => {
+    updateCart(item, -1);
+  }, [item, updateCart]);
+
+  const handleIncrement = useCallback(() => {
+    updateCart(item, 1);
+  }, [item, updateCart]);
+
+  return (
+    <div className="flex items-center gap-4 rounded-[24px] border border-luxe-border bg-white p-4 shadow-sm">
+      <img
+        src={getImageUrl(item.image)}
+        alt={item.name}
+        className="h-16 w-16 rounded-xl object-cover"
+        decoding="async"
+        height="64"
+        loading="lazy"
+        width="64"
+      />
+      <div className="min-w-0 flex-1">
+        <h3 className="font-semibold text-luxe-charcoal">{item.name}</h3>
+        <p className="text-sm text-luxe-muted">
+          {formatCurrency(item.price)} each
+        </p>
+      </div>
+      <div className="flex items-center gap-3">
+        <div className="flex items-center rounded-full border border-luxe-border bg-luxe-smoke p-1">
+          <button
+            type="button"
+            onClick={handleDecrement}
+            className="h-6 w-6 rounded-full text-xs text-luxe-charcoal transition hover:bg-white"
+          >
+            -
+          </button>
+          <span className="min-w-6 text-center text-xs font-semibold">
+            {item.quantity}
+          </span>
+          <button
+            type="button"
+            onClick={handleIncrement}
+            className="h-6 w-6 rounded-full text-xs text-luxe-charcoal transition hover:bg-white"
+          >
+            +
+          </button>
+        </div>
+        <span className="text-sm font-semibold text-luxe-charcoal">
+          {formatCurrency(item.price * item.quantity)}
+        </span>
+      </div>
+    </div>
+  );
+});
+
+function DiningCartTab({
   cart,
   clearCart,
   formatCurrency,
@@ -19,15 +78,29 @@ export default function DiningCartTab({
   tables,
   setActiveTab,
 }) {
+  const tableOptions = useMemo(
+    () =>
+      tables.map((table) => (
+        <option key={table._id} value={table.tableNumber}>
+          Table {table.tableNumber}
+        </option>
+      )),
+    [tables],
+  );
+
+  const handleViewOrders = useCallback(() => {
+    setActiveTab("orders");
+  }, [setActiveTab]);
+
   useEffect(() => {
     if (orderMessage.type === "success") {
       toast.success("Order Placed Successfully!");
       const timer = setTimeout(() => {
-        setActiveTab("orders");
+        handleViewOrders();
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [orderMessage, setActiveTab]);
+  }, [handleViewOrders, orderMessage.type]);
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_400px]">
@@ -42,50 +115,13 @@ export default function DiningCartTab({
         {cart.length > 0 ? (
           <div className="space-y-4">
             {cart.map((item) => (
-              <div
+              <CartItem
                 key={item._id}
-                className="flex items-center gap-4 rounded-[24px] border border-luxe-border bg-white p-4 shadow-sm"
-              >
-                <img
-                  src={getImageUrl(item.image)}
-                  alt={item.name}
-                  className="h-16 w-16 rounded-xl object-cover"
-                  decoding="async"
-                  loading="lazy"
-                />
-                <div className="min-w-0 flex-1">
-                  <h3 className="font-semibold text-luxe-charcoal">
-                    {item.name}
-                  </h3>
-                  <p className="text-sm text-luxe-muted">
-                    {formatCurrency(item.price)} each
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center rounded-full border border-luxe-border bg-luxe-smoke p-1">
-                    <button
-                      type="button"
-                      onClick={() => updateCart(item, -1)}
-                      className="h-6 w-6 rounded-full text-xs text-luxe-charcoal transition hover:bg-white"
-                    >
-                      -
-                    </button>
-                    <span className="min-w-6 text-center text-xs font-semibold">
-                      {item.quantity}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => updateCart(item, 1)}
-                      className="h-6 w-6 rounded-full text-xs text-luxe-charcoal transition hover:bg-white"
-                    >
-                      +
-                    </button>
-                  </div>
-                  <span className="text-sm font-semibold text-luxe-charcoal">
-                    {formatCurrency(item.price * item.quantity)}
-                  </span>
-                </div>
-              </div>
+                formatCurrency={formatCurrency}
+                getImageUrl={getImageUrl}
+                item={item}
+                updateCart={updateCart}
+              />
             ))}
           </div>
         ) : (
@@ -155,11 +191,7 @@ export default function DiningCartTab({
                       className={inputClass}
                     >
                       <option value="">Select a table</option>
-                      {tables.map((table) => (
-                        <option key={table._id} value={table.tableNumber}>
-                          Table {table.tableNumber}
-                        </option>
-                      ))}
+                      {tableOptions}
                     </select>
                   </div>
                 )}
@@ -223,7 +255,7 @@ export default function DiningCartTab({
                       {orderMessage.type === "success" && (
                         <button
                           type="button"
-                          onClick={() => setActiveTab("orders")}
+                          onClick={handleViewOrders}
                           className="w-fit rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-emerald-700"
                         >
                           View My Orders
@@ -246,3 +278,5 @@ export default function DiningCartTab({
     </div>
   );
 }
+
+export default memo(DiningCartTab);

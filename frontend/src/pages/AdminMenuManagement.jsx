@@ -381,13 +381,31 @@ const AdminMenuManagement = () => {
                   Image
                   <input
                     type="file"
-                    accept="image/*"
-                    onChange={(event) =>
-                      setFormData({
-                        ...formData,
-                        imageFile: event.target.files?.[0] || null,
-                      })
-                    }
+                    accept="image/webp"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (file) {
+                        if (file.type !== "image/webp") {
+                          alert("Please upload only WebP images.");
+                          event.target.value = "";
+                          return;
+                        }
+                        if (file.size > 1024 * 1024) {
+                          alert("File size must be below 1MB.");
+                          event.target.value = "";
+                          return;
+                        }
+                        setFormData({
+                          ...formData,
+                          imageFile: file,
+                        });
+                      } else {
+                        setFormData({
+                          ...formData,
+                          imageFile: null,
+                        });
+                      }
+                    }}
                     className={inputClass}
                   />
                 </label>

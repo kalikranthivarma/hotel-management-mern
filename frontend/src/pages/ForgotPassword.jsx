@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { forgotPassword } from "../api/authApi";
 
 const inputClass =
@@ -7,6 +7,7 @@ const inputClass =
 
 const ForgotPassword = () => {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -33,8 +34,13 @@ const ForgotPassword = () => {
         },
         role,
       );
-      setSuccess(data?.message || "Reset link sent to your email.");
+      setSuccess(data?.message || "OTP sent to your email.");
       setEmail("");
+      
+      // Navigate to reset password page after 2 seconds
+      setTimeout(() => {
+        navigate(isAdmin ? "/admin/reset-password" : "/user/reset-password");
+      }, 2000);
     } catch (submitError) {
       setError(submitError.response?.data?.message || submitError.message || "Failed to send reset link.");
     } finally {
@@ -49,10 +55,10 @@ const ForgotPassword = () => {
         onSubmit={handleSubmit}
       >
         <p className="text-xs font-bold uppercase tracking-[0.35em] text-luxe-bronze">Forgot Password</p>
-        <h1 className="mt-4 font-serif text-4xl sm:text-5xl">Request reset link</h1>
+        <h1 className="mt-4 font-serif text-4xl sm:text-5xl">Request reset OTP</h1>
         <p className="mt-4 text-base leading-8 text-luxe-muted">
-          Enter your registered {isAdmin ? "staff" : "guest"} email and the backend will send a
-          reset link.
+          Enter your registered {isAdmin ? "staff" : "guest"} email and we will send you a 6-digit
+          OTP to reset your password.
         </p>
 
         <label className="mt-6 block text-sm font-semibold text-luxe-charcoal">
@@ -77,12 +83,12 @@ const ForgotPassword = () => {
           className="mt-6 w-full rounded-2xl bg-luxe-bronze px-5 py-3.5 font-semibold text-white transition hover:bg-luxe-charcoal disabled:cursor-wait disabled:opacity-70"
           disabled={isSubmitting}
         >
-          {isSubmitting ? "Sending link..." : "Send reset link"}
+          {isSubmitting ? "Sending OTP..." : "Send reset OTP"}
         </button>
 
         {success ? (
           <p className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-            {success}
+            {success} Redirecting to reset page...
           </p>
         ) : null}
         {error ? (

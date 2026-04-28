@@ -9,7 +9,9 @@ import {
   useRef,
   useState,
 } from "react";
+import { startTransition } from "react";
 import { useSelector } from "react-redux";
+
 import Loader from "../components/Loader";
 import {
   bookDiningTable,
@@ -116,6 +118,8 @@ const MenuCard = memo(function MenuCard({
           <img
             src={getImageUrl(item.image)}
             alt={item.name}
+            width="315"
+            height="205"
             className="h-full w-full object-cover transition-transform group-hover:scale-105"
             decoding={isPriority ? "sync" : "async"}
             fetchPriority={isPriority ? "high" : "auto"}
@@ -536,10 +540,10 @@ export default function Dining() {
         <div className="mb-4 flex flex-col items-center gap-3">
           <div className="flex flex-wrap justify-center gap-2 rounded-2xl bg-luxe-smoke p-1">
             {[
-              { id: "menu",    label: "Browse Menu",           icon: "🍽️" },
-              { id: "cart",    label: `Cart (${cart.length})`, icon: "🛒" },
-              { id: "reserve", label: "Reserve Table",         icon: "📅" },
-              { id: "orders",  label: "My Orders",             icon: "📋" },
+              { id: "menu", label: "Browse Menu", icon: "🍽️" },
+              { id: "cart", label: `Cart (${cart.length})`, icon: "🛒" },
+              { id: "reserve", label: "Reserve Table", icon: "📅" },
+              { id: "orders", label: "My Orders", icon: "📋" },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -585,7 +589,11 @@ export default function Dining() {
                       type="text"
                       placeholder="Search for dishes..."
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onChange={(e) => {
+                        startTransition(() => {
+                          setSearchQuery(e.target.value);
+                        });
+                      }}
                       className="w-full rounded-2xl border border-luxe-border bg-luxe-smoke py-3 pl-11 pr-4 text-sm outline-none transition focus:border-luxe-bronze focus:bg-white focus:ring-4 focus:ring-luxe-bronze/10"
                     />
                     <svg
@@ -674,30 +682,27 @@ export default function Dining() {
               </div>
             ) : filteredMenuItems.length > 0 ? (
               <div className="space-y-6">
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 max-w-5xl mx-auto">
-                  {visibleMenuItems.map((item) => (
+                <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                  {visibleMenuItems.map((item, i) => (
                     <MenuCard
                       key={item._id}
-                      isPriority={item._id === visibleMenuItems[0]?._id}
+                      isPriority={i < 4}
                       item={item}
                       quantity={cartMap.get(item._id)?.quantity || 0}
                       onUpdateCart={updateCart}
                     />
                   ))}
                 </div>
-
                 {hasMoreMenuItems && (
-                  <div className="flex justify-center">
+                  <div className="flex justify-center pt-2">
                     <button
                       type="button"
                       onClick={() =>
-                        setVisibleMenuItemCount((prev) =>
-                          Math.min(prev + MENU_ITEMS_LOAD_STEP, filteredMenuItems.length),
-                        )
+                        setVisibleMenuItemCount((c) => c + MENU_ITEMS_LOAD_STEP)
                       }
-                      className="rounded-full border border-luxe-border bg-white px-6 py-3 text-sm font-semibold text-luxe-charcoal transition hover:bg-luxe-smoke"
+                      className="rounded-full border border-luxe-border bg-white px-8 py-3 text-sm font-semibold text-luxe-charcoal shadow-sm transition hover:border-luxe-bronze hover:text-luxe-bronze"
                     >
-                      Load more dishes
+                      Load more ({filteredMenuItems.length - visibleMenuItemCount} remaining)
                     </button>
                   </div>
                 )}

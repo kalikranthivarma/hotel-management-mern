@@ -43,5 +43,5 @@ export const resendVerification = (data) =>
 export const forgotPassword = (data, role = "user") =>
   axios.post(`/auth/${role}/forgot-password`, data);
 
-export const resetPassword = (token, data, role = "user") =>
-  axios.put(`/auth/${role}/reset-password/${token}`, data);
+export const resetPassword = (data, role = "user") =>
+  axios.post(`/auth/${role}/reset-password`, data);

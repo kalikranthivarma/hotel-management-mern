@@ -64,11 +64,11 @@ function App() {
               element={<VerifyEmail />}
             />
             <Route
-              path="/user/reset-password/:token"
+              path="/user/reset-password"
               element={<ResetPassword />}
             />
             <Route
-              path="/admin/reset-password/:token"
+              path="/admin/reset-password"
               element={<ResetPassword />}
             />
             <Route path="/rooms" element={<RoomsEntryRoute />} />

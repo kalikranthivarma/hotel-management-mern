@@ -1,14 +1,15 @@
 import { useState } from "react";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { resetPassword } from "../api/authApi";
 
 const inputClass =
   "mt-2 w-full rounded-2xl border border-luxe-border bg-luxe-smoke px-4 py-3 outline-none transition focus:border-luxe-bronze focus:bg-white focus:ring-4 focus:ring-luxe-bronze/10";
 
 const ResetPassword = () => {
-  const { token } = useParams();
   const { pathname } = useLocation();
   const [formData, setFormData] = useState({
+    email: "",
+    otp: "",
     password: "",
     confirmPassword: "",
   });
@@ -33,12 +34,14 @@ const ResetPassword = () => {
     setError("");
     setSuccess("");
 
-    if (!formData.password.trim() || !formData.confirmPassword.trim()) {
-      setError("Please enter and confirm your new password.");
+    const { email, otp, password, confirmPassword } = formData;
+
+    if (!email.trim() || !otp.trim() || !password.trim() || !confirmPassword.trim()) {
+      setError("Please fill in all fields.");
       return;
     }
 
-    if (formData.password !== formData.confirmPassword) {
+    if (password !== confirmPassword) {
       setError("Passwords do not match.");
       return;
     }
@@ -47,15 +50,18 @@ const ResetPassword = () => {
 
     try {
       const { data } = await resetPassword(
-        token,
         {
-          password: formData.password,
-          confirmPassword: formData.confirmPassword,
+          email: email.trim(),
+          otp: otp.trim(),
+          password,
+          confirmPassword,
         },
         role,
       );
       setSuccess(data?.message || "Password updated successfully.");
       setFormData({
+        email: "",
+        otp: "",
         password: "",
         confirmPassword: "",
       });
@@ -75,38 +81,66 @@ const ResetPassword = () => {
         <p className="text-xs font-bold uppercase tracking-[0.35em] text-luxe-bronze">Reset Password</p>
         <h1 className="mt-4 font-serif text-4xl sm:text-5xl">Create a new password</h1>
         <p className="mt-4 text-base leading-8 text-luxe-muted">
-          This page uses the real backend {accountLabel} reset-password token API.
+          Enter your registered email, the OTP sent to you, and your new password.
         </p>
 
-        <label className="mt-6 block text-sm font-semibold text-luxe-charcoal">
-          New password
-          <input
-            type="password"
-            name="password"
-            autoComplete="new-password"
-            placeholder="Enter new password"
-            value={formData.password}
-            onChange={handleChange}
-            className={inputClass}
-          />
-        </label>
+        <div className="mt-6 space-y-5">
+          <label className="block text-sm font-semibold text-luxe-charcoal">
+            Email address
+            <input
+              type="email"
+              name="email"
+              autoComplete="email"
+              placeholder="name@example.com"
+              value={formData.email}
+              onChange={handleChange}
+              className={inputClass}
+            />
+          </label>
 
-        <label className="mt-5 block text-sm font-semibold text-luxe-charcoal">
-          Confirm new password
-          <input
-            type="password"
-            name="confirmPassword"
-            autoComplete="new-password"
-            placeholder="Confirm new password"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            className={inputClass}
-          />
-        </label>
+          <label className="block text-sm font-semibold text-luxe-charcoal">
+            OTP Code
+            <input
+              type="text"
+              name="otp"
+              placeholder="Enter 6-digit OTP"
+              maxLength="6"
+              value={formData.otp}
+              onChange={handleChange}
+              className={inputClass}
+            />
+          </label>
+
+          <label className="block text-sm font-semibold text-luxe-charcoal">
+            New password
+            <input
+              type="password"
+              name="password"
+              autoComplete="new-password"
+              placeholder="Enter new password"
+              value={formData.password}
+              onChange={handleChange}
+              className={inputClass}
+            />
+          </label>
+
+          <label className="block text-sm font-semibold text-luxe-charcoal">
+            Confirm new password
+            <input
+              type="password"
+              name="confirmPassword"
+              autoComplete="new-password"
+              placeholder="Confirm new password"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              className={inputClass}
+            />
+          </label>
+        </div>
 
         <button
           type="submit"
-          className="mt-6 w-full rounded-2xl bg-luxe-bronze px-5 py-3.5 font-semibold text-white transition hover:bg-luxe-charcoal disabled:cursor-wait disabled:opacity-70"
+          className="mt-8 w-full rounded-2xl bg-luxe-bronze px-5 py-3.5 font-semibold text-white transition hover:bg-luxe-charcoal disabled:cursor-wait disabled:opacity-70"
           disabled={isSubmitting}
         >
           {isSubmitting ? "Updating password..." : "Update password"}
@@ -125,7 +159,7 @@ const ResetPassword = () => {
 
         <p className="mt-6 border-t border-luxe-border pt-6 text-sm text-luxe-muted">
           Back to{" "}
-          <Link to="/login" className="font-semibold text-luxe-bronze">
+          <Link to={role === "admin" ? "/admin/login" : "/login"} className="font-semibold text-luxe-bronze">
             Login
           </Link>
         </p>

@@ -137,6 +137,7 @@ export const bookTable = async (req, res, next) => {
     const resDate = new Date(reservationTime);
     const hours = resDate.getHours();
 
+    // 1. Check operational hours (7 AM - 10 PM)
     if (hours < 7 || hours >= 22) {
       res.status(400);
       throw new Error('Table bookings are only allowed between 7 AM and 10 PM');
@@ -148,12 +149,30 @@ export const bookTable = async (req, res, next) => {
       throw new Error('Table not found');
     }
 
-    if (table.status !== 'Available') {
+    // 2. 4-Hour Duration Logic
+    const DURATION_MS = 4 * 60 * 60 * 1000; // 4 hours
+    const requestedStartTime = resDate.getTime();
+    const requestedEndTime = requestedStartTime + DURATION_MS;
+
+    // 3. Check for overlapping reservations for this table
+    // A reservation overlaps if: existingStart < requestedEnd AND existingEnd > requestedStart
+    const existingReservations = await TableReservation.find({
+      table: table._id,
+      status: 'Confirmed',
+    });
+
+    const isOverlapping = existingReservations.some(res => {
+      const existingStart = new Date(res.reservationTime).getTime();
+      const existingEnd = existingStart + DURATION_MS;
+      return existingStart < requestedEndTime && existingEnd > requestedStartTime;
+    });
+
+    if (isOverlapping) {
       res.status(400);
-      throw new Error('Table is already reserved or occupied');
+      throw new Error('This table is already booked during the requested 4-hour time slot. Please choose another time or table.');
     }
 
-    // 1. Create a reservation record
+    // 4. Create a reservation record
     const reservation = await TableReservation.create({
       user: req.user._id,
       table: table._id,
@@ -161,15 +180,19 @@ export const bookTable = async (req, res, next) => {
       reservationTime: resDate,
       guestsCount,
       specialRequests,
+      status: 'Confirmed'
     });
 
-    // 2. Mark table as reserved
-    table.status = 'Reserved';
-    await table.save();
+    // 5. Update table status if the reservation is starting now or very soon
+    const now = new Date().getTime();
+    if (requestedStartTime <= now && requestedEndTime > now) {
+      table.status = 'Reserved';
+      await table.save();
+    }
 
     res.status(201).json({
       success: true,
-      message: `Table ${tableNumber} successfully reserved for ${resDate.toLocaleString()}`,
+      message: `Table ${tableNumber} successfully reserved for a 4-hour slot starting ${resDate.toLocaleString()}`,
       data: reservation,
     });
   } catch (error) {
@@ -182,7 +205,7 @@ export const bookTable = async (req, res, next) => {
 // @access  Private/User
 export const getMyReservations = async (req, res, next) => {
   try {
-    const reservations = await TableReservation.find({ user: req.user._id }).sort({ reservationTime: 1 });
+    const reservations = await TableReservation.find({ user: req.user._id }).sort({ createdAt: -1 });
     res.status(200).json({ success: true, count: reservations.length, data: reservations });
   } catch (error) {
     next(error);
@@ -197,7 +220,7 @@ export const getAllReservations = async (req, res, next) => {
     const reservations = await TableReservation.find({})
       .populate('user', 'firstName lastName email')
       .populate('table')
-      .sort({ reservationTime: 1 });
+      .sort({ createdAt: -1 });
     res.status(200).json({ success: true, count: reservations.length, data: reservations });
   } catch (error) {
     next(error);

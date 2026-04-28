@@ -1,7 +1,36 @@
-import { useEffect } from "react";
+import { memo, useCallback, useEffect, useMemo } from "react";
 import { toast } from "react-toastify";
 
-export default function DiningReserveTab({
+const TableCard = memo(function TableCard({ onSelect, selected, table }) {
+  const handleSelect = useCallback(() => {
+    onSelect(table.tableNumber);
+  }, [onSelect, table.tableNumber]);
+
+  return (
+    <button
+      type="button"
+      className={`cursor-pointer rounded-[24px] border-2 p-5 text-left transition-all ${
+        selected
+          ? "border-luxe-bronze bg-luxe-bronze/5 shadow-lg"
+          : "border-luxe-border bg-white hover:border-luxe-bronze/50"
+      }`}
+      onClick={handleSelect}
+    >
+      <div className="flex items-center justify-between">
+        <h3 className="font-serif text-xl">Table {table.tableNumber}</h3>
+        <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+          Available
+        </span>
+      </div>
+      <p className="mt-2 text-sm text-luxe-muted">{table.location}</p>
+      <p className="mt-1 text-sm font-semibold text-luxe-charcoal">
+        Capacity: {table.capacity} guests
+      </p>
+    </button>
+  );
+});
+
+function DiningReserveTab({
   availableTables,
   handleReservationInputChange,
   handleReserveTable,
@@ -15,30 +44,69 @@ export default function DiningReserveTab({
   submittingReservation,
   user,
 }) {
+  const minDate = useMemo(() => new Date().toISOString().slice(0, 16), []);
+
+  const handleViewBookings = useCallback(() => {
+    setActiveTab("orders");
+  }, [setActiveTab]);
+
   useEffect(() => {
     if (reserveMessage.type === "success") {
       toast.success("Table Booked Successfully!");
       const timer = setTimeout(() => {
-        setActiveTab("orders");
+        handleViewBookings();
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [reserveMessage, setActiveTab]);
+  }, [handleViewBookings, reserveMessage.type]);
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     setReservationForm({
       tableNumber: "",
       reservationTime: "",
       guestsCount: 2,
       specialRequests: "",
     });
-  };
+  }, [setReservationForm]);
 
-  const selectedTable = availableTables.find(
-    (t) => t.tableNumber.toString() === reservationForm.tableNumber
+  const handleTableSelect = useCallback(
+    (tableNumber) => {
+      setReservationForm((prev) => ({
+        ...prev,
+        tableNumber: String(tableNumber),
+      }));
+    },
+    [setReservationForm],
   );
-  const isOverCapacity =
-    selectedTable && reservationForm.guestsCount > selectedTable.capacity;
+
+  const selectedTable = useMemo(
+    () =>
+      availableTables.find(
+        (table) => table.tableNumber.toString() === reservationForm.tableNumber,
+      ),
+    [availableTables, reservationForm.tableNumber],
+  );
+
+  const isOverCapacity = useMemo(
+    () =>
+      Boolean(
+        selectedTable && reservationForm.guestsCount > selectedTable.capacity,
+      ),
+    [reservationForm.guestsCount, selectedTable],
+  );
+
+  const renderedTables = useMemo(
+    () =>
+      availableTables.map((table) => (
+        <TableCard
+          key={table._id}
+          onSelect={handleTableSelect}
+          selected={reservationForm.tableNumber === table.tableNumber.toString()}
+          table={table}
+        />
+      )),
+    [availableTables, handleTableSelect, reservationForm.tableNumber],
+  );
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_400px]">
@@ -56,39 +124,7 @@ export default function DiningReserveTab({
               Loading reservation data...
             </div>
           ) : availableTables.length > 0 ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {availableTables.map((table) => (
-                <button
-                  key={table._id}
-                  type="button"
-                  className={`text-left cursor-pointer rounded-[24px] border-2 p-5 transition-all ${reservationForm.tableNumber === table.tableNumber.toString()
-                    ? "border-luxe-bronze bg-luxe-bronze/5 shadow-lg"
-                    : "border-luxe-border bg-white hover:border-luxe-bronze/50"
-                    }`}
-                  onClick={() =>
-                    setReservationForm((prev) => ({
-                      ...prev,
-                      tableNumber: table.tableNumber.toString(),
-                    }))
-                  }
-                >
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-serif text-xl">
-                      Table {table.tableNumber}
-                    </h3>
-                    <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
-                      Available
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm text-luxe-muted">
-                    {table.location}
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-luxe-charcoal">
-                    Capacity: {table.capacity} guests
-                  </p>
-                </button>
-              ))}
-            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{renderedTables}</div>
           ) : (
             <div className="rounded-[30px] border border-dashed border-luxe-border bg-white px-6 py-14 text-center">
               <h3 className="font-serif text-2xl">No tables available</h3>
@@ -133,7 +169,7 @@ export default function DiningReserveTab({
                 <input
                   type="datetime-local"
                   name="reservationTime"
-                  min={new Date().toISOString().slice(0, 16)}
+                  min={minDate}
                   value={reservationForm.reservationTime}
                   onChange={handleReservationInputChange}
                   className={inputClass}
@@ -209,7 +245,7 @@ export default function DiningReserveTab({
                     {reserveMessage.type === "success" && (
                       <button
                         type="button"
-                        onClick={() => setActiveTab("orders")}
+                        onClick={handleViewBookings}
                         className="w-fit rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-emerald-700"
                       >
                         View My Bookings
@@ -231,3 +267,5 @@ export default function DiningReserveTab({
     </div>
   );
 }
+
+export default memo(DiningReserveTab);

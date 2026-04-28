@@ -97,7 +97,7 @@ const createBooking = async (req, res, next) => {
 const getMyBookings = async (req, res, next) => {
   try {
     console.log(`[getMyBookings] User ID: ${req.user._id} (${req.user.email})`);
-    const bookings = await Booking.find({ user: req.user._id }).populate('room');
+    const bookings = await Booking.find({ user: req.user._id }).populate('room').sort({ createdAt: -1 });
     console.log(`[getMyBookings] Found: ${bookings.length}`);
     res.status(200).json({ success: true, count: bookings.length, bookings });
   } catch (error) {
@@ -112,7 +112,8 @@ const getAllBookings = async (req, res, next) => {
   try {
     const bookings = await Booking.find({})
       .populate('room')
-      .populate('user', 'firstName lastName email');
+      .populate('user', 'firstName lastName email')
+      .sort({ createdAt: -1 });
     res.status(200).json({ success: true, count: bookings.length, bookings });
   } catch (error) {
     next(error);

@@ -114,7 +114,7 @@ function DiningReserveTab({
         <div className="rounded-[30px] border border-luxe-border bg-white p-6 shadow-[0_18px_50px_rgba(28,28,28,0.06)]">
           <h2 className="font-serif text-2xl">Table Availability</h2>
           <p className="mt-2 text-luxe-muted">
-            Choose from our available dining tables
+            Choose from our available dining tables. Note: All reservations are for a <b>4-hour</b> duration.
           </p>
         </div>
 
@@ -146,7 +146,7 @@ function DiningReserveTab({
         <div className="rounded-[30px] border border-luxe-border bg-white p-6 shadow-[0_18px_50px_rgba(28,28,28,0.06)]">
           <h3 className="font-serif text-xl">Make Reservation</h3>
           <p className="mt-2 text-sm text-luxe-muted">
-            Book your table for a special dining experience
+            Book your table for a 4-hour premium dining experience
           </p>
 
           {user && !isAdmin ? (
@@ -174,6 +174,11 @@ function DiningReserveTab({
                   onChange={handleReservationInputChange}
                   className={inputClass}
                 />
+                {reservationForm.reservationTime && (
+                  <p className="mt-2 text-xs font-semibold text-luxe-bronze">
+                    Slot Ends at: {new Date(new Date(reservationForm.reservationTime).getTime() + 4 * 60 * 60 * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                )}
               </div>
 
               <div>

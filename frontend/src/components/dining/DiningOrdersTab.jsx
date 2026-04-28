@@ -70,11 +70,19 @@ const ReservationCard = memo(function ReservationCard({
   );
 
   const formattedTime = useMemo(
-    () =>
-      new Date(reservation.reservationTime).toLocaleTimeString([], {
+    () => {
+      const startTime = new Date(reservation.reservationTime);
+      const endTime = new Date(startTime.getTime() + 4 * 60 * 60 * 1000);
+      const startStr = startTime.toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
-      }),
+      });
+      const endStr = endTime.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      return `${startStr} - ${endStr} (4h slot)`;
+    },
     [reservation.reservationTime],
   );
 

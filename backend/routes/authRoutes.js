@@ -8,6 +8,7 @@ import {
   registerAdminStep3,
   registerUserStep1,
   registerUserStep3,
+  refreshAccessToken,
   resetAdminPassword,
   resetUserPassword,
   verifyAdminOTP,
@@ -15,6 +16,9 @@ import {
 } from '../controllers/authController.js';
 
 const router = express.Router();
+
+// ─── REFRESH TOKEN ROUTE ──────────────────────────────────────────────────────
+router.post('/refresh', refreshAccessToken);
 
 // ─── GUEST (USER) ROUTES ──────────────────────────────────────────────────────
 router.post('/user/register-step-1', registerUserStep1);

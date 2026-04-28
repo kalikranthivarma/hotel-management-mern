@@ -30,6 +30,7 @@ const getStoredAuth = () => {
   if (!raw) {
     return {
       token: "",
+      refreshToken: "",
       user: null,
     };
   }
@@ -38,12 +39,14 @@ const getStoredAuth = () => {
     const parsed = JSON.parse(raw);
     return {
       token: parsed?.token || "",
+      refreshToken: parsed?.refreshToken || "",
       user: normalizeUser(parsed?.user),
     };
   } catch {
     localStorage.removeItem(storageKey);
     return {
       token: "",
+      refreshToken: "",
       user: null,
     };
   }
@@ -54,6 +57,7 @@ const persistAuth = (state) => {     //saves login data into local storage
     storageKey,
     JSON.stringify({
       token: state.token,
+      refreshToken: state.refreshToken,
       user: state.user,
     })
   );
@@ -71,11 +75,15 @@ const authSlice = createSlice({   //create redux slice
   reducers: {
     setCredentials: (state, action) => {    //runs when user log in
       state.token = action.payload?.token || "";    //saves token
+      if (action.payload?.refreshToken) {
+        state.refreshToken = action.payload.refreshToken; //saves refresh token
+      }
       state.user = normalizeUser(action.payload?.user || action.payload?.admin);   //saves user
       persistAuth(state);
     },
     logoutUser: (state) => {
       state.token = "";
+      state.refreshToken = "";
       state.user = null;
       clearStoredAuth();
     },

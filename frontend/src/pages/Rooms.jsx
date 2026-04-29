@@ -254,9 +254,9 @@ const Rooms = () => {
   return (
     <div className="pb-14">
 
-      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-6 lg:grid-cols-[300px_1fr] lg:items-start lg:px-8">
+      <div className="mx-auto grid max-w-7xl gap-6 px-3 py-6 sm:px-4 lg:grid-cols-[300px_1fr] lg:items-start lg:gap-8 lg:px-8">
         {/* ── FILTER SIDEBAR ── */}
-        <aside className="sticky top-24 rounded-[30px] border border-luxe-border bg-white p-6 shadow-[0_18px_50px_rgba(28,28,28,0.06)]">
+        <aside className="rounded-[30px] border border-luxe-border bg-white p-5 shadow-[0_18px_50px_rgba(28,28,28,0.06)] sm:p-6 lg:sticky lg:top-24">
           <h2 className="font-serif text-2xl">Filter By</h2>
 
           {/* Date availability */}
@@ -344,18 +344,18 @@ const Rooms = () => {
         </aside>
 
         {/* ── MAIN CONTENT ── */}
-        <main>
+        <main className="min-w-0">
           {/* Suggestion 6 + 5 — Sort bar and active filter chips */}
           <div className="mb-6 flex flex-wrap items-center gap-3">
             {/* Sort dropdown */}
-            <div className="flex items-center gap-2 rounded-2xl border border-luxe-border bg-white px-4 py-2 shadow-sm">
+            <div className="flex w-full items-center gap-2 rounded-2xl border border-luxe-border bg-white px-4 py-2 shadow-sm sm:w-auto">
               <span className="text-xs font-semibold uppercase tracking-[0.2em] text-luxe-muted">
                 Sort
               </span>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="border-none bg-transparent text-sm font-semibold text-luxe-charcoal outline-none cursor-pointer"
+                className="min-w-0 flex-1 cursor-pointer border-none bg-transparent text-sm font-semibold text-luxe-charcoal outline-none sm:flex-none"
               >
                 {SORT_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -389,7 +389,7 @@ const Rooms = () => {
           ) : sortedRooms.length > 0 ? (
             <div ref={listContainerRef}>
               {paddingTop > 0 ? <div style={{ height: paddingTop }} aria-hidden="true" /> : null}
-              <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3 max-w-6xl">{renderedRoomCards}</div>
+              <div className="grid w-full max-w-6xl gap-5 md:grid-cols-2 xl:grid-cols-3">{renderedRoomCards}</div>
               {paddingBottom > 0 ? (
                 <div style={{ height: paddingBottom }} aria-hidden="true" />
               ) : null}

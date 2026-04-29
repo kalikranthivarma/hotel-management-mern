@@ -60,7 +60,7 @@ const RoomCard = ({ room, datesActive }) => {
 
   return (
     <article
-      className={`group overflow-hidden rounded-[28px] max-w-[315px] mx-auto border bg-white shadow-[0_18px_50px_rgba(28,28,28,0.08)] transition hover:-translate-y-1 hover:shadow-[0_24px_70px_rgba(28,28,28,0.12)] ${isBooked ? "border-rose-200 opacity-75" : "border-luxe-border"
+      className={`group mx-auto w-full overflow-hidden rounded-[24px] border bg-white shadow-[0_18px_50px_rgba(28,28,28,0.08)] transition hover:-translate-y-1 hover:shadow-[0_24px_70px_rgba(28,28,28,0.12)] sm:rounded-[28px] ${isBooked ? "border-rose-200 opacity-75" : "border-luxe-border"
         }`}
     >
       <div className="relative aspect-[4/3] overflow-hidden">
@@ -72,14 +72,14 @@ const RoomCard = ({ room, datesActive }) => {
         />
 
         {/* Suggestion 1 — Capitalized room type badge */}
-        <div className="absolute left-4 top-4 rounded-full bg-luxe-charcoal/80 px-4 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-white">
+        <div className="absolute left-3 top-3 max-w-[calc(100%-1.5rem)] truncate rounded-full bg-luxe-charcoal/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-white sm:left-4 sm:top-4 sm:max-w-[calc(100%-2rem)] sm:px-4 sm:tracking-[0.25em]">
           {capitalizedType}
         </div>
 
         {/* Availability badge — only shown when dates are selected */}
         {datesActive && (
           <div
-            className={`absolute right-4 top-4 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] ${isBooked
+            className={`absolute bottom-3 right-3 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] sm:bottom-auto sm:right-4 sm:top-4 sm:tracking-[0.18em] ${isBooked
               ? "bg-rose-500 text-white"
               : "bg-emerald-500 text-white"
               }`}
@@ -91,24 +91,24 @@ const RoomCard = ({ room, datesActive }) => {
         {/* Overlay for booked rooms */}
         {isBooked && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-            <span className="rounded-full bg-white/90 px-4 py-2 text-sm font-semibold text-rose-600">
+            <span className="mx-4 rounded-full bg-white/90 px-4 py-2 text-center text-sm font-semibold text-rose-600">
               Not available for selected dates
             </span>
           </div>
         )}
       </div>
 
-      <div className="space-y-4 p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h3 className="font-serif text-xl text-luxe-charcoal">{title}</h3>
+      <div className="space-y-4 p-4 sm:p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+          <div className="min-w-0">
+            <h3 className="font-serif text-xl leading-tight text-luxe-charcoal">{title}</h3>
             <p className="mt-2 text-sm leading-6 text-luxe-muted">
               {description?.length > 100 ? `${description.substring(0, 100)}...` : description}
             </p>
           </div>
 
           {/* Suggestion 2 — Formatted price with Indian locale */}
-          <p className="shrink-0 text-right">
+          <p className="shrink-0 text-left sm:text-right">
             <span className="block text-xl font-semibold text-luxe-bronze">
               Rs. {formattedPrice}
             </span>
@@ -121,7 +121,7 @@ const RoomCard = ({ room, datesActive }) => {
           {amenities?.slice(0, 3).map((amenity, idx) => (
             <span
               key={idx}
-              className="rounded-full border border-luxe-border bg-luxe-smoke px-3 py-1 text-xs font-medium text-luxe-charcoal"
+              className="max-w-full rounded-full border border-luxe-border bg-luxe-smoke px-3 py-1 text-xs font-medium text-luxe-charcoal"
             >
               {getAmenityIcon(amenity)} {amenity}
             </span>
@@ -133,18 +133,18 @@ const RoomCard = ({ room, datesActive }) => {
           )}
         </div>
 
-        <div className="flex items-center justify-between gap-4 border-t border-luxe-border pt-6">
+        <div className="flex flex-col gap-3 border-t border-luxe-border pt-5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:pt-6">
           <p className="text-sm font-medium text-luxe-muted">Up to {maxGuests} guests</p>
 
           {/* Suggestion 8 — Smart button label */}
           {isBooked ? (
-            <span className="cursor-not-allowed rounded-full bg-luxe-muted/30 px-5 py-2.5 text-sm font-semibold text-luxe-muted">
+            <span className="cursor-not-allowed rounded-full bg-luxe-muted/30 px-5 py-2.5 text-center text-sm font-semibold text-luxe-muted">
               Unavailable
             </span>
           ) : (
             <Link
               to={`/room/${_id}`}
-              className="rounded-full bg-luxe-bronze px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-luxe-charcoal whitespace-nowrap"
+              className="rounded-full bg-luxe-bronze px-5 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-luxe-charcoal sm:whitespace-nowrap"
             >
               {buttonLabel}
             </Link>

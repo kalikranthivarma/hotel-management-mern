@@ -442,15 +442,6 @@ const Register = () => {
                   Login
                 </Link>
               </p>
-              <p>
-                Are you hotel staff?{" "}
-                <Link
-                  to="/admin/register"
-                  className="font-bold text-luxe-bronze hover:text-luxe-charcoal underline underline-offset-4 decoration-luxe-bronze/30"
-                >
-                  Staff Registration →
-                </Link>
-              </p>
             </div>
           </div>
         </div>

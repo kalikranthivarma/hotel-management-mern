@@ -111,6 +111,8 @@ const Navbar = () => {
     const guestLinks = [
       { to: "/rooms", label: "Rooms" },
       { to: "/dining", label: "Dining" },
+      { to: "/contact", label: "Contact" },
+
     ];
 
     return [...guestLinks, { to: "/bookings", label: "My Bookings" }];
@@ -289,28 +291,6 @@ const Navbar = () => {
                           </svg>
                           My Profile
                         </Link>
-                        {!isAdmin && (
-                          <Link
-                            to="/contact"
-                            className="flex items-center gap-3 px-4 py-2.5 text-[0.82rem] text-white/75 transition hover:bg-white/6 hover:text-white"
-                            onClick={() => setProfileOpen(false)}
-                          >
-                            <svg
-                              className="h-3.5 w-3.5"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              strokeWidth={2}
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                              />
-                            </svg>
-                            Contact Us
-                          </Link>
-                        )}
                         <div className="my-1 mx-3 border-t border-white/8" />
                         <button
                           onClick={handleLogout}
@@ -467,7 +447,7 @@ const Navbar = () => {
                 My Profile
               </Link>
             )}
-            {!isAdmin && (
+              {!isAdmin && (
               <Link
                 to="/contact"
                 className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-white/70 transition-all hover:bg-white/5 hover:text-white"
